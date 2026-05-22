@@ -1,65 +1,930 @@
-import Image from "next/image";
+"use client";
+import { useEffect, useRef, useState, useMemo } from "react";
+import { supabase } from "@/lib/supabase";
+
+
+type Hotspot = { type: "phone" | "sms" | "email" | "address"; label?: string; value: string };
+
+type Flyer = {
+  id: string;
+  title: string;
+  entity: string | null;
+  description: string | null;
+  tags: string[] | null;
+  image_url: string | null;
+  status: string;
+  created_at: string | null;
+  approved_at: string | null;
+  hotspots: Hotspot[] | null;
+};
 
 export default function Home() {
+  const [flyers, setFlyers] = useState<Flyer[]>([]);
+  const [allTags, setAllTags] = useState<string[]>([]);
+  const [allEntities, setAllEntities] = useState<string[]>([]);
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [activeTags, setActiveTags] = useState<string[]>([]);
+  const [activeEntities, setActiveEntities] = useState<string[]>([]);
+  const [filterTab, setFilterTab] = useState<"topics" | "agency">("topics");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [preview, setPreview] = useState<Flyer | null>(null);
+  const [previewInitialSearch, setPreviewInitialSearch] = useState("");
+  const [quickLook, setQuickLook] = useState<Flyer | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [visible, setVisible] = useState(false);
+  const [gridKey, setGridKey] = useState(0);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(searchInput);
+      setGridKey(k => k + 1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  useEffect(() => {
+    async function fetchFlyers() {
+      const { data } = await supabase
+        .from("flyers")
+        .select("*")
+        .eq("status", "approved")
+        .order("created_at", { ascending: false });
+      const flyerList = data || [];
+      setFlyers(flyerList);
+
+      // Collect unique tags and entities across all flyers
+      const tagSet = new Set<string>();
+      const entitySet = new Set<string>();
+      flyerList.forEach(f => {
+        f.tags?.forEach((t: string) => tagSet.add(t));
+        if (f.entity) entitySet.add(f.entity);
+      });
+      setAllTags(Array.from(tagSet).sort());
+      setAllEntities(Array.from(entitySet).sort());
+
+      setLoading(false);
+      setVisible(true);
+    }
+    fetchFlyers();
+  }, []);
+
+  const toggleTag = (tag: string) => {
+    setActiveTags(prev =>
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+    setGridKey(k => k + 1);
+  };
+
+  const toggleEntity = (entity: string) => {
+    setActiveEntities(prev =>
+      prev.includes(entity) ? prev.filter(e => e !== entity) : [...prev, entity]
+    );
+    setGridKey(k => k + 1);
+  };
+
+  // Alphabet index
+  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const panelScrollRef = useRef<HTMLDivElement>(null);
+
+  const tagsByLetter = useMemo(() => {
+    const groups: Record<string, string[]> = {};
+    allTags.forEach(tag => {
+      const letter = tag[0]?.toUpperCase() ?? "#";
+      if (!groups[letter]) groups[letter] = [];
+      groups[letter].push(tag);
+    });
+    return groups;
+  }, [allTags]);
+
+  const availableLetters = useMemo(() => Object.keys(tagsByLetter).sort(), [tagsByLetter]);
+
+  const scrollToLetter = (letter: string) => {
+    const el = sectionRefs.current[letter];
+    const container = panelScrollRef.current;
+    if (el && container) {
+      const elTop = el.getBoundingClientRect().top;
+      const containerTop = container.getBoundingClientRect().top;
+      container.scrollTop += elTop - containerTop - 8;
+    }
+  };
+
+  // Close filter panel on Escape
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") setFilterOpen(false); };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, []);
+
+  const filtered = flyers.filter(f => {
+    const q = search.toLowerCase();
+    const matchSearch =
+      q === "" ||
+      f.title.toLowerCase().includes(q) ||
+      f.entity?.toLowerCase().includes(q) ||
+      f.description?.toLowerCase().includes(q) ||
+      f.tags?.some(t => t.toLowerCase().includes(q)) ||
+      f.hotspots?.some(s =>
+        s.label?.toLowerCase().includes(q) || s.value.toLowerCase().includes(q)
+      );
+    const matchTags =
+      activeTags.length === 0 ||
+      activeTags.every(t => f.tags?.includes(t));
+    const matchEntities =
+      activeEntities.length === 0 ||
+      (f.entity != null && activeEntities.includes(f.entity));
+    return matchSearch && matchTags && matchEntities;
+  });
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+    <>
+      <main style={{ minHeight: "100vh", padding: "48px 0 180px", opacity: visible ? 1 : 0, transition: "opacity 0.4s ease" }}>
+        <div style={{ maxWidth: 720, margin: "0 auto", paddingLeft: 24, paddingRight: 24 }}>
+
+          {/* Header */}
+          <div className="fade-up" style={{ animationDelay: "0.05s", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 40 }}>
+            <div />
+            <a href="/upload" style={{
+              fontSize: 13, color: "var(--text)", fontFamily: "var(--font-sans)",
+              textDecoration: "none", fontWeight: 500, padding: "8px 18px",
+              borderRadius: 99, border: "1.5px solid var(--border)",
+              background: "var(--surface)", transition: "background 0.15s",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+            }}
+              onMouseEnter={e => (e.currentTarget.style.background = "var(--bg)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "var(--surface)")}
+            >+ Upload Flyer</a>
+          </div>
+
+
+          {loading && (
+            <p style={{ fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Loading…</p>
+          )}
+
+          {/* Flyer grid */}
+          {!loading && (
+            <div key={gridKey} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, alignItems: "start" }}>
+              {filtered.map((flyer, i) => (
+                <FlyerCard
+                  key={flyer.id}
+                  flyer={flyer}
+                  search={search}
+                  onPreview={(initialSearch = "") => { setPreviewInitialSearch(initialSearch); setPreview(flyer); }}
+                  onQuickLook={() => setQuickLook(flyer)}
+                  animationDelay={i * 0.06}
+                />
+              ))}
+              {filtered.length === 0 && (
+                <p style={{ color: "var(--muted)", fontSize: 14, fontFamily: "var(--font-sans)", gridColumn: "1/-1", paddingTop: 24 }}>
+                  No flyers match your search.
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </main>
+
+      {/* Tap-outside backdrop — outside the transformed container so it's not trapped in its stacking context */}
+      {filterOpen && <div onClick={() => setFilterOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 48 }} />}
+
+      {/* ── Floating bottom search + filter bar ───────────────────── */}
+      <div style={{
+        position: "fixed", bottom: 20, left: "50%", transform: "translateX(-50%)",
+        width: "calc(50% - 16px)", maxWidth: 336, zIndex: 50,
+      }}>
+
+        {/* Filter tag panel — opens above bar */}
+        {allTags.length > 0 && (
+          <>
+
+            {/* Outer wrapper — positions both panel and sidebar */}
+            <div style={{
+              position: "absolute", bottom: "calc(100% + 10px)", left: 0, right: 0, zIndex: 49,
+              opacity: filterOpen ? 1 : 0,
+              filter: filterOpen ? "blur(0px)" : "blur(12px)",
+              transform: filterOpen ? "translateY(0) scale(1)" : "translateY(8px) scale(0.97)",
+              pointerEvents: filterOpen ? "auto" : "none",
+              transition: "opacity 0.25s ease, filter 0.25s ease, transform 0.25s ease",
+            }}>
+
+              {/* Panel — fixed header + scrollable body */}
+              <div style={{
+                background: "rgba(255,255,255,0.95)",
+                backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
+                borderRadius: 28,
+                boxShadow: "0 2px 12px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.07)",
+                display: "flex", flexDirection: "column",
+                maxHeight: 360, overflow: "hidden",
+              }}>
+
+                {/* Sticky header: segmented control + clear all */}
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  padding: "12px 14px 10px",
+                  flexShrink: 0,
+                }}>
+                  <div style={{ display: "flex", gap: 6, flex: 1 }}>
+                    {(["agency", "topics"] as const).map(tab => (
+                      <button
+                        key={tab}
+                        onClick={() => setFilterTab(tab)}
+                        style={{
+                          flex: 1, padding: "6px 0", borderRadius: 99,
+                          border: `1px solid ${filterTab === tab ? "transparent" : "var(--border)"}`,
+                          background: filterTab === tab ? "var(--text)" : "transparent",
+                          color: filterTab === tab ? "#fff" : "var(--muted)",
+                          fontSize: 12, fontWeight: 500, fontFamily: "var(--font-sans)",
+                          cursor: "pointer", transition: "background 0.15s, color 0.15s, border-color 0.15s",
+                        }}
+                      >{tab === "topics" ? "Topics" : "Agency"}</button>
+                    ))}
+                  </div>
+                  {(activeTags.length + activeEntities.length) > 0 && (
+                    <button
+                      onClick={() => { setActiveTags([]); setActiveEntities([]); setGridKey(k => k + 1); }}
+                      style={{
+                        flexShrink: 0, width: 24, height: 24, borderRadius: "50%",
+                        border: "none", background: "#ef4444",
+                        color: "#fff", fontSize: 16, lineHeight: 1,
+                        fontFamily: "var(--font-sans)", cursor: "pointer",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        transition: "background 0.15s",
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "#dc2626")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "#ef4444")}
+                    >×</button>
+                  )}
+                </div>
+
+                {/* Scrollable list */}
+                <div
+                  ref={panelScrollRef}
+                  className="tag-panel"
+                  style={{ overflowY: "auto", flex: 1, padding: "6px 30px 14px 14px" }}
+                >
+
+                {/* Topics list */}
+                {filterTab === "topics" && availableLetters.map((letter, letterIdx) => {
+                  const letterTags = tagsByLetter[letter];
+                  const globalOffset = availableLetters.slice(0, letterIdx).reduce((sum, l) => sum + tagsByLetter[l].length, 0);
+                  return (
+                    <div key={letter} ref={el => { sectionRefs.current[letter] = el; }}>
+                      <p style={{
+                        fontSize: 10, fontWeight: 700, color: "var(--muted)",
+                        fontFamily: "var(--font-sans)", letterSpacing: "0.08em",
+                        textTransform: "uppercase", margin: 0,
+                        padding: letterIdx === 0 ? "2px 12px 4px" : "10px 12px 4px",
+                      }}>{letter}</p>
+                      {letterTags.map((tag, tagIdx) => {
+                        const active = activeTags.includes(tag);
+                        const count = flyers.filter(f => f.tags?.includes(tag)).length;
+                        return (
+                          <div
+                            key={tag}
+                            onClick={() => toggleTag(tag)}
+                            style={{
+                              display: "flex", alignItems: "center",
+                              background: active ? "rgba(34,197,94,0.1)" : "transparent",
+                              borderRadius: 20, padding: "10px 12px", marginBottom: 4,
+                              cursor: "pointer",
+                              opacity: 0, transform: "translateY(12px)",
+                              animation: `ios-fadeInUp 0.35s cubic-bezier(0.28, 0.11, 0.32, 1) ${0.04 + (globalOffset + tagIdx) * 0.02}s forwards`,
+                              transition: "background 0.15s",
+                            }}
+                            onMouseEnter={e => { if (!active) e.currentTarget.style.background = "#f7f7f8"; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = active ? "rgba(34,197,94,0.1)" : "transparent"; }}
+                            onMouseDown={e => { (e.currentTarget as HTMLElement).style.transform = "scale(0.97)"; }}
+                            onMouseUp={e => { (e.currentTarget as HTMLElement).style.transform = "scale(1)"; }}
+                          >
+                            <div style={{ flex: 1 }}>
+                              <p style={{ fontSize: 14, fontWeight: 500, color: "var(--text)", margin: 0, fontFamily: "var(--font-sans)", letterSpacing: "-0.2px" }}>{tag}</p>
+                              <p style={{ fontSize: 12, color: "var(--muted)", margin: "1px 0 0", fontFamily: "var(--font-sans)" }}>{count} flyer{count !== 1 ? "s" : ""}</p>
+                            </div>
+                            <div style={{
+                              width: 20, height: 20, borderRadius: "50%",
+                              background: "#22c55e",
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              color: "#fff", fontSize: 11, fontWeight: 700, flexShrink: 0,
+                              opacity: active ? 1 : 0,
+                              filter: active ? "blur(0px)" : "blur(4px)",
+                              transform: active ? "scale(1)" : "scale(0.6)",
+                              transition: "opacity 0.2s ease, filter 0.2s ease, transform 0.2s ease",
+                            }}>✓</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+
+                {/* Agency list */}
+                {filterTab === "agency" && allEntities.map((entity, idx) => {
+                  const active = activeEntities.includes(entity);
+                  const count = flyers.filter(f => f.entity === entity).length;
+                  return (
+                    <div
+                      key={entity}
+                      onClick={() => toggleEntity(entity)}
+                      style={{
+                        display: "flex", alignItems: "center",
+                        background: active ? "rgba(34,197,94,0.1)" : "transparent",
+                        borderRadius: 20, padding: "10px 12px", marginBottom: 4,
+                        cursor: "pointer",
+                        opacity: 0, transform: "translateY(12px)",
+                        animation: `ios-fadeInUp 0.35s cubic-bezier(0.28, 0.11, 0.32, 1) ${0.04 + idx * 0.04}s forwards`,
+                        transition: "background 0.15s",
+                      }}
+                      onMouseEnter={e => { if (!active) e.currentTarget.style.background = "#f7f7f8"; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = active ? "rgba(34,197,94,0.1)" : "transparent"; }}
+                      onMouseDown={e => { (e.currentTarget as HTMLElement).style.transform = "scale(0.97)"; }}
+                      onMouseUp={e => { (e.currentTarget as HTMLElement).style.transform = "scale(1)"; }}
+                    >
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: 14, fontWeight: 500, color: "var(--text)", margin: 0, fontFamily: "var(--font-sans)", letterSpacing: "-0.2px" }}>{entity}</p>
+                        <p style={{ fontSize: 12, color: "var(--muted)", margin: "1px 0 0", fontFamily: "var(--font-sans)" }}>{count} flyer{count !== 1 ? "s" : ""}</p>
+                      </div>
+                      <div style={{
+                        width: 20, height: 20, borderRadius: "50%",
+                        background: "#22c55e",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        color: "#fff", fontSize: 11, fontWeight: 700, flexShrink: 0,
+                        opacity: active ? 1 : 0,
+                        filter: active ? "blur(0px)" : "blur(4px)",
+                        transform: active ? "scale(1)" : "scale(0.6)",
+                        transition: "opacity 0.2s ease, filter 0.2s ease, transform 0.2s ease",
+                      }}>✓</div>
+                    </div>
+                  );
+                })}
+                </div>
+              </div>
+
+              {/* Alphabet sidebar — Topics only */}
+              {filterTab === "topics" && (
+                <div style={{
+                  position: "absolute", top: 0, bottom: 0, right: 4,
+                  width: 20, display: "flex", flexDirection: "column",
+                  alignItems: "center", justifyContent: "center",
+                  zIndex: 50, pointerEvents: "auto",
+                }}>
+                  {availableLetters.map(letter => (
+                    <button
+                      key={letter}
+                      onClick={() => scrollToLetter(letter)}
+                      style={{
+                        background: "none", border: "none", cursor: "pointer",
+                        fontSize: 9, fontWeight: 700, fontFamily: "var(--font-sans)",
+                        color: "var(--muted)", padding: "2px 0", lineHeight: 1.3,
+                        width: "100%", textAlign: "center", borderRadius: 4,
+                        transition: "color 0.15s",
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.color = "var(--accent)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.color = "var(--muted)"; }}
+                    >{letter}</button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Bar row: pill + clear button */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{
+            flex: 1, display: "flex", alignItems: "center",
+            background: "var(--surface)", borderRadius: 52,
+            boxShadow: "0 2px 12px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.07)",
+            overflow: "hidden",
+          }}>
+            {/* Filter icon button */}
+            <button
+              onClick={() => setFilterOpen(o => !o)}
+              style={{
+                flexShrink: 0, padding: "14px 16px 14px 20px",
+                background: "transparent",
+                border: "none", borderRight: "1px solid var(--border)",
+                cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
+                transition: "background 0.15s", position: "relative",
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M1 3h14M4 8h8M7 13h2" stroke={activeTags.length > 0 || activeEntities.length > 0 || filterOpen ? "#22c55e" : "var(--muted)"} strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              {(activeTags.length + activeEntities.length) > 0 && (
+                <span style={{
+                  position: "absolute", top: 8, right: 8,
+                  width: 14, height: 14, borderRadius: "50%",
+                  background: "#22c55e", color: "#fff",
+                  fontSize: 9, fontWeight: 700, fontFamily: "var(--font-sans)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>{activeTags.length + activeEntities.length}</span>
+              )}
+            </button>
+
+            {/* Search input */}
+            <input
+              type="text"
+              placeholder={`Search all ${flyers.length} flyers…`}
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+              style={{
+                flex: 1, padding: "14px 20px",
+                border: "none", background: "transparent",
+                fontSize: 14, fontFamily: "var(--font-sans)", color: "var(--text)",
+                outline: "none",
+              }}
+            />
+          </div>
+
+          {/* Clear button — outside the pill */}
+          {searchInput && (
+            <button
+              onClick={() => setSearchInput("")}
+              style={{
+                flexShrink: 0, width: 36, height: 36,
+                borderRadius: "50%", border: "none",
+                background: "#ef4444", color: "#fff",
+                fontSize: 16, lineHeight: 1, cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                boxShadow: "0 2px 12px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.07)",
+                transition: "background 0.15s",
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = "#dc2626")}
+              onMouseLeave={e => (e.currentTarget.style.background = "#ef4444")}
+            >×</button>
+          )}
+        </div>
+      </div>
+
+      {/* Quick Look overlay */}
+      {quickLook && (
+        <QuickLook
+          flyer={quickLook}
+          onClose={() => setQuickLook(null)}
+          onExpand={() => { setPreview(quickLook); setPreviewInitialSearch(""); setQuickLook(null); }}
+        />
+      )}
+
+      {/* Flyer preview overlay */}
+      {preview && (
+        <FlyerPreview
+          flyer={preview}
+          initialSearch={previewInitialSearch}
+          onClose={() => { setPreview(null); setPreviewInitialSearch(""); }}
+        />
+      )}
+    </>
+  );
+}
+
+// ── Flyer card ────────────────────────────────────────────────────────────────
+function FlyerCard({ flyer, search, onPreview, onQuickLook, animationDelay = 0 }: {
+  flyer: Flyer;
+  search: string;
+  onPreview: (initialSearch?: string) => void;
+  onQuickLook: () => void;
+  animationDelay?: number;
+}) {
+  const [pressed, setPressed] = useState(false);
+
+  return (
+    <div
+      className="stagger-item"
+      onMouseLeave={() => setPressed(false)}
+      style={{ animationDelay: `${animationDelay}s` }}
+    >
+      <div
+        onClick={() => {
+          const q = search.toLowerCase();
+          const hasMatch = q && flyer.hotspots?.some(s =>
+            s.label?.toLowerCase().includes(q) || s.value.toLowerCase().includes(q)
+          );
+          onPreview(hasMatch ? search : "");
+        }}
+        onMouseDown={() => setPressed(true)}
+        onMouseUp={() => setPressed(false)}
+        style={{
+          position: "relative",
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          background: "rgba(0,0,0,0.05)",
+          border: "1px solid rgba(0,0,0,0.06)",
+          borderRadius: 52,
+          padding: "10px 20px 10px 10px",
+          cursor: "pointer",
+          transform: pressed ? "scale(0.98) translateZ(0)" : "scale(1) translateZ(0)",
+          transition: "transform 0.15s ease-out",
+        }}
+      >
+        {/* Circular image — tap opens Quick Look */}
+        <div
+          onClick={e => { e.stopPropagation(); onQuickLook(); }}
+          style={{ flexShrink: 0, width: 64, height: 64, borderRadius: "50%", overflow: "hidden", cursor: "pointer" }}
+        >
+          {flyer.image_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={flyer.image_url} alt={flyer.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg)" }}>
+              <span style={{ fontSize: "2em", fontWeight: 700, color: "var(--accent)", opacity: 0.45, fontFamily: "var(--font-sans)" }}>
+                {flyer.title.charAt(0)}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Entity + Title + matched contact snippet */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          {(() => {
+            const q = search.toLowerCase();
+            const match = q ? flyer.hotspots?.find(s =>
+              s.label?.toLowerCase().includes(q) || s.value.toLowerCase().includes(q)
+            ) : null;
+            const matchIcons: Record<Hotspot["type"], React.ReactNode> = {
+              phone: <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3.5 2A1.5 1.5 0 0 0 2 3.5v.75C2 10.28 5.72 14 11.75 14h.75A1.5 1.5 0 0 0 14 12.5v-1.38a1.5 1.5 0 0 0-1.11-1.45l-1.62-.4a1.5 1.5 0 0 0-1.56.6l-.36.48A6.52 6.52 0 0 1 5.65 6.65l.48-.36a1.5 1.5 0 0 0 .6-1.56l-.4-1.62A1.5 1.5 0 0 0 4.88 2H3.5z" fill="var(--text)"/></svg>,
+              sms: <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H5l-3 2V3z" fill="#fff"/></svg>,
+              email: <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4z" fill="#f97316"/><path d="M2 4l6 5 6-5" stroke="#fff" strokeWidth="1.4" strokeLinecap="round"/></svg>,
+              address: <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.75 4.5 8.5 4.5 8.5s4.5-4.75 4.5-8.5C12.5 3.515 10.485 1.5 8 1.5zm0 6a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" fill="#ef4444"/></svg>,
+            };
+            return (
+              <>
+                {match ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ flexShrink: 0, display: "flex" }}>{matchIcons[match.type]}</span>
+                    <span style={{ fontSize: 12, fontWeight: 400, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>
+                      {match.label ? `${match.label} · ${match.value}` : match.value}
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    {flyer.entity && (
+                      <p style={{ fontSize: 11, fontWeight: 600, fontFamily: "var(--font-sans)", color: "var(--muted)", lineHeight: 1.3, margin: 0 }}>
+                        {flyer.entity}
+                      </p>
+                    )}
+                    <p style={{ fontSize: 15, fontWeight: 500, fontFamily: "var(--font-sans)", color: "var(--text)", lineHeight: 1.4, margin: 0 }}>
+                      {flyer.title}
+                    </p>
+                  </>
+                )}
+              </>
+            );
+          })()}
+        </div>
+      </div>
     </div>
+  );
+}
+
+// ── Quick Look ────────────────────────────────────────────────────────────────
+function QuickLook({ flyer, onClose, onExpand }: { flyer: Flyer; onClose: () => void; onExpand: () => void }) {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    requestAnimationFrame(() => setOpen(true));
+    const handleKey = (e: globalThis.KeyboardEvent) => { if (e.key === "Escape") handleClose(); };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleClose = () => {
+    setOpen(false);
+    setTimeout(onClose, 280);
+  };
+
+  return (
+    <div
+      onClick={handleClose}
+      style={{
+        position: "fixed", inset: 0, zIndex: 90,
+        background: open ? "rgba(0,0,0,0.45)" : "rgba(0,0,0,0)",
+        backdropFilter: open ? "blur(6px)" : "blur(0px)",
+        WebkitBackdropFilter: open ? "blur(6px)" : "blur(0px)",
+        transition: "background 0.28s ease, backdrop-filter 0.28s ease",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 24,
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          position: "relative",
+          width: "100%", maxWidth: 560,
+          maxHeight: "85vh",
+          background: "var(--surface)",
+          borderRadius: 24,
+          overflow: "hidden",
+          boxShadow: "0 32px 80px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.08)",
+          display: "flex", flexDirection: "column",
+          transform: open ? "scale(1) translateY(0)" : "scale(0.92) translateY(16px)",
+          opacity: open ? 1 : 0,
+          transition: "transform 0.32s cubic-bezier(0.34, 1.4, 0.64, 1), opacity 0.28s ease",
+        }}
+      >
+        {/* Scrollable image — tap to expand to full preview */}
+        <div
+          onClick={() => { handleClose(); setTimeout(onExpand, 100); }}
+          style={{ overflowY: "auto", flex: 1, cursor: "pointer" }}
+        >
+          {flyer.image_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={flyer.image_url} alt={flyer.title} style={{ width: "100%", display: "block" }} />
+          ) : (
+            <div style={{ height: 200, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg)" }}>
+              <span style={{ fontSize: 64, fontWeight: 700, color: "var(--accent)", opacity: 0.2, fontFamily: "var(--font-sans)" }}>
+                {flyer.title.charAt(0)}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FlyerPreview({ flyer, initialSearch = "", onClose }: {
+  flyer: Flyer;
+  initialSearch?: string;
+  onClose: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(!!initialSearch);
+  const [contactSearch, setContactSearch] = useState(initialSearch);
+  const [contactFilter, setContactFilter] = useState<"all" | "phone" | "sms" | "email" | "address">("all");
+  const hasHotspots = (flyer.hotspots?.length ?? 0) > 0;
+
+  useEffect(() => {
+    requestAnimationFrame(() => setOpen(true));
+    const handleKey = (e: globalThis.KeyboardEvent) => { if (e.key === "Escape") handleClose(); };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleClose = () => {
+    setSheetOpen(false);
+    setContactSearch("");
+    setOpen(false);
+    setTimeout(onClose, 300);
+  };
+
+  const handleDownload = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!flyer.image_url) return;
+    const res = await fetch(flyer.image_url);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${flyer.title}.${blob.type.split("/")[1] || "jpg"}`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 100,
+      background: "#0a0a0a",
+      opacity: open ? 1 : 0,
+      transition: "opacity 0.3s ease",
+    }}>
+      {/* Full-screen image */}
+      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+        {flyer.image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={flyer.image_url} alt={flyer.title} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+        ) : (
+          <span style={{ fontSize: 120, fontWeight: 700, color: "var(--accent)", opacity: 0.2, fontFamily: "var(--font-sans)" }}>
+            {flyer.title.charAt(0)}
+          </span>
+        )}
+      </div>
+
+      {/* Close button — top center */}
+      <button onClick={handleClose} style={{
+        position: "absolute", top: 20, left: "50%", transform: "translateX(-50%)", zIndex: 20,
+        width: 36, height: 36, borderRadius: "50%",
+        background: "#ef4444", border: "none",
+        color: "#fff", fontSize: 20, cursor: "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
+        opacity: open ? 1 : 0,
+        transition: "background 0.15s, opacity 0.35s ease 0.1s",
+      }}
+        onMouseEnter={e => (e.currentTarget.style.background = "#dc2626")}
+        onMouseLeave={e => (e.currentTarget.style.background = "#ef4444")}
+      >×</button>
+
+      {/* Panel backdrop — dismisses contacts panel on outside tap */}
+      {sheetOpen && (
+        <div
+          onClick={() => { setSheetOpen(false); setContactSearch(""); }}
+          style={{ position: "absolute", inset: 0, zIndex: 9 }}
+        />
+      )}
+
+      {/* Bottom bar: pill area */}
+      <div style={{
+        position: "absolute", bottom: 28, left: "50%",
+        transform: "translateX(-50%)",
+        width: "calc(100% - 48px)", maxWidth: 400,
+        display: "flex", alignItems: "center", gap: 8,
+        opacity: open ? 1 : 0,
+        transition: "opacity 0.35s ease 0.1s",
+        zIndex: 10,
+      }}>
+        {/* Pill + floating contacts panel above */}
+        <div style={{ flex: 1, minWidth: 0, position: "relative" }}>
+
+          {/* Contacts panel — floats above pill, same pattern as filter panel */}
+          <div style={{
+            position: "absolute", bottom: "calc(100% + 10px)", left: 0, right: 0,
+            background: "rgba(255,255,255,0.95)",
+            backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
+            borderRadius: 28,
+            boxShadow: "0 8px 40px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.06)",
+            overflow: "hidden",
+            opacity: sheetOpen ? 1 : 0,
+            filter: sheetOpen ? "blur(0px)" : "blur(12px)",
+            transform: sheetOpen ? "translateY(0) scale(1)" : "translateY(8px) scale(0.97)",
+            pointerEvents: sheetOpen ? "auto" : "none",
+            transition: "opacity 0.25s ease, filter 0.25s ease, transform 0.25s ease",
+          }}>
+            {/* Segmented control */}
+            {hasHotspots && (() => {
+              const allSegments = [
+                { key: "all" as const, label: "All", activeBg: "var(--text)", activeColor: "#fff" },
+                { key: "phone" as const, label: "Phones", activeBg: "rgba(34,197,94,0.15)", activeColor: "#16a34a" },
+                { key: "sms" as const, label: "SMS", activeBg: "rgba(6,182,212,0.15)", activeColor: "#0891b2" },
+                { key: "email" as const, label: "Email", activeBg: "rgba(251,191,36,0.2)", activeColor: "#f97316" },
+                { key: "address" as const, label: "Addresses", activeBg: "rgba(59,130,246,0.15)", activeColor: "#2563eb" },
+              ];
+              const segments = allSegments.filter(s => s.key === "all" || flyer.hotspots?.some(h => h.type === s.key));
+              return segments.length > 1 ? (
+                <div style={{ padding: "10px 12px 8px", display: "flex", gap: 6 }}>
+                  {segments.map(({ key, label, activeBg, activeColor }) => (
+                    <button
+                      key={key}
+                      onClick={() => setContactFilter(key)}
+                      style={{
+                        flex: 1, padding: "6px 0", borderRadius: 99,
+                        border: `1px solid ${contactFilter === key ? "transparent" : "var(--border)"}`,
+                        background: contactFilter === key ? activeBg : "transparent",
+                        color: contactFilter === key ? activeColor : "var(--muted)",
+                        fontSize: 12, fontWeight: 500, fontFamily: "var(--font-sans)",
+                        cursor: "pointer", transition: "background 0.15s, color 0.15s, border-color 0.15s",
+                      }}
+                    >{label}</button>
+                  ))}
+                </div>
+              ) : null;
+            })()}
+
+            <div style={{ maxHeight: 280, overflowY: "auto" }}>
+              {flyer.hotspots?.filter(spot => {
+                const q = contactSearch.toLowerCase();
+                const matchesSearch = !q || spot.label?.toLowerCase().includes(q) || spot.value.toLowerCase().includes(q);
+                const matchesFilter = contactFilter === "all" || spot.type === contactFilter;
+                return matchesSearch && matchesFilter;
+              }).map((spot, i) => {
+                const spotMeta: Record<Hotspot["type"], { bg: string; icon: React.ReactNode; href: string }> = {
+                  phone: {
+                    bg: "#22c55e",
+                    icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3.5 2A1.5 1.5 0 0 0 2 3.5v.75C2 10.28 5.72 14 11.75 14h.75A1.5 1.5 0 0 0 14 12.5v-1.38a1.5 1.5 0 0 0-1.11-1.45l-1.62-.4a1.5 1.5 0 0 0-1.56.6l-.36.48A6.52 6.52 0 0 1 5.65 6.65l.48-.36a1.5 1.5 0 0 0 .6-1.56l-.4-1.62A1.5 1.5 0 0 0 4.88 2H3.5z" fill="#fff"/></svg>,
+                    href: `tel:${spot.value.replace(/\D/g, "")}`,
+                  },
+                  sms: {
+                    bg: "#06b6d4",
+                    icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H5l-3 2V3z" fill="#fff"/></svg>,
+                    href: `sms:${spot.value.replace(/\D/g, "")}`,
+                  },
+                  email: {
+                    bg: "rgba(251,191,36,0.18)",
+                    icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4z" fill="#f97316"/><path d="M2 4l6 5 6-5" stroke="#fff" strokeWidth="1.4" strokeLinecap="round"/></svg>,
+                    href: `mailto:${spot.value}`,
+                  },
+                  address: {
+                    bg: "rgba(59,130,246,0.12)",
+                    icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.75 4.5 8.5 4.5 8.5s4.5-4.75 4.5-8.5C12.5 3.515 10.485 1.5 8 1.5zm0 6a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" fill="#ef4444"/></svg>,
+                    href: `https://maps.apple.com/?q=${encodeURIComponent(spot.value)}`,
+                  },
+                };
+                const meta = spotMeta[spot.type];
+                return (
+                  <a
+                    key={i}
+                    href={meta.href}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 10,
+                      padding: "8px 16px", textDecoration: "none",
+                      transition: "background 0.15s",
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(0,0,0,0.04)")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                  >
+                    <div style={{
+                      width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
+                      background: meta.bg,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      {meta.icon}
+                    </div>
+                    <div>
+                      {spot.label && (
+                        <p style={{ fontSize: 11, color: "var(--muted)", fontFamily: "var(--font-sans)", fontWeight: 500, margin: 0, lineHeight: 1.3 }}>
+                          {spot.label}
+                        </p>
+                      )}
+                      <p style={{ fontSize: 13, color: "var(--text)", fontFamily: "var(--font-sans)", fontWeight: 500, margin: 0, lineHeight: 1.4 }}>
+                        {spot.value}
+                      </p>
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+            <div style={{ height: 1, background: "var(--border)", margin: "6px 0 0" }} />
+          </div>
+
+          {/* Pill — search + download */}
+          <div style={{
+            background: "var(--surface)",
+            borderRadius: 52,
+            display: "flex", alignItems: "center",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.18)",
+            overflow: "hidden",
+          }}>
+            <input
+              type="text"
+              placeholder="Search inside this flyer…"
+              value={contactSearch}
+              onChange={e => {
+                setContactSearch(e.target.value);
+                if (e.target.value) setSheetOpen(true);
+              }}
+              onFocus={() => setSheetOpen(true)}
+              style={{
+                flex: 1, minWidth: 0,
+                padding: "14px 20px",
+                border: "none", background: "transparent",
+                fontSize: 14, fontFamily: "var(--font-sans)", color: "var(--text)",
+                outline: "none",
+                cursor: "text",
+              }}
+            />
+            {/* Download button */}
+            <button
+              onClick={handleDownload}
+              style={{
+                flexShrink: 0, padding: "14px 18px 14px 14px",
+                background: "transparent", border: "none",
+                borderLeft: "1px solid var(--border)",
+                cursor: "pointer", display: "flex", alignItems: "center",
+                transition: "background 0.15s",
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = "rgba(0,0,0,0.04)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 2v8M5 7l3 3 3-3M3 13h10" stroke="var(--accent)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+function PreviewAction({ onClick, label, active = false, tint, children }: {
+  onClick: () => void;
+  label: string;
+  active?: boolean;
+  tint?: string;
+  children: React.ReactNode;
+}) {
+  const bg = active ? "var(--accent)" : (tint ?? "var(--bg)");
+  return (
+    <button
+      onClick={onClick}
+      title={label}
+      style={{
+        width: 40, height: 40, borderRadius: "50%",
+        background: bg,
+        color: tint || active ? "#fff" : "var(--text)",
+        border: `2px solid ${active ? "var(--accent)" : "var(--border)"}`,
+        cursor: "pointer", flexShrink: 0,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        transition: "filter 0.15s",
+      }}
+      onMouseEnter={e => { e.currentTarget.style.filter = "brightness(0.88)"; }}
+      onMouseLeave={e => { e.currentTarget.style.filter = "brightness(1)"; }}
+    >
+      {children}
+    </button>
   );
 }
