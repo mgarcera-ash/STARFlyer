@@ -26,7 +26,7 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const [activeEntities, setActiveEntities] = useState<string[]>([]);
-  const [filterTab, setFilterTab] = useState<"topics" | "agency">("topics");
+  const [filterTab, setFilterTab] = useState<"topics" | "agency">("agency");
   const [filterOpen, setFilterOpen] = useState(false);
   const [preview, setPreview] = useState<Flyer | null>(null);
   const [previewInitialSearch, setPreviewInitialSearch] = useState("");

@@ -61,6 +61,25 @@ export default function UploadPage() {
     setForm(emptyForm()); setEntity(""); setTags([]); setTagInput(""); setHotspots([]);
   };
 
+  const compressImage = (file: File, maxPx = 1600, quality = 0.82): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL("image/jpeg", quality);
+        resolve(dataUrl.split(",")[1]);
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+
   const handleImageSelect = async (file: File) => {
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
@@ -68,12 +87,7 @@ export default function UploadPage() {
     setOcrProgress(0);
 
     try {
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve((reader.result as string).split(",")[1]);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
+      const base64 = await compressImage(file);
 
       setOcrProgress(50);
 
