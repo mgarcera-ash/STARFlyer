@@ -26,7 +26,32 @@ body {
   line-height: 1.65;
 }
 
+/* ─── BUBBLE FLOAT ───────────────────────────────────────── */
+@keyframes bubble-float {
+  0%   { transform: translateY(0);       opacity: 0;   }
+  8%   { opacity: 0.9; }
+  90%  { opacity: 0.9; }
+  100% { transform: translateY(-105vh);  opacity: 0;   }
+}
+
+.bubble-float {
+  position: fixed;
+  bottom: -60px;
+  pointer-events: none;
+  animation: bubble-float var(--duration, 14s) ease-in infinite;
+  animation-delay: var(--delay, 0s);
+  left: var(--left, 50%);
+  font-size: var(--size, 26px);
+  will-change: transform, opacity;
+  z-index: 1;
+}
+
 /* ─── ENTRANCE ANIMATIONS ───────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 @keyframes fadeScale {
   from { opacity: 0; transform: scale(0.94); }
   to   { opacity: 1; transform: scale(1); }

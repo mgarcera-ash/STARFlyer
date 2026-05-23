@@ -1,8 +1,8 @@
 "use client";
 
-export type Hotspot = { type: "phone" | "sms" | "email" | "address"; label: string; value: string };
+export type Hotspot = { type: "phone" | "sms" | "email" | "address" | "website"; label: string; value: string };
 
-const TYPE_ORDER: Hotspot["type"][] = ["phone", "sms", "email", "address"];
+const TYPE_ORDER: Hotspot["type"][] = ["phone", "sms", "email", "address", "website"];
 
 const TYPE_META: Record<Hotspot["type"], { bg: string; icon: React.ReactNode; placeholder: string }> = {
   phone: {
@@ -24,6 +24,11 @@ const TYPE_META: Record<Hotspot["type"], { bg: string; icon: React.ReactNode; pl
     bg: "rgba(59,130,246,0.1)",
     icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.75 4.5 8.5 4.5 8.5s4.5-4.75 4.5-8.5C12.5 3.515 10.485 1.5 8 1.5zm0 6a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" fill="#ef4444"/></svg>,
     placeholder: "Street address",
+  },
+  website: {
+    bg: "rgba(99,102,241,0.1)",
+    icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="#6366f1" strokeWidth="1.2"/><path d="M8 2.5c-1.5 1.5-1.5 9.5 0 11M8 2.5c1.5 1.5 1.5 9.5 0 11" stroke="#6366f1" strokeWidth="1.2"/><path d="M2.5 8h11" stroke="#6366f1" strokeWidth="1.2"/></svg>,
+    placeholder: "Website URL",
   },
 };
 

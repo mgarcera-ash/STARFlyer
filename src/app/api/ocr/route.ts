@@ -39,12 +39,13 @@ ${fullText}
 
 Return ONLY valid JSON — no markdown, no code blocks:
 {
-  "title": "the main program or service name (short, clear heading — 2 to 7 words)",
+  "title": "a short action-first description of what this resource helps someone do or get — lead with a verb or outcome, not the program name (e.g. 'Find emergency shelter tonight', 'Report trafficking and get help', 'Apply for rental assistance'). Use simple, plain language a 9th grader can understand. Avoid jargon, clinical terms, or complex words. 5 to 10 words.",
   "tags": ["5 to 10 short lowercase tags"],
   "phones": [{ "label": "name or organization this number belongs to", "value": "phone number exactly as written" }],
   "sms": [{ "label": "name or organization this number belongs to", "value": "short code or SMS number exactly as written" }],
   "emails": [{ "label": "name or organization this email belongs to", "value": "email address exactly as written" }],
-  "addresses": [{ "label": "name or location this address belongs to", "value": "street address exactly as written" }]
+  "addresses": [{ "label": "name or location this address belongs to", "value": "street address exactly as written" }],
+  "websites": [{ "label": "name or organization this website belongs to", "value": "URL exactly as written" }]
 }
 
 For tags, be generous — apply every category that reasonably fits. Draw from this taxonomy:
@@ -66,7 +67,8 @@ If the flyer is about shelter but also mentions mental health, crisis services, 
 For phones: list every phone number with its associated name or organization as the label. If none, return [].
 For sms: list every SMS short code or text number (e.g. "text HELLO to 233733") with its label. If none, return [].
 For emails: list every email address with its associated name or organization as the label. If none, return [].
-For addresses: list every street address with its associated location or organization name as the label. If none, return [].`,
+For addresses: list every street address with its associated location or organization name as the label. If none, return [].
+For websites: list every website URL with its associated name or organization as the label. If none, return [].`,
       }],
       max_tokens: 1500,
     });
@@ -75,7 +77,7 @@ For addresses: list every street address with its associated location or organiz
     const parsed = JSON.parse(raw);
 
     // ── Step 3: Build hotspots (type + label + value) ────────────────────────
-    type Hotspot = { type: "phone" | "sms" | "email" | "address"; label?: string; value: string };
+    type Hotspot = { type: "phone" | "sms" | "email" | "address" | "website"; label?: string; value: string };
     const mapItems = (items: unknown[], type: Hotspot["type"]): Hotspot[] =>
       (items ?? []).map((item: unknown) =>
         typeof item === "string"
@@ -88,6 +90,7 @@ For addresses: list every street address with its associated location or organiz
       ...mapItems(parsed.sms ?? [], "sms"),
       ...mapItems(parsed.emails ?? [], "email"),
       ...mapItems(parsed.addresses ?? [], "address"),
+      ...mapItems(parsed.websites ?? [], "website"),
     ];
 
     return NextResponse.json({

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 
 
-type Hotspot = { type: "phone" | "sms" | "email" | "address"; label?: string; value: string };
+type Hotspot = { type: "phone" | "sms" | "email" | "address" | "website"; label?: string; value: string };
 
 type Flyer = {
   id: string;
@@ -34,6 +34,67 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false);
   const [gridKey, setGridKey] = useState(0);
+  const [splashVisible, setSplashVisible] = useState(true);
+  const [splashOut, setSplashOut] = useState(false);
+  const [firstLineVisible, setFirstLineVisible] = useState(false);
+  const [countVisible, setCountVisible] = useState(false);
+  const [displayCount, setDisplayCount] = useState(0);
+  const [minTimeReady, setMinTimeReady] = useState(false);
+  const [imagesReady, setImagesReady] = useState(false);
+
+  // Splash text sequence
+  useEffect(() => {
+    const first = setTimeout(() => setFirstLineVisible(true), 500);
+    return () => clearTimeout(first);
+  }, []);
+
+  useEffect(() => {
+    if (!firstLineVisible) return;
+    const count = setTimeout(() => setCountVisible(true), 500);
+    return () => clearTimeout(count);
+  }, [firstLineVisible]);
+
+  // Minimum splash time: 4s
+  useEffect(() => {
+    const t = setTimeout(() => setMinTimeReady(true), 4000);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Preload images once flyers are fetched, cap at 10s
+  useEffect(() => {
+    if (flyers.length === 0) return;
+    const cap = setTimeout(() => setImagesReady(true), 10000);
+    const urls = flyers.map(f => f.image_url).filter(Boolean) as string[];
+    Promise.all(urls.map(url => new Promise<void>(resolve => {
+      const img = new Image();
+      img.onload = () => resolve();
+      img.onerror = () => resolve();
+      img.src = url;
+    }))).then(() => setImagesReady(true));
+    return () => clearTimeout(cap);
+  }, [flyers]);
+
+  // Exit splash when both conditions met
+  useEffect(() => {
+    if (!minTimeReady || !imagesReady) return;
+    const fadeOut = setTimeout(() => setSplashOut(true), 0);
+    const remove = setTimeout(() => setSplashVisible(false), 600);
+    return () => { clearTimeout(fadeOut); clearTimeout(remove); };
+  }, [minTimeReady, imagesReady]);
+
+  useEffect(() => {
+    if (!countVisible || flyers.length === 0) return;
+    const duration = 1500;
+    const start = performance.now();
+    const target = flyers.length;
+    const tick = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplayCount(Math.round(eased * target));
+      if (progress < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, [countVisible, flyers.length]);
 
   // Debounce search
   useEffect(() => {
@@ -139,24 +200,76 @@ export default function Home() {
 
   return (
     <>
+
+      {/* Splash screen */}
+      {splashVisible && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 200,
+          background: "#000",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: 32,
+          opacity: splashOut ? 0 : 1,
+          transition: "opacity 0.6s ease",
+          pointerEvents: splashOut ? "none" : "auto",
+        }}>
+          {/* Floating bubbles — inside splash so black bg contains them */}
+          {[
+            { emoji: "📸", left: "7%",  delay: "0s",    duration: "8s",   size: "28px" },
+            { emoji: "🤳", left: "18%", delay: "1.5s",  duration: "9s",   size: "24px" },
+            { emoji: "📸", left: "32%", delay: "3s",    duration: "7.5s", size: "22px" },
+            { emoji: "🤳", left: "48%", delay: "0.75s", duration: "8.5s", size: "30px" },
+            { emoji: "📸", left: "63%", delay: "2.25s", duration: "8s",   size: "24px" },
+            { emoji: "🤳", left: "76%", delay: "1s",    duration: "9s",   size: "26px" },
+            { emoji: "📸", left: "88%", delay: "3.5s",  duration: "7.5s", size: "22px" },
+          ].map(({ emoji, left, delay, duration, size }, i) => (
+            <span
+              key={i}
+              className="bubble-float"
+              style={{ "--left": left, "--delay": delay, "--duration": duration, "--size": size, zIndex: 1 } as React.CSSProperties}
+            >{emoji}</span>
+          ))}
+
+          <div style={{ position: "relative", zIndex: 2 }}>
+
+            <p style={{
+              fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 600,
+              color: "#fff", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em",
+              opacity: firstLineVisible ? 1 : 0,
+              transition: "opacity 0.8s ease",
+            }}>
+              Find the right resource.
+            </p>
+            <p style={{
+              fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 400,
+              color: "#fff", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em",
+              opacity: countVisible ? 1 : 0,
+              transition: "opacity 0.8s ease",
+            }}>
+              {(() => {
+                const colors = ["#3b82f6", "#22c55e", "#eab308", "#f97316", "#14b8a6", "#06b6d4", "#a855f7"];
+                const color = colors[displayCount % colors.length];
+                return <>To date, the STAR team has uploaded <span style={{ color, transition: "color 0.05s" }}>{displayCount}</span> flyers for you.</>;
+              })()}
+            </p>
+          </div>
+        </div>
+      )}
+
       <main style={{ minHeight: "100vh", padding: "48px 0 180px", opacity: visible ? 1 : 0, transition: "opacity 0.4s ease" }}>
         <div style={{ maxWidth: 720, margin: "0 auto", paddingLeft: 24, paddingRight: 24 }}>
 
-          {/* Header */}
-          <div className="fade-up" style={{ animationDelay: "0.05s", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 40 }}>
-            <div />
-            <a href="/upload" style={{
-              fontSize: 13, color: "var(--text)", fontFamily: "var(--font-sans)",
-              textDecoration: "none", fontWeight: 500, padding: "8px 18px",
-              borderRadius: 99, border: "1.5px solid var(--border)",
-              background: "var(--surface)", transition: "background 0.15s",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-            }}
-              onMouseEnter={e => (e.currentTarget.style.background = "var(--bg)")}
-              onMouseLeave={e => (e.currentTarget.style.background = "var(--surface)")}
-            >+ Upload Flyer</a>
-          </div>
 
+
+          {!loading && (
+            <div className="fade-up" style={{ marginBottom: 32 }}>
+              <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 600, color: "var(--text)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
+                Find the right resource.
+              </p>
+              <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 400, color: "var(--muted)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
+                Browse {flyers.length} flyers below.
+              </p>
+            </div>
+          )}
 
           {loading && (
             <p style={{ fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Loading…</p>
@@ -170,8 +283,8 @@ export default function Home() {
                   key={flyer.id}
                   flyer={flyer}
                   search={search}
-                  onPreview={(initialSearch = "") => { setPreviewInitialSearch(initialSearch); setPreview(flyer); }}
-                  onQuickLook={() => setQuickLook(flyer)}
+                  showEntity={activeEntities.length > 0}
+                  onQuickLook={(initialSearch = "") => { setPreviewInitialSearch(initialSearch); setQuickLook(flyer); }}
                   animationDelay={i * 0.06}
                 />
               ))}
@@ -213,7 +326,7 @@ export default function Home() {
                 background: "rgba(255,255,255,0.95)",
                 backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
                 borderRadius: 28,
-                boxShadow: "0 2px 12px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.07)",
+                border: "2px solid var(--border)",
                 display: "flex", flexDirection: "column",
                 maxHeight: 360, overflow: "hidden",
               }}>
@@ -231,7 +344,7 @@ export default function Home() {
                         onClick={() => setFilterTab(tab)}
                         style={{
                           flex: 1, padding: "6px 0", borderRadius: 99,
-                          border: `1px solid ${filterTab === tab ? "transparent" : "var(--border)"}`,
+                          border: `2px solid ${filterTab === tab ? "transparent" : "var(--border)"}`,
                           background: filterTab === tab ? "var(--text)" : "transparent",
                           color: filterTab === tab ? "#fff" : "var(--muted)",
                           fontSize: 12, fontWeight: 500, fontFamily: "var(--font-sans)",
@@ -394,7 +507,7 @@ export default function Home() {
           <div style={{
             flex: 1, display: "flex", alignItems: "center",
             background: "var(--surface)", borderRadius: 52,
-            boxShadow: "0 2px 12px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.07)",
+            border: "2px solid var(--border)",
             overflow: "hidden",
           }}>
             {/* Filter icon button */}
@@ -447,7 +560,6 @@ export default function Home() {
                 background: "#ef4444", color: "#fff",
                 fontSize: 16, lineHeight: 1, cursor: "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                boxShadow: "0 2px 12px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.07)",
                 transition: "background 0.15s",
               }}
               onMouseEnter={e => (e.currentTarget.style.background = "#dc2626")}
@@ -462,7 +574,7 @@ export default function Home() {
         <QuickLook
           flyer={quickLook}
           onClose={() => setQuickLook(null)}
-          onExpand={() => { setPreview(quickLook); setPreviewInitialSearch(""); setQuickLook(null); }}
+          onExpand={() => { setPreview(quickLook); setQuickLook(null); }}
         />
       )}
 
@@ -479,11 +591,11 @@ export default function Home() {
 }
 
 // ── Flyer card ────────────────────────────────────────────────────────────────
-function FlyerCard({ flyer, search, onPreview, onQuickLook, animationDelay = 0 }: {
+function FlyerCard({ flyer, search, showEntity, onQuickLook, animationDelay = 0 }: {
   flyer: Flyer;
   search: string;
-  onPreview: (initialSearch?: string) => void;
-  onQuickLook: () => void;
+  showEntity: boolean;
+  onQuickLook: (initialSearch?: string) => void;
   animationDelay?: number;
 }) {
   const [pressed, setPressed] = useState(false);
@@ -500,7 +612,7 @@ function FlyerCard({ flyer, search, onPreview, onQuickLook, animationDelay = 0 }
           const hasMatch = q && flyer.hotspots?.some(s =>
             s.label?.toLowerCase().includes(q) || s.value.toLowerCase().includes(q)
           );
-          onPreview(hasMatch ? search : "");
+          onQuickLook(hasMatch ? search : "");
         }}
         onMouseDown={() => setPressed(true)}
         onMouseUp={() => setPressed(false)}
@@ -510,7 +622,7 @@ function FlyerCard({ flyer, search, onPreview, onQuickLook, animationDelay = 0 }
           alignItems: "center",
           gap: 12,
           background: "rgba(0,0,0,0.05)",
-          border: "1px solid rgba(0,0,0,0.06)",
+          border: "2px solid rgba(0,0,0,0.06)",
           borderRadius: 52,
           padding: "10px 20px 10px 10px",
           cursor: "pointer",
@@ -518,10 +630,9 @@ function FlyerCard({ flyer, search, onPreview, onQuickLook, animationDelay = 0 }
           transition: "transform 0.15s ease-out",
         }}
       >
-        {/* Circular image — tap opens Quick Look */}
+        {/* Circular image */}
         <div
-          onClick={e => { e.stopPropagation(); onQuickLook(); }}
-          style={{ flexShrink: 0, width: 64, height: 64, borderRadius: "50%", overflow: "hidden", cursor: "pointer" }}
+          style={{ flexShrink: 0, width: 64, height: 64, borderRadius: "50%", overflow: "hidden", border: "2px solid rgba(0,0,0,0.15)" }}
         >
           {flyer.image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -542,29 +653,41 @@ function FlyerCard({ flyer, search, onPreview, onQuickLook, animationDelay = 0 }
             const match = q ? flyer.hotspots?.find(s =>
               s.label?.toLowerCase().includes(q) || s.value.toLowerCase().includes(q)
             ) : null;
-            const matchIcons: Record<Hotspot["type"], React.ReactNode> = {
-              phone: <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3.5 2A1.5 1.5 0 0 0 2 3.5v.75C2 10.28 5.72 14 11.75 14h.75A1.5 1.5 0 0 0 14 12.5v-1.38a1.5 1.5 0 0 0-1.11-1.45l-1.62-.4a1.5 1.5 0 0 0-1.56.6l-.36.48A6.52 6.52 0 0 1 5.65 6.65l.48-.36a1.5 1.5 0 0 0 .6-1.56l-.4-1.62A1.5 1.5 0 0 0 4.88 2H3.5z" fill="var(--text)"/></svg>,
-              sms: <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H5l-3 2V3z" fill="#fff"/></svg>,
-              email: <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4z" fill="#f97316"/><path d="M2 4l6 5 6-5" stroke="#fff" strokeWidth="1.4" strokeLinecap="round"/></svg>,
-              address: <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.75 4.5 8.5 4.5 8.5s4.5-4.75 4.5-8.5C12.5 3.515 10.485 1.5 8 1.5zm0 6a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" fill="#ef4444"/></svg>,
+            const matchCircle: Record<Hotspot["type"], { bg: string; icon: React.ReactNode }> = {
+              phone: { bg: "#22c55e", icon: <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M3.5 2A1.5 1.5 0 0 0 2 3.5v.75C2 10.28 5.72 14 11.75 14h.75A1.5 1.5 0 0 0 14 12.5v-1.38a1.5 1.5 0 0 0-1.11-1.45l-1.62-.4a1.5 1.5 0 0 0-1.56.6l-.36.48A6.52 6.52 0 0 1 5.65 6.65l.48-.36a1.5 1.5 0 0 0 .6-1.56l-.4-1.62A1.5 1.5 0 0 0 4.88 2H3.5z" fill="#fff"/></svg> },
+              sms: { bg: "#06b6d4", icon: <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M2 3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H5l-3 2V3z" fill="#fff"/></svg> },
+              email: { bg: "rgba(251,191,36,0.18)", icon: <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M2 4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4z" fill="#f97316"/><path d="M2 4l6 5 6-5" stroke="#fff" strokeWidth="1.4" strokeLinecap="round"/></svg> },
+              address: { bg: "rgba(59,130,246,0.12)", icon: <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.75 4.5 8.5 4.5 8.5s4.5-4.75 4.5-8.5C12.5 3.515 10.485 1.5 8 1.5zm0 6a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" fill="#ef4444"/></svg> },
+              website: { bg: "rgba(99,102,241,0.1)", icon: <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="#6366f1" strokeWidth="1.2"/><path d="M8 2.5c-1.5 1.5-1.5 9.5 0 11M8 2.5c1.5 1.5 1.5 9.5 0 11" stroke="#6366f1" strokeWidth="1.2"/><path d="M2.5 8h11" stroke="#6366f1" strokeWidth="1.2"/></svg> },
             };
             return (
               <>
                 {match ? (
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ flexShrink: 0, display: "flex" }}>{matchIcons[match.type]}</span>
-                    <span style={{ fontSize: 12, fontWeight: 400, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>
-                      {match.label ? `${match.label} · ${match.value}` : match.value}
-                    </span>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                    <p style={{ fontSize: 11, fontWeight: 400, fontFamily: "var(--font-sans)", color: "var(--muted)", lineHeight: 1.3, margin: 0 }}>
+                      {flyer.title}
+                    </p>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <div style={{
+                        flexShrink: 0, width: 20, height: 20, borderRadius: "50%",
+                        background: matchCircle[match.type].bg,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>
+                        {matchCircle[match.type].icon}
+                      </div>
+                      <span style={{ fontSize: 12, fontWeight: 400, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>
+                        {match.label ? `${match.label} · ${match.value}` : match.value}
+                      </span>
+                    </div>
                   </div>
                 ) : (
                   <>
-                    {flyer.entity && (
+                    {showEntity && flyer.entity && (
                       <p style={{ fontSize: 11, fontWeight: 600, fontFamily: "var(--font-sans)", color: "var(--muted)", lineHeight: 1.3, margin: 0 }}>
                         {flyer.entity}
                       </p>
                     )}
-                    <p style={{ fontSize: 15, fontWeight: 500, fontFamily: "var(--font-sans)", color: "var(--text)", lineHeight: 1.4, margin: 0 }}>
+                    <p style={{ fontSize: 14, fontWeight: 500, fontFamily: "var(--font-sans)", color: "var(--text)", lineHeight: 1.4, margin: 0 }}>
                       {flyer.title}
                     </p>
                   </>
@@ -653,7 +776,7 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
   const [open, setOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(!!initialSearch);
   const [contactSearch, setContactSearch] = useState(initialSearch);
-  const [contactFilter, setContactFilter] = useState<"all" | "phone" | "sms" | "email" | "address">("all");
+  const [contactFilter, setContactFilter] = useState<"all" | "phone" | "sms" | "email" | "address" | "website">("all");
   const hasHotspots = (flyer.hotspots?.length ?? 0) > 0;
 
   useEffect(() => {
@@ -706,17 +829,21 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
       {/* Close button — top center */}
       <button onClick={handleClose} style={{
         position: "absolute", top: 20, left: "50%", transform: "translateX(-50%)", zIndex: 20,
-        width: 36, height: 36, borderRadius: "50%",
+        height: 36, borderRadius: 99, padding: "0 16px 0 12px",
         background: "#ef4444", border: "none",
-        color: "#fff", fontSize: 20, cursor: "pointer",
-        display: "flex", alignItems: "center", justifyContent: "center",
+        color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "var(--font-sans)",
+        cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
         boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
         opacity: open ? 1 : 0,
         transition: "background 0.15s, opacity 0.35s ease 0.1s",
+        whiteSpace: "nowrap",
       }}
         onMouseEnter={e => (e.currentTarget.style.background = "#dc2626")}
         onMouseLeave={e => (e.currentTarget.style.background = "#ef4444")}
-      >×</button>
+      >
+        <span style={{ fontSize: 18, lineHeight: 1 }}>×</span>
+        Close
+      </button>
 
       {/* Panel backdrop — dismisses contacts panel on outside tap */}
       {sheetOpen && (
@@ -745,7 +872,7 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
             background: "rgba(255,255,255,0.95)",
             backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
             borderRadius: 28,
-            boxShadow: "0 8px 40px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.06)",
+            border: "2px solid var(--border)",
             overflow: "hidden",
             opacity: sheetOpen ? 1 : 0,
             filter: sheetOpen ? "blur(0px)" : "blur(12px)",
@@ -761,6 +888,7 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
                 { key: "sms" as const, label: "SMS", activeBg: "rgba(6,182,212,0.15)", activeColor: "#0891b2" },
                 { key: "email" as const, label: "Email", activeBg: "rgba(251,191,36,0.2)", activeColor: "#f97316" },
                 { key: "address" as const, label: "Addresses", activeBg: "rgba(59,130,246,0.15)", activeColor: "#2563eb" },
+                { key: "website" as const, label: "Websites", activeBg: "rgba(99,102,241,0.15)", activeColor: "#6366f1" },
               ];
               const segments = allSegments.filter(s => s.key === "all" || flyer.hotspots?.some(h => h.type === s.key));
               return segments.length > 1 ? (
@@ -771,7 +899,7 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
                       onClick={() => setContactFilter(key)}
                       style={{
                         flex: 1, padding: "6px 0", borderRadius: 99,
-                        border: `1px solid ${contactFilter === key ? "transparent" : "var(--border)"}`,
+                        border: `2px solid ${contactFilter === key ? "transparent" : "var(--border)"}`,
                         background: contactFilter === key ? activeBg : "transparent",
                         color: contactFilter === key ? activeColor : "var(--muted)",
                         fontSize: 12, fontWeight: 500, fontFamily: "var(--font-sans)",
@@ -810,6 +938,11 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
                     bg: "rgba(59,130,246,0.12)",
                     icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.75 4.5 8.5 4.5 8.5s4.5-4.75 4.5-8.5C12.5 3.515 10.485 1.5 8 1.5zm0 6a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" fill="#ef4444"/></svg>,
                     href: `https://maps.apple.com/?q=${encodeURIComponent(spot.value)}`,
+                  },
+                  website: {
+                    bg: "rgba(99,102,241,0.1)",
+                    icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="#6366f1" strokeWidth="1.2"/><path d="M8 2.5c-1.5 1.5-1.5 9.5 0 11M8 2.5c1.5 1.5 1.5 9.5 0 11" stroke="#6366f1" strokeWidth="1.2"/><path d="M2.5 8h11" stroke="#6366f1" strokeWidth="1.2"/></svg>,
+                    href: spot.value.startsWith("http") ? spot.value : `https://${spot.value}`,
                   },
                 };
                 const meta = spotMeta[spot.type];
@@ -853,8 +986,8 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
           <div style={{
             background: "var(--surface)",
             borderRadius: 52,
+            border: "2px solid var(--border)",
             display: "flex", alignItems: "center",
-            boxShadow: "0 4px 16px rgba(0,0,0,0.18)",
             overflow: "hidden",
           }}>
             <input

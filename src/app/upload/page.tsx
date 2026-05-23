@@ -59,6 +59,7 @@ export default function UploadPage() {
     setImageFile(null); setImagePreview(null);
     setOcrStatus("idle"); setOcrProgress(0);
     setForm(emptyForm()); setEntity(""); setTags([]); setTagInput(""); setHotspots([]);
+    setSubmitted(false);
   };
 
   const compressImage = (file: File, maxPx = 1600, quality = 0.82): Promise<string> =>
@@ -265,18 +266,6 @@ export default function UploadPage() {
               <div style={{ maxHeight: 320, overflowY: "auto" }}>
                 <img src={imagePreview} alt="Flyer preview" style={{ width: "100%", display: "block" }} />
               </div>
-              <button onClick={reset} style={{
-                position: "absolute", top: 10, right: 10,
-                width: 32, height: 32, borderRadius: 99,
-                background: "#ef4444", border: "1.5px solid #ef4444",
-                color: "#fff", cursor: "pointer", fontSize: 16,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
-                transition: "background 0.15s",
-              }}
-                onMouseEnter={e => (e.currentTarget.style.background = "#dc2626")}
-                onMouseLeave={e => (e.currentTarget.style.background = "#ef4444")}
-              >×</button>
             </div>
           )}
           <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileChange} style={{ display: "none" }} />
@@ -379,7 +368,7 @@ export default function UploadPage() {
               style={{
                 position: "relative", overflow: "hidden", isolation: "isolate",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                alignSelf: "flex-end", marginTop: 8, padding: "10px 16px",
+                alignSelf: "center", marginTop: 8, padding: "10px 16px",
                 borderRadius: 9999, border: "2px solid var(--border)",
                 background: "var(--surface)", fontSize: 14,
                 fontFamily: "var(--font-sans)", fontWeight: 600, color: "var(--text)",
