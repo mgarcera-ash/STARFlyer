@@ -15,7 +15,7 @@ const dmMono = DM_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "STARLight",
+  title: "STARFlyer",
   description: "Resource flyer platform for ASH staff.",
 };
 
