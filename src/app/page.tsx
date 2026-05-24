@@ -673,11 +673,15 @@ function FlyerCard({ flyer, search, showEntity, onQuickLook, animationDelay = 0 
             return (
               <>
                 {match ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                     <p style={{ fontSize: 11, fontWeight: 400, fontFamily: "var(--font-sans)", color: "var(--muted)", lineHeight: 1.3, margin: 0 }}>
                       {flyer.title}
                     </p>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{
+                      display: "flex", alignItems: "center", gap: 6,
+                      borderLeft: "2px solid #22c55e",
+                      paddingLeft: 8, marginLeft: 2,
+                    }}>
                       <div style={{
                         flexShrink: 0, width: 20, height: 20, borderRadius: "50%",
                         background: matchCircle[match.type].bg,
