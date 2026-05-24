@@ -898,6 +898,8 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
             borderRadius: 28,
             border: "2px solid var(--border)",
             overflow: "hidden",
+            height: 320,
+            display: "flex", flexDirection: "column",
             opacity: sheetOpen ? 1 : 0,
             filter: sheetOpen ? "blur(0px)" : "blur(12px)",
             transform: sheetOpen ? "translateY(0) scale(1)" : "translateY(8px) scale(0.97)",
@@ -935,7 +937,7 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
               ) : null;
             })()}
 
-            <div style={{ maxHeight: 280, overflowY: "auto" }}>
+            <div style={{ flex: 1, overflowY: "auto" }}>
               {flyer.hotspots?.filter(spot => {
                 const q = contactSearch.toLowerCase();
                 const matchesSearch = !q || spot.label?.toLowerCase().includes(q) || spot.value.toLowerCase().includes(q);
