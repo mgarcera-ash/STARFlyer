@@ -674,14 +674,7 @@ function FlyerCard({ flyer, search, showEntity, onQuickLook, animationDelay = 0 
               <>
                 {match ? (
                   <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    <p style={{ fontSize: 11, fontWeight: 400, fontFamily: "var(--font-sans)", color: "var(--muted)", lineHeight: 1.3, margin: 0 }}>
-                      {flyer.title}
-                    </p>
-                    <div style={{
-                      display: "flex", flexDirection: "column", gap: 2,
-                      borderLeft: "2px solid var(--muted)",
-                      paddingLeft: 8, marginLeft: 2,
-                    }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                       <div style={{
                         flexShrink: 0, width: 20, height: 20, borderRadius: "50%",
                         background: matchCircle[match.type].bg,
@@ -689,6 +682,15 @@ function FlyerCard({ flyer, search, showEntity, onQuickLook, animationDelay = 0 
                       }}>
                         {matchCircle[match.type].icon}
                       </div>
+                      <p style={{ fontSize: 11, fontWeight: 400, fontFamily: "var(--font-sans)", color: "var(--muted)", lineHeight: 1.3, margin: 0 }}>
+                        {flyer.title}
+                      </p>
+                    </div>
+                    <div style={{
+                      display: "flex", flexDirection: "column", gap: 1,
+                      borderLeft: "2px solid var(--muted)",
+                      paddingLeft: 8, marginLeft: 2,
+                    }}>
                       {match.label && (
                         <span style={{ fontSize: 11, fontWeight: 500, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>
                           {match.label}
