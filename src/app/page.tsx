@@ -679,7 +679,7 @@ function FlyerCard({ flyer, search, showEntity, onQuickLook, animationDelay = 0 
                     </p>
                     <div style={{
                       display: "flex", flexDirection: "column", gap: 1,
-                      borderLeft: "2px solid var(--border)",
+                      borderLeft: "2px solid rgba(0,0,0,0.15)",
                       paddingLeft: 8, marginLeft: 2,
                     }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
