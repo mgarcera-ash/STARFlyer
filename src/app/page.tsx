@@ -685,9 +685,16 @@ function FlyerCard({ flyer, search, showEntity, onQuickLook, animationDelay = 0 
                       }}>
                         {matchCircle[match.type].icon}
                       </div>
-                      <span style={{ fontSize: 12, fontWeight: 400, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>
-                        {match.label ? `${match.label} · ${match.value}` : match.value}
-                      </span>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                        {match.label && (
+                          <span style={{ fontSize: 11, fontWeight: 500, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>
+                            {match.label}
+                          </span>
+                        )}
+                        <span style={{ fontSize: 12, fontWeight: 500, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>
+                          {match.value}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ) : (
