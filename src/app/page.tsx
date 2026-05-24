@@ -911,9 +911,10 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
           {/* Contacts panel — floats above pill, same pattern as filter panel */}
           <div style={{
             position: "absolute", bottom: "calc(100% + 10px)", left: 0, right: 0,
-            background: "#fff",
+            background: "rgba(20,20,20,0.85)",
+            backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
             borderRadius: 28,
-            border: "2px solid var(--border)",
+            border: "2px solid rgba(255,255,255,0.12)",
             overflow: "hidden",
             height: 320,
             display: "flex", flexDirection: "column",
@@ -926,12 +927,12 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
             {/* Segmented control */}
             {hasHotspots && (() => {
               const allSegments = [
-                { key: "all" as const, label: "All", activeBg: "var(--text)", activeColor: "#fff" },
-                { key: "phone" as const, label: "Phones", activeBg: "rgba(34,197,94,0.15)", activeColor: "#16a34a" },
-                { key: "sms" as const, label: "SMS", activeBg: "rgba(6,182,212,0.15)", activeColor: "#0891b2" },
-                { key: "email" as const, label: "Email", activeBg: "rgba(251,191,36,0.2)", activeColor: "#f97316" },
-                { key: "address" as const, label: "Addresses", activeBg: "rgba(59,130,246,0.15)", activeColor: "#2563eb" },
-                { key: "website" as const, label: "Websites", activeBg: "rgba(99,102,241,0.15)", activeColor: "#6366f1" },
+                { key: "all" as const, label: "All", activeBg: "rgba(255,255,255,0.2)", activeColor: "#fff" },
+                { key: "phone" as const, label: "Phones", activeBg: "rgba(34,197,94,0.25)", activeColor: "#4ade80" },
+                { key: "sms" as const, label: "SMS", activeBg: "rgba(6,182,212,0.25)", activeColor: "#22d3ee" },
+                { key: "email" as const, label: "Email", activeBg: "rgba(251,191,36,0.25)", activeColor: "#fbbf24" },
+                { key: "address" as const, label: "Addresses", activeBg: "rgba(59,130,246,0.25)", activeColor: "#60a5fa" },
+                { key: "website" as const, label: "Websites", activeBg: "rgba(99,102,241,0.25)", activeColor: "#a5b4fc" },
               ];
               const segments = allSegments.filter(s => s.key === "all" || flyer.hotspots?.some(h => h.type === s.key));
               return segments.length > 1 ? (
@@ -948,9 +949,9 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
                       onClick={() => setContactFilter(key)}
                       style={{
                         flexShrink: 0, padding: "6px 14px", borderRadius: 99,
-                        border: `2px solid ${contactFilter === key ? "transparent" : "var(--border)"}`,
+                        border: `2px solid ${contactFilter === key ? "transparent" : "rgba(255,255,255,0.15)"}`,
                         background: contactFilter === key ? activeBg : "transparent",
-                        color: contactFilter === key ? activeColor : "var(--muted)",
+                        color: contactFilter === key ? activeColor : "rgba(255,255,255,0.45)",
                         fontSize: 12, fontWeight: 500, fontFamily: "var(--font-sans)",
                         cursor: "pointer", transition: "background 0.15s, color 0.15s, border-color 0.15s",
                         whiteSpace: "nowrap",
@@ -1005,7 +1006,7 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
                       padding: "10px 16px", textDecoration: "none",
                       transition: "background 0.15s",
                     }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(0,0,0,0.04)")}
+                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
                     onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                   >
                     <div style={{
@@ -1017,11 +1018,11 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
                     </div>
                     <div>
                       {spot.label && (
-                        <p style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-sans)", fontWeight: 500, margin: 0, lineHeight: 1.3 }}>
+                        <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontFamily: "var(--font-sans)", fontWeight: 500, margin: 0, lineHeight: 1.3 }}>
                           {spot.label}
                         </p>
                       )}
-                      <p style={{ fontSize: 15, color: "var(--text)", fontFamily: "var(--font-sans)", fontWeight: 500, margin: 0, lineHeight: 1.4 }}>
+                      <p style={{ fontSize: 15, color: "#fff", fontFamily: "var(--font-sans)", fontWeight: 500, margin: 0, lineHeight: 1.4 }}>
                         {spot.value}
                       </p>
                     </div>
@@ -1029,7 +1030,7 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
                 );
               })}
             </div>
-            <div style={{ height: 1, background: "var(--border)", margin: "6px 0 0" }} />
+            <div style={{ height: 1, background: "rgba(255,255,255,0.1)", margin: "6px 0 0" }} />
           </div>
 
           {/* Pill — search + download */}
