@@ -789,7 +789,7 @@ function QuickLook({ flyer, onClose, onExpand }: { flyer: Flyer; onClose: () => 
             pointerEvents: "none",
           }}>
             <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
-              <path d="M3 3h4M3 3v4M13 3h-4M13 3v4M3 13h4M3 13v-4M13 13h-4M13 13v-4" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/>
+              <path d="M10 2h4v4M6 14H2v-4M14 2l-5.5 5.5M2 14l5.5-5.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
             <span style={{ fontSize: 11, fontWeight: 500, color: "#fff", fontFamily: "var(--font-sans)", whiteSpace: "nowrap" }}>
               Tap again to expand
