@@ -365,9 +365,9 @@ export default function Home() {
                     <button
                       onClick={() => { setActiveTags([]); setActiveEntities([]); setGridKey(k => k + 1); }}
                       style={{
-                        flexShrink: 0, width: 24, height: 24, borderRadius: "50%",
+                        flexShrink: 0, width: 36, height: 36, borderRadius: "50%",
                         border: "none", background: "#ef4444",
-                        color: "#fff", fontSize: 16, lineHeight: 1,
+                        color: "#fff", fontSize: 20, lineHeight: 1,
                         fontFamily: "var(--font-sans)", cursor: "pointer",
                         display: "flex", alignItems: "center", justifyContent: "center",
                         transition: "background 0.15s",
