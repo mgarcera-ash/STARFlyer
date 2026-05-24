@@ -1035,9 +1035,10 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
 
           {/* Pill — search + download */}
           <div style={{
-            background: "rgba(255,255,255,0.1)",
+            background: "rgba(20,20,20,0.85)",
+            backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
             borderRadius: 52,
-            border: "2px solid rgba(255,255,255,0.18)",
+            border: "2px solid rgba(255,255,255,0.12)",
             display: "flex", alignItems: "center",
             overflow: "hidden",
           }}>
