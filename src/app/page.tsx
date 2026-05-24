@@ -332,8 +332,7 @@ export default function Home() {
 
               {/* Panel — fixed header + scrollable body */}
               <div style={{
-                background: "rgba(255,255,255,0.95)",
-                backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
+                background: "#fff",
                 borderRadius: 28,
                 border: "2px solid var(--border)",
                 display: "flex", flexDirection: "column",
@@ -898,8 +897,7 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
           {/* Contacts panel — floats above pill, same pattern as filter panel */}
           <div style={{
             position: "absolute", bottom: "calc(100% + 10px)", left: 0, right: 0,
-            background: "rgba(255,255,255,0.95)",
-            backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
+            background: "#fff",
             borderRadius: 28,
             border: "2px solid var(--border)",
             overflow: "hidden",
