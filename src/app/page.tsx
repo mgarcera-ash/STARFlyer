@@ -552,7 +552,7 @@ export default function Home() {
               style={{
                 flex: 1, padding: "14px 20px",
                 border: "none", background: "transparent",
-                fontSize: 14, fontFamily: "var(--font-sans)", color: "var(--text)",
+                fontSize: 16, fontFamily: "var(--font-sans)", color: "var(--text)",
                 outline: "none",
               }}
             />
@@ -1030,7 +1030,7 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
                 flex: 1, minWidth: 0,
                 padding: "14px 20px",
                 border: "none", background: "transparent",
-                fontSize: 14, fontFamily: "var(--font-sans)", color: "var(--text)",
+                fontSize: 16, fontFamily: "var(--font-sans)", color: "var(--text)",
                 outline: "none",
                 cursor: "text",
               }}
