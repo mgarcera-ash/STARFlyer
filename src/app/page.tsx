@@ -1034,15 +1034,16 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
 
           {/* Pill — search + download */}
           <div style={{
-            background: "var(--surface)",
+            background: "rgba(255,255,255,0.1)",
             borderRadius: 52,
-            border: "2px solid var(--border)",
+            border: "2px solid rgba(255,255,255,0.18)",
             display: "flex", alignItems: "center",
             overflow: "hidden",
           }}>
             <input
               type="text"
               placeholder="Search inside this flyer…"
+              className="preview-search"
               value={contactSearch}
               onChange={e => {
                 setContactSearch(e.target.value);
@@ -1053,7 +1054,7 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
                 flex: 1, minWidth: 0,
                 padding: "14px 20px",
                 border: "none", background: "transparent",
-                fontSize: 16, fontFamily: "var(--font-sans)", color: "var(--text)",
+                fontSize: 16, fontFamily: "var(--font-sans)", color: "#fff",
                 outline: "none",
                 cursor: "text",
               }}
@@ -1064,15 +1065,15 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
               style={{
                 flexShrink: 0, padding: "14px 18px 14px 14px",
                 background: "transparent", border: "none",
-                borderLeft: "1px solid var(--border)",
+                borderLeft: "1px solid rgba(255,255,255,0.18)",
                 cursor: "pointer", display: "flex", alignItems: "center",
                 transition: "background 0.15s",
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = "rgba(0,0,0,0.04)")}
+              onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
               onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M8 2v8M5 7l3 3 3-3M3 13h10" stroke="var(--accent)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M8 2v8M5 7l3 3 3-3M3 13h10" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
           </div>
