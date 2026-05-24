@@ -854,10 +854,10 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
       {/* Close button — top center */}
       <button onClick={handleClose} style={{
         position: "absolute", top: 20, left: "50%", transform: "translateX(-50%)", zIndex: 20,
-        height: 36, borderRadius: 99, padding: "0 16px 0 12px",
+        height: 44, borderRadius: 99, padding: "0 18px 0 14px",
         background: "#ef4444", border: "none",
-        color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "var(--font-sans)",
-        cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
+        color: "#fff", fontSize: 14, fontWeight: 600, fontFamily: "var(--font-sans)",
+        cursor: "pointer", display: "flex", alignItems: "center", gap: 7,
         boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
         opacity: open ? 1 : 0,
         transition: "background 0.15s, opacity 0.35s ease 0.1s",
@@ -866,7 +866,7 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
         onMouseEnter={e => (e.currentTarget.style.background = "#dc2626")}
         onMouseLeave={e => (e.currentTarget.style.background = "#ef4444")}
       >
-        <span style={{ fontSize: 18, lineHeight: 1 }}>×</span>
+        <span style={{ fontSize: 20, lineHeight: 1 }}>×</span>
         Close
       </button>
 
