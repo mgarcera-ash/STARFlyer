@@ -409,9 +409,10 @@ export default function Home() {
                               background: active ? "rgba(34,197,94,0.1)" : "transparent",
                               borderRadius: 20, padding: "10px 12px", marginBottom: 4,
                               cursor: "pointer",
+                              border: `1px solid ${active ? "#22c55e" : "transparent"}`,
                               opacity: 0, transform: "translateY(12px)",
                               animation: `ios-fadeInUp 0.35s cubic-bezier(0.28, 0.11, 0.32, 1) ${0.04 + (globalOffset + tagIdx) * 0.02}s forwards`,
-                              transition: "background 0.15s",
+                              transition: "background 0.15s, border-color 0.15s",
                             }}
                             onMouseEnter={e => { if (!active) e.currentTarget.style.background = "#f7f7f8"; }}
                             onMouseLeave={e => { e.currentTarget.style.background = active ? "rgba(34,197,94,0.1)" : "transparent"; }}
@@ -422,16 +423,6 @@ export default function Home() {
                               <p style={{ fontSize: 14, fontWeight: 500, color: "var(--text)", margin: 0, fontFamily: "var(--font-sans)", letterSpacing: "-0.2px" }}>{tag}</p>
                               <p style={{ fontSize: 12, color: "var(--muted)", margin: "1px 0 0", fontFamily: "var(--font-sans)" }}>{count} flyer{count !== 1 ? "s" : ""}</p>
                             </div>
-                            <div style={{
-                              width: 20, height: 20, borderRadius: "50%",
-                              background: "#22c55e",
-                              display: "flex", alignItems: "center", justifyContent: "center",
-                              color: "#fff", fontSize: 11, fontWeight: 700, flexShrink: 0,
-                              opacity: active ? 1 : 0,
-                              filter: active ? "blur(0px)" : "blur(4px)",
-                              transform: active ? "scale(1)" : "scale(0.6)",
-                              transition: "opacity 0.2s ease, filter 0.2s ease, transform 0.2s ease",
-                            }}>✓</div>
                           </div>
                         );
                       })}
@@ -452,9 +443,10 @@ export default function Home() {
                         background: active ? "rgba(34,197,94,0.1)" : "transparent",
                         borderRadius: 20, padding: "10px 12px", marginBottom: 4,
                         cursor: "pointer",
+                        border: `1px solid ${active ? "#22c55e" : "transparent"}`,
                         opacity: 0, transform: "translateY(12px)",
                         animation: `ios-fadeInUp 0.35s cubic-bezier(0.28, 0.11, 0.32, 1) ${0.04 + idx * 0.04}s forwards`,
-                        transition: "background 0.15s",
+                        transition: "background 0.15s, border-color 0.15s",
                       }}
                       onMouseEnter={e => { if (!active) e.currentTarget.style.background = "#f7f7f8"; }}
                       onMouseLeave={e => { e.currentTarget.style.background = active ? "rgba(34,197,94,0.1)" : "transparent"; }}
@@ -465,16 +457,6 @@ export default function Home() {
                         <p style={{ fontSize: 14, fontWeight: 500, color: "var(--text)", margin: 0, fontFamily: "var(--font-sans)", letterSpacing: "-0.2px" }}>{entity}</p>
                         <p style={{ fontSize: 12, color: "var(--muted)", margin: "1px 0 0", fontFamily: "var(--font-sans)" }}>{count} flyer{count !== 1 ? "s" : ""}</p>
                       </div>
-                      <div style={{
-                        width: 20, height: 20, borderRadius: "50%",
-                        background: "#22c55e",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        color: "#fff", fontSize: 11, fontWeight: 700, flexShrink: 0,
-                        opacity: active ? 1 : 0,
-                        filter: active ? "blur(0px)" : "blur(4px)",
-                        transform: active ? "scale(1)" : "scale(0.6)",
-                        transition: "opacity 0.2s ease, filter 0.2s ease, transform 0.2s ease",
-                      }}>✓</div>
                     </div>
                   );
                 })}
