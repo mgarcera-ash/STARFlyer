@@ -778,8 +778,23 @@ function QuickLook({ flyer, onClose, onExpand }: { flyer: Flyer; onClose: () => 
         {/* Scrollable image — tap to expand to full preview */}
         <div
           onClick={() => { handleClose(); setTimeout(onExpand, 100); }}
-          style={{ overflowY: "auto", flex: 1, cursor: "pointer" }}
+          style={{ overflowY: "auto", flex: 1, cursor: "pointer", position: "relative" }}
         >
+          {/* Tap to expand hint */}
+          <div style={{
+            position: "absolute", top: 12, right: 12, zIndex: 10,
+            background: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
+            borderRadius: 99, padding: "5px 10px",
+            display: "flex", alignItems: "center", gap: 5,
+            pointerEvents: "none",
+          }}>
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
+              <path d="M3 3h4M3 3v4M13 3h-4M13 3v4M3 13h4M3 13v-4M13 13h-4M13 13v-4" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/>
+            </svg>
+            <span style={{ fontSize: 11, fontWeight: 500, color: "#fff", fontFamily: "var(--font-sans)", whiteSpace: "nowrap" }}>
+              Tap again to expand
+            </span>
+          </div>
           {flyer.image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={flyer.image_url} alt={flyer.title} style={{ width: "100%", display: "block" }} />
