@@ -258,7 +258,7 @@ export default function Home() {
               opacity: countVisible && !imagesReady ? 1 : 0,
               transition: "opacity 0.5s ease",
             }}>
-              Loading resources<span className="loading-dot">.</span><span className="loading-dot">.</span><span className="loading-dot">.</span>
+              Almost done loading<span className="loading-dot">.</span><span className="loading-dot">.</span><span className="loading-dot">.</span>
             </p>
           </div>
         </div>
