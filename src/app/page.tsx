@@ -680,7 +680,7 @@ function FlyerCard({ flyer, search, showEntity, onQuickLook, onPreview, animatio
               <>
                 {match ? (
                   <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    <p style={{ fontSize: 11, fontWeight: 400, fontFamily: "var(--font-sans)", color: "var(--muted)", lineHeight: 1.3, margin: 0 }}>
+                    <p style={{ fontSize: 11, fontWeight: 400, fontFamily: "var(--font-sans)", color: "var(--text)", lineHeight: 1.3, margin: 0 }}>
                       {flyer.title}
                     </p>
                     <div style={{
@@ -702,7 +702,7 @@ function FlyerCard({ flyer, search, showEntity, onQuickLook, onPreview, animatio
                           </span>
                         )}
                       </div>
-                      <span style={{ fontSize: 12, fontWeight: 500, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>
+                      <span style={{ fontSize: 12, fontWeight: 500, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>
                         {match.value}
                       </span>
                     </div>
