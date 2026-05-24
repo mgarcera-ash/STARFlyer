@@ -74,11 +74,11 @@ export default function Home() {
     return () => clearTimeout(cap);
   }, [flyers]);
 
-  // Exit splash when both conditions met
+  // Exit splash when both conditions met — 1.5s buffer after ready
   useEffect(() => {
     if (!minTimeReady || !imagesReady) return;
-    const fadeOut = setTimeout(() => setSplashOut(true), 0);
-    const remove = setTimeout(() => setSplashVisible(false), 600);
+    const fadeOut = setTimeout(() => { setSplashOut(true); setVisible(true); }, 1500);
+    const remove = setTimeout(() => setSplashVisible(false), 2100);
     return () => { clearTimeout(fadeOut); clearTimeout(remove); };
   }, [minTimeReady, imagesReady]);
 
@@ -126,7 +126,6 @@ export default function Home() {
       setAllEntities(Array.from(entitySet).sort());
 
       setLoading(false);
-      setVisible(true);
     }
     fetchFlyers();
   }, []);
@@ -250,6 +249,16 @@ export default function Home() {
                 const color = colors[displayCount % colors.length];
                 return <>To date, the STAR team has uploaded <span style={{ color, transition: "color 0.05s" }}>{displayCount}</span> flyers for you.</>;
               })()}
+            </p>
+
+            {/* Loading indicator */}
+            <p style={{
+              fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 400,
+              color: "rgba(255,255,255,0.4)", margin: "16px 0 0", letterSpacing: "0.01em",
+              opacity: countVisible && !imagesReady ? 1 : 0,
+              transition: "opacity 0.5s ease",
+            }}>
+              Loading resources<span className="loading-dot">.</span><span className="loading-dot">.</span><span className="loading-dot">.</span>
             </p>
           </div>
         </div>
@@ -599,6 +608,7 @@ function FlyerCard({ flyer, search, showEntity, onQuickLook, animationDelay = 0 
   animationDelay?: number;
 }) {
   const [pressed, setPressed] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
 
   return (
     <div
@@ -632,11 +642,23 @@ function FlyerCard({ flyer, search, showEntity, onQuickLook, animationDelay = 0 
       >
         {/* Circular image */}
         <div
-          style={{ flexShrink: 0, width: 64, height: 64, borderRadius: "50%", overflow: "hidden", border: "2px solid rgba(0,0,0,0.15)" }}
+          style={{ position: "relative", flexShrink: 0, width: 64, height: 64, borderRadius: "50%", overflow: "hidden", border: "2px solid rgba(0,0,0,0.15)" }}
         >
+          {/* Skeleton */}
+          <div style={{
+            position: "absolute", inset: 0, borderRadius: "50%",
+            background: "var(--border)",
+            opacity: imgLoaded ? 0 : 1,
+            transition: "opacity 0.4s ease",
+          }} />
           {flyer.image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={flyer.image_url} alt={flyer.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <img
+              src={flyer.image_url}
+              alt={flyer.title}
+              onLoad={() => setImgLoaded(true)}
+              style={{ width: "100%", height: "100%", objectFit: "cover", opacity: imgLoaded ? 1 : 0, transition: "opacity 0.4s ease" }}
+            />
           ) : (
             <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg)" }}>
               <span style={{ fontSize: "2em", fontWeight: 700, color: "var(--accent)", opacity: 0.45, fontFamily: "var(--font-sans)" }}>
