@@ -313,7 +313,7 @@ export default function Home() {
       {/* ── Floating bottom search + filter bar ───────────────────── */}
       <div style={{
         position: "fixed", bottom: 20, left: "50%", transform: "translateX(-50%)",
-        width: "calc(50% - 16px)", maxWidth: 336, zIndex: 50,
+        width: "calc(100% - 48px)", maxWidth: 480, zIndex: 50,
       }}>
 
         {/* Filter tag panel — opens above bar */}
@@ -609,6 +609,12 @@ function FlyerCard({ flyer, search, showEntity, onQuickLook, animationDelay = 0 
 }) {
   const [pressed, setPressed] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // Cached images never fire onLoad — check .complete after mount
+  useEffect(() => {
+    if (imgRef.current?.complete) setImgLoaded(true);
+  }, []);
 
   return (
     <div
@@ -654,6 +660,7 @@ function FlyerCard({ flyer, search, showEntity, onQuickLook, animationDelay = 0 
           {flyer.image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
+              ref={imgRef}
               src={flyer.image_url}
               alt={flyer.title}
               onLoad={() => setImgLoaded(true)}
