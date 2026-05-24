@@ -294,6 +294,7 @@ export default function Home() {
                   search={search}
                   showEntity={activeEntities.length > 0}
                   onQuickLook={(initialSearch = "") => { setPreviewInitialSearch(initialSearch); setQuickLook(flyer); }}
+                  onPreview={(initialSearch = "") => { setPreviewInitialSearch(initialSearch); setPreview(flyer); }}
                   animationDelay={i * 0.06}
                 />
               ))}
@@ -581,11 +582,12 @@ export default function Home() {
 }
 
 // ── Flyer card ────────────────────────────────────────────────────────────────
-function FlyerCard({ flyer, search, showEntity, onQuickLook, animationDelay = 0 }: {
+function FlyerCard({ flyer, search, showEntity, onQuickLook, onPreview, animationDelay = 0 }: {
   flyer: Flyer;
   search: string;
   showEntity: boolean;
   onQuickLook: (initialSearch?: string) => void;
+  onPreview: (initialSearch?: string) => void;
   animationDelay?: number;
 }) {
   const [pressed, setPressed] = useState(false);
@@ -609,7 +611,11 @@ function FlyerCard({ flyer, search, showEntity, onQuickLook, animationDelay = 0 
           const hasMatch = q && flyer.hotspots?.some(s =>
             s.label?.toLowerCase().includes(q) || s.value.toLowerCase().includes(q)
           );
-          onQuickLook(hasMatch ? search : "");
+          if (hasMatch) {
+            onPreview(search);
+          } else {
+            onQuickLook();
+          }
         }}
         onMouseDown={() => setPressed(true)}
         onMouseUp={() => setPressed(false)}
