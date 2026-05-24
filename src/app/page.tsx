@@ -358,7 +358,7 @@ export default function Home() {
                           fontSize: 12, fontWeight: 500, fontFamily: "var(--font-sans)",
                           cursor: "pointer", transition: "background 0.15s, color 0.15s, border-color 0.15s",
                         }}
-                      >{tab === "topics" ? "Topics" : "Agency"}</button>
+                      >{tab === "topics" ? "By Topic" : "By Agency"}</button>
                     ))}
                   </div>
                   {(activeTags.length + activeEntities.length) > 0 && (
