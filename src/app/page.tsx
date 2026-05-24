@@ -918,18 +918,25 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
               ];
               const segments = allSegments.filter(s => s.key === "all" || flyer.hotspots?.some(h => h.type === s.key));
               return segments.length > 1 ? (
-                <div style={{ padding: "10px 12px 8px", display: "flex", gap: 6 }}>
+                <div style={{
+                  padding: "10px 12px 8px",
+                  display: "flex", gap: 6,
+                  overflowX: "auto", flexShrink: 0,
+                  scrollbarWidth: "none",
+                  msOverflowStyle: "none",
+                } as React.CSSProperties}>
                   {segments.map(({ key, label, activeBg, activeColor }) => (
                     <button
                       key={key}
                       onClick={() => setContactFilter(key)}
                       style={{
-                        flex: 1, padding: "6px 0", borderRadius: 99,
+                        flexShrink: 0, padding: "6px 14px", borderRadius: 99,
                         border: `2px solid ${contactFilter === key ? "transparent" : "var(--border)"}`,
                         background: contactFilter === key ? activeBg : "transparent",
                         color: contactFilter === key ? activeColor : "var(--muted)",
                         fontSize: 12, fontWeight: 500, fontFamily: "var(--font-sans)",
                         cursor: "pointer", transition: "background 0.15s, color 0.15s, border-color 0.15s",
+                        whiteSpace: "nowrap",
                       }}
                     >{label}</button>
                   ))}
