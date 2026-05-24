@@ -947,27 +947,27 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
                 const spotMeta: Record<Hotspot["type"], { bg: string; icon: React.ReactNode; href: string }> = {
                   phone: {
                     bg: "#22c55e",
-                    icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3.5 2A1.5 1.5 0 0 0 2 3.5v.75C2 10.28 5.72 14 11.75 14h.75A1.5 1.5 0 0 0 14 12.5v-1.38a1.5 1.5 0 0 0-1.11-1.45l-1.62-.4a1.5 1.5 0 0 0-1.56.6l-.36.48A6.52 6.52 0 0 1 5.65 6.65l.48-.36a1.5 1.5 0 0 0 .6-1.56l-.4-1.62A1.5 1.5 0 0 0 4.88 2H3.5z" fill="#fff"/></svg>,
+                    icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3.5 2A1.5 1.5 0 0 0 2 3.5v.75C2 10.28 5.72 14 11.75 14h.75A1.5 1.5 0 0 0 14 12.5v-1.38a1.5 1.5 0 0 0-1.11-1.45l-1.62-.4a1.5 1.5 0 0 0-1.56.6l-.36.48A6.52 6.52 0 0 1 5.65 6.65l.48-.36a1.5 1.5 0 0 0 .6-1.56l-.4-1.62A1.5 1.5 0 0 0 4.88 2H3.5z" fill="#fff"/></svg>,
                     href: `tel:${spot.value.replace(/\D/g, "")}`,
                   },
                   sms: {
                     bg: "#06b6d4",
-                    icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H5l-3 2V3z" fill="#fff"/></svg>,
+                    icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H5l-3 2V3z" fill="#fff"/></svg>,
                     href: `sms:${spot.value.replace(/\D/g, "")}`,
                   },
                   email: {
                     bg: "rgba(251,191,36,0.18)",
-                    icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4z" fill="#f97316"/><path d="M2 4l6 5 6-5" stroke="#fff" strokeWidth="1.4" strokeLinecap="round"/></svg>,
+                    icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4z" fill="#f97316"/><path d="M2 4l6 5 6-5" stroke="#fff" strokeWidth="1.4" strokeLinecap="round"/></svg>,
                     href: `mailto:${spot.value}`,
                   },
                   address: {
                     bg: "rgba(59,130,246,0.12)",
-                    icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.75 4.5 8.5 4.5 8.5s4.5-4.75 4.5-8.5C12.5 3.515 10.485 1.5 8 1.5zm0 6a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" fill="#ef4444"/></svg>,
+                    icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.75 4.5 8.5 4.5 8.5s4.5-4.75 4.5-8.5C12.5 3.515 10.485 1.5 8 1.5zm0 6a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" fill="#ef4444"/></svg>,
                     href: `https://maps.apple.com/?q=${encodeURIComponent(spot.value)}`,
                   },
                   website: {
                     bg: "rgba(99,102,241,0.1)",
-                    icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="#6366f1" strokeWidth="1.2"/><path d="M8 2.5c-1.5 1.5-1.5 9.5 0 11M8 2.5c1.5 1.5 1.5 9.5 0 11" stroke="#6366f1" strokeWidth="1.2"/><path d="M2.5 8h11" stroke="#6366f1" strokeWidth="1.2"/></svg>,
+                    icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="#6366f1" strokeWidth="1.2"/><path d="M8 2.5c-1.5 1.5-1.5 9.5 0 11M8 2.5c1.5 1.5 1.5 9.5 0 11" stroke="#6366f1" strokeWidth="1.2"/><path d="M2.5 8h11" stroke="#6366f1" strokeWidth="1.2"/></svg>,
                     href: spot.value.startsWith("http") ? spot.value : `https://${spot.value}`,
                   },
                 };
@@ -977,15 +977,15 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
                     key={i}
                     href={meta.href}
                     style={{
-                      display: "flex", alignItems: "center", gap: 10,
-                      padding: "8px 16px", textDecoration: "none",
+                      display: "flex", alignItems: "center", gap: 12,
+                      padding: "10px 16px", textDecoration: "none",
                       transition: "background 0.15s",
                     }}
                     onMouseEnter={e => (e.currentTarget.style.background = "rgba(0,0,0,0.04)")}
                     onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                   >
                     <div style={{
-                      width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
+                      width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
                       background: meta.bg,
                       display: "flex", alignItems: "center", justifyContent: "center",
                     }}>
@@ -993,11 +993,11 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
                     </div>
                     <div>
                       {spot.label && (
-                        <p style={{ fontSize: 11, color: "var(--muted)", fontFamily: "var(--font-sans)", fontWeight: 500, margin: 0, lineHeight: 1.3 }}>
+                        <p style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-sans)", fontWeight: 500, margin: 0, lineHeight: 1.3 }}>
                           {spot.label}
                         </p>
                       )}
-                      <p style={{ fontSize: 13, color: "var(--text)", fontFamily: "var(--font-sans)", fontWeight: 500, margin: 0, lineHeight: 1.4 }}>
+                      <p style={{ fontSize: 15, color: "var(--text)", fontFamily: "var(--font-sans)", fontWeight: 500, margin: 0, lineHeight: 1.4 }}>
                         {spot.value}
                       </p>
                     </div>
