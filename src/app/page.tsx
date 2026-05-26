@@ -353,28 +353,32 @@ export default function Home() {
           backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
           borderRadius: 20, border: "1px solid rgba(0,0,0,0.08)",
           boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
-          minWidth: 180, overflow: "hidden",
+          minWidth: 200, overflow: "hidden",
           opacity: menuOpen ? 1 : 0,
           transform: menuOpen ? "translateY(0) scale(1)" : "translateY(-8px) scale(0.97)",
           pointerEvents: menuOpen ? "auto" : "none",
           transition: "opacity 0.2s ease, transform 0.2s ease",
         }}>
-          <a
-            href="/login"
-            onClick={() => setMenuOpen(false)}
-            style={{
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-              padding: "14px 18px",
-              color: "var(--text)", textDecoration: "none",
-              fontSize: 14, fontWeight: 500, fontFamily: "var(--font-sans)",
-              transition: "background 0.15s",
-            }}
-            onMouseEnter={e => (e.currentTarget.style.background = "rgba(0,0,0,0.04)")}
-            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-          >
-            Staff access
-            <span style={{ opacity: 0.3, fontSize: 16 }}>›</span>
-          </a>
+
+          {/* General */}
+          <div style={{ padding: "10px 18px 4px", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)", fontFamily: "var(--font-sans)" }}>General</div>
+          <MenuRow label="Help" href="#" onClick={() => setMenuOpen(false)} />
+
+          {/* Divider */}
+          <div style={{ height: 1, background: "rgba(0,0,0,0.06)", margin: "6px 0" }} />
+
+          {/* Staff */}
+          <div style={{ padding: "6px 18px 4px", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Staff</div>
+          <MenuRow label="Upload a flyer" href="/login?from=/upload" onClick={() => setMenuOpen(false)} />
+
+          {/* Divider */}
+          <div style={{ height: 1, background: "rgba(0,0,0,0.06)", margin: "6px 0" }} />
+
+          {/* Admin */}
+          <div style={{ padding: "6px 18px 4px", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Admin</div>
+          <MenuRow label="Review submissions" href="/login?from=/admin" onClick={() => setMenuOpen(false)} />
+
+          <div style={{ height: 8 }} />
         </div>
 
         {/* ··· button */}
@@ -712,6 +716,28 @@ export default function Home() {
 
 // Tracks URLs that have already been loaded this session — survives remounts
 const loadedImageUrls = new Set<string>();
+
+// ── Menu row ──────────────────────────────────────────────────────────────────
+function MenuRow({ label, href, onClick }: { label: string; href: string; onClick: () => void }) {
+  return (
+    <a
+      href={href}
+      onClick={onClick}
+      style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "9px 18px",
+        color: "var(--text)", textDecoration: "none",
+        fontSize: 14, fontWeight: 500, fontFamily: "var(--font-sans)",
+        transition: "background 0.15s",
+      }}
+      onMouseEnter={e => (e.currentTarget.style.background = "rgba(0,0,0,0.04)")}
+      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+    >
+      {label}
+      <span style={{ opacity: 0.25, fontSize: 16 }}>›</span>
+    </a>
+  );
+}
 
 // ── Flyer card ────────────────────────────────────────────────────────────────
 function FlyerCard({ flyer, search, showEntity, onQuickLook, onPreview, animationDelay = 0 }: {
