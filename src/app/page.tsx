@@ -304,6 +304,7 @@ export default function Home() {
 
           {/* Flyer grid */}
           {!loading && (
+            <div style={{ filter: searchOpen ? "blur(6px)" : "blur(0px)", opacity: searchOpen ? 0.5 : 1, transition: "filter 0.3s ease, opacity 0.3s ease", pointerEvents: searchOpen ? "none" : "auto" }}>
             <div key={gridKey} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, alignItems: "start" }}>
               {filtered.map((flyer, i) => (
                 <FlyerCard
@@ -321,6 +322,7 @@ export default function Home() {
                   No flyers match your search.
                 </p>
               )}
+            </div>
             </div>
           )}
         </div>
