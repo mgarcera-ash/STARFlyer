@@ -35,8 +35,8 @@ function LoginForm() {
   };
 
   const tabs: { value: Role; label: string }[] = [
-    { value: "staff", label: "Staff Upload" },
-    { value: "admin", label: "Admin Portal" },
+    { value: "staff", label: "Upload a Flyer" },
+    { value: "admin", label: "Approve a Flyer" },
   ];
 
   return (
