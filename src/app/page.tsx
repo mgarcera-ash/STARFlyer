@@ -603,7 +603,7 @@ export default function Home() {
 
           {/* Close overlay button */}
           <button
-            onClick={() => { setSearchOpen(false); setFilterOpen(false); }}
+            onClick={() => { setSearchOpen(false); setFilterOpen(false); setSearchInput(""); }}
             style={{
               flexShrink: 0, width: 44, height: 44,
               borderRadius: "50%", border: "none",
