@@ -276,19 +276,25 @@ export default function Home() {
         </div>
       )}
 
-      <main style={{ minHeight: "100vh", padding: "80px 0 48px", opacity: visible ? 1 : 0, transition: "opacity 0.4s ease" }}>
+      <main style={{ minHeight: "100vh", padding: `${searchOpen ? 92 : 80}px 0 48px`, opacity: visible ? 1 : 0, transition: "opacity 0.4s ease, padding-top 0.3s ease" }}>
         <div style={{ maxWidth: 720, margin: "0 auto", paddingLeft: 24, paddingRight: 24 }}>
 
-
-
           {!loading && (
-            <div className="fade-up" style={{ marginBottom: 32 }}>
-              <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 600, color: "var(--text)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
-                Find the right resource.
-              </p>
-              <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 400, color: "var(--muted)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
-                Browse {flyers.length} flyers below.
-              </p>
+            <div style={{
+              overflow: "hidden",
+              maxHeight: searchOpen ? 0 : 120,
+              opacity: searchOpen ? 0 : 1,
+              marginBottom: searchOpen ? 0 : 32,
+              transition: "max-height 0.3s ease, opacity 0.2s ease, margin-bottom 0.3s ease",
+            }}>
+              <div className="fade-up">
+                <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 600, color: "var(--text)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
+                  Find the right resource.
+                </p>
+                <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 400, color: "var(--muted)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
+                  Browse {flyers.length} flyers below.
+                </p>
+              </div>
             </div>
           )}
 
@@ -350,27 +356,14 @@ export default function Home() {
         )}
       </button>
 
-      {/* Search overlay backdrop */}
-      {searchOpen && (
-        <div
-          onClick={() => { setSearchOpen(false); setFilterOpen(false); }}
-          style={{
-            position: "fixed", inset: 0, zIndex: 48,
-            background: "rgba(0,0,0,0.3)",
-            backdropFilter: "blur(4px)",
-            WebkitBackdropFilter: "blur(4px)",
-          }}
-        />
-      )}
-
-      {/* Filter tap-outside (within overlay) */}
+      {/* Filter tap-outside */}
       {filterOpen && <div onClick={() => setFilterOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 49 }} />}
 
       {/* ── Floating top search bar ────────────────────────────────── */}
       <div style={{
         position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
         width: "calc(100% - 48px)", maxWidth: 480, zIndex: 50,
-        paddingTop: 16,
+        paddingTop: 16, paddingBottom: 12,
         opacity: searchOpen ? 1 : 0,
         pointerEvents: searchOpen ? "auto" : "none",
         transition: "opacity 0.25s ease",
