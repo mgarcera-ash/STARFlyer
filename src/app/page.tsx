@@ -384,9 +384,11 @@ export default function Home() {
 
               {/* Panel — fixed header + scrollable body */}
               <div style={{
-                background: "#fff",
+                background: "rgba(255,255,255,0.82)",
+                backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
                 borderRadius: 28,
-                border: "2px solid var(--border)",
+                border: "1px solid rgba(0,0,0,0.08)",
+                boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
                 display: "flex", flexDirection: "column",
                 maxHeight: 360, overflow: "hidden",
               }}>
@@ -548,8 +550,10 @@ export default function Home() {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{
             flex: 1, display: "flex", alignItems: "center",
-            background: "var(--surface)", borderRadius: 52,
-            border: "2px solid var(--border)",
+            background: "rgba(255,255,255,0.75)", borderRadius: 52,
+            border: "1px solid rgba(0,0,0,0.08)",
+            backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
             overflow: "hidden",
           }}>
             {/* Filter icon button */}
@@ -558,7 +562,7 @@ export default function Home() {
               style={{
                 flexShrink: 0, padding: "14px 16px 14px 20px",
                 background: "transparent",
-                border: "none", borderRight: "1px solid var(--border)",
+                border: "none", borderRight: "1px solid rgba(0,0,0,0.08)",
                 cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
                 transition: "background 0.15s", position: "relative",
               }}
