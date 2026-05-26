@@ -388,8 +388,10 @@ export default function Home() {
 
       {/* ── Floating top search bar ────────────────────────────────── */}
       <div style={{
-        position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
-        width: "calc(100% - 48px)", maxWidth: 480, zIndex: 50,
+        position: "fixed", top: 0,
+        left: "max(24px, calc(50% - 240px))",
+        right: "max(80px, calc(50% - 240px))",
+        zIndex: 50,
         paddingTop: 16, paddingBottom: 12,
         opacity: searchOpen ? 1 : 0,
         pointerEvents: searchOpen ? "auto" : "none",
