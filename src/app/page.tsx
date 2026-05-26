@@ -326,6 +326,12 @@ export default function Home() {
             </div>
           )}
         </div>
+
+        <div style={{ textAlign: "center", paddingTop: 48, paddingBottom: 24 }}>
+          <a href="/login" style={{ fontSize: 12, color: "var(--border)", fontFamily: "var(--font-sans)", textDecoration: "none" }}>
+            Staff
+          </a>
+        </div>
       </main>
 
       {/* ── Search FAB — upper right ──────────────────────────────── */}
