@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import HotspotEditor, { Hotspot as HotspotType } from "@/components/HotspotEditor";
+import SignOutButton from "@/components/SignOutButton";
 
 type OcrStatus = "idle" | "processing" | "done" | "error";
 
@@ -225,8 +226,8 @@ export default function UploadPage() {
     <main style={{ minHeight: "100vh", padding: "48px 0 80px" }}>
       <div style={{ maxWidth: 560, margin: "0 auto", paddingLeft: 24, paddingRight: 24 }}>
 
-        {/* Back button */}
-        <div className="fade-up" style={{ animationDelay: "0.05s", marginBottom: 28 }}>
+        {/* Header row */}
+        <div className="fade-up" style={{ animationDelay: "0.05s", marginBottom: 28, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <button onClick={() => router.push("/")} style={{
             fontSize: 13, color: "var(--text)", fontFamily: "var(--font-sans)",
             fontWeight: 500, padding: "8px 18px", borderRadius: 99,
@@ -237,6 +238,7 @@ export default function UploadPage() {
             onMouseEnter={e => (e.currentTarget.style.background = "var(--bg)")}
             onMouseLeave={e => (e.currentTarget.style.background = "var(--surface)")}
           >← Back</button>
+          <SignOutButton />
         </div>
 
         {/* Upload zone */}
