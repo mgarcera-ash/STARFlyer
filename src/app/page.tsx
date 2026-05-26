@@ -874,7 +874,7 @@ function FlyerCard({ flyer, search, showEntity, onQuickLook, onPreview, animatio
                   </div>
                 ) : (
                   <>
-                    {showEntity && flyer.entity && (
+                    {flyer.entity && (
                       <p style={{ fontSize: 11, fontWeight: 600, fontFamily: "var(--font-sans)", color: "var(--muted)", lineHeight: 1.3, margin: 0 }}>
                         {flyer.entity}
                       </p>
