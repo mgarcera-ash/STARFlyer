@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, useMemo } from "react";
+import { FaSafari } from "react-icons/fa";
 import { supabase } from "@/lib/supabase";
 
 
@@ -1091,11 +1092,11 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
             {hasHotspots && (() => {
               const allSegments = [
                 { key: "all" as const, label: "All", activeBg: "rgba(255,255,255,0.2)", activeColor: "#fff" },
-                { key: "phone" as const, label: "Phones", activeBg: "rgba(34,197,94,0.25)", activeColor: "#4ade80" },
-                { key: "sms" as const, label: "SMS", activeBg: "rgba(6,182,212,0.25)", activeColor: "#22d3ee" },
-                { key: "email" as const, label: "Email", activeBg: "rgba(251,191,36,0.25)", activeColor: "#fbbf24" },
-                { key: "address" as const, label: "Addresses", activeBg: "rgba(59,130,246,0.25)", activeColor: "#60a5fa" },
-                { key: "website" as const, label: "Websites", activeBg: "rgba(99,102,241,0.25)", activeColor: "#a5b4fc" },
+                { key: "phone" as const, label: "Phones", activeBg: "#22c55e", activeColor: "#fff" },
+                { key: "sms" as const, label: "SMS", activeBg: "#06b6d4", activeColor: "#fff" },
+                { key: "email" as const, label: "Email", activeBg: "#f97316", activeColor: "#fff" },
+                { key: "address" as const, label: "Addresses", activeBg: "#ef4444", activeColor: "#fff" },
+                { key: "website" as const, label: "Websites", activeBg: "#3b82f6", activeColor: "#fff" },
               ];
               const segments = allSegments.filter(s => s.key === "all" || flyer.hotspots?.some(h => h.type === s.key));
               return segments.length > 1 ? (
@@ -1154,8 +1155,8 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
                     href: `https://maps.apple.com/?q=${encodeURIComponent(spot.value)}`,
                   },
                   website: {
-                    bg: "rgba(99,102,241,0.1)",
-                    icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="#6366f1" strokeWidth="1.2"/><path d="M8 2.5c-1.5 1.5-1.5 9.5 0 11M8 2.5c1.5 1.5 1.5 9.5 0 11" stroke="#6366f1" strokeWidth="1.2"/><path d="M2.5 8h11" stroke="#6366f1" strokeWidth="1.2"/></svg>,
+                    bg: "#3b82f6",
+                    icon: <FaSafari size={16} color="#fff" />,
                     href: spot.value.startsWith("http") ? spot.value : `https://${spot.value}`,
                   },
                 };
