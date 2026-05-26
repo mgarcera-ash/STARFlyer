@@ -380,7 +380,7 @@ export default function Home() {
                   </p>
                 )}
                 {flyerGroups.map(({ flyer, hotspotsByType, isFallback }) => (
-                  <div key={flyer.id} style={{ background: "var(--surface)", borderRadius: 20, overflow: "hidden" }}>
+                  <div key={flyer.id} style={{ background: "var(--surface)", borderRadius: 20, overflow: "hidden", border: "2px solid #d4d4d4" }}>
                     {/* Flyer header */}
                     <button
                       onClick={() => { setPreviewInitialSearch(search); setPreview(flyer); }}
@@ -446,7 +446,7 @@ export default function Home() {
 
           {/* Flyer grid — shown when not actively searching */}
           {!loading && search === "" && (
-            <div style={{ filter: searchOpen && activeTags.length === 0 && activeEntities.length === 0 ? "blur(6px)" : "blur(0px)", opacity: searchOpen && activeTags.length === 0 && activeEntities.length === 0 ? 0.5 : 1, transition: "filter 0.3s ease, opacity 0.3s ease", pointerEvents: searchOpen && activeTags.length === 0 && activeEntities.length === 0 ? "none" : "auto" }}>
+            <div style={{ opacity: searchOpen ? 0 : 1, pointerEvents: searchOpen ? "none" : "auto", transition: "opacity 0.2s ease" }}>
             <div key={gridKey} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, alignItems: "start" }}>
               {filtered.map((flyer, i) => (
                 <FlyerCard
