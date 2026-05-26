@@ -411,7 +411,7 @@ export default function Home() {
                 {matched.length > 0 && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                     {matched.map(({ flyer, hotspotsByType }) => (
-                      <div key={flyer.id} style={{ background: "#1c1c1e", borderRadius: 20, overflow: "hidden", border: "2px solid #d4d4d4" }}>
+                      <div key={flyer.id} style={{ background: "#1c1c1e", borderRadius: 32, overflow: "hidden", border: "2px solid #d4d4d4" }}>
                         <button
                           onClick={() => { setPreviewInitialSearch(""); setPreview(flyer); }}
                           style={{
