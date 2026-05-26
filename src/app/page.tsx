@@ -318,10 +318,11 @@ export default function Home() {
                     cursor: "pointer", color: "#fff",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     position: "relative",
-                    transition: "transform 0.15s",
+                    border: "1.5px solid var(--text)",
+                    transition: "background 0.15s, color 0.15s",
                   }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.06)"; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
+                  onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = "#fff"; b.style.color = "var(--text)"; }}
+                  onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = "var(--text)"; b.style.color = "#fff"; }}
                 >
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                     <circle cx="9" cy="9" r="5.5" stroke="currentColor" strokeWidth="1.75" />
