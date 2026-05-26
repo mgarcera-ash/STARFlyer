@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, useMemo } from "react";
-import { FaSafari } from "react-icons/fa";
+import { FaSafari, FaSms } from "react-icons/fa";
 import { MdEmail } from "react-icons/md";
 import { supabase } from "@/lib/supabase";
 
@@ -1142,7 +1142,7 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
                   },
                   sms: {
                     bg: "#06b6d4",
-                    icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H5l-3 2V3z" fill="#fff"/></svg>,
+                    icon: <FaSms size={16} color="#fff" />,
                     href: `sms:${spot.value.replace(/\D/g, "")}`,
                   },
                   email: {
