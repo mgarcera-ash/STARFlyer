@@ -476,7 +476,7 @@ export default function Home() {
 
           {/* Flyer grid — shown when no search or filters active */}
           {!loading && !showGrouped && (
-            <div style={{ opacity: searchOpen ? 0 : 1, pointerEvents: searchOpen ? "none" : "auto", transition: "opacity 0.2s ease" }}>
+            <div style={{ opacity: searchOpen && activeEntities.length === 0 ? 0 : 1, pointerEvents: searchOpen && activeEntities.length === 0 ? "none" : "auto", transition: "opacity 0.2s ease" }}>
             <div key={gridKey} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, alignItems: "start" }}>
               {filtered.map((flyer, i) => (
                 <FlyerCard
