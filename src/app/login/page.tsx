@@ -47,15 +47,20 @@ function LoginForm() {
       <div style={{ width: "100%", maxWidth: 360, padding: "0 24px" }}>
 
         {/* Back */}
-        <a href="/" style={{
-          display: "inline-flex", alignItems: "center",
-          fontSize: 13, color: "var(--muted)", textDecoration: "none",
-          fontFamily: "var(--font-sans)", marginBottom: 32,
-          transition: "color 0.15s",
-        }}
-          onMouseEnter={e => (e.currentTarget.style.color = "var(--text)")}
-          onMouseLeave={e => (e.currentTarget.style.color = "var(--muted)")}
-        >← Back</a>
+        <div style={{ marginBottom: 32 }}>
+          <a href="/" style={{
+            display: "inline-block",
+            fontSize: 13, color: "var(--text)", textDecoration: "none",
+            fontFamily: "var(--font-sans)", fontWeight: 500,
+            padding: "8px 18px", borderRadius: 99,
+            border: "1.5px solid var(--border)", background: "var(--surface)",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+            transition: "background 0.15s",
+          }}
+            onMouseEnter={e => (e.currentTarget.style.background = "var(--bg)")}
+            onMouseLeave={e => (e.currentTarget.style.background = "var(--surface)")}
+          >← Back</a>
+        </div>
 
         <p style={{ fontSize: 22, fontWeight: 600, color: "var(--text)", marginBottom: 6, letterSpacing: "-0.02em" }}>
           Staff access

@@ -43,6 +43,16 @@ export default function Home() {
   const [imagesReady, setImagesReady] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
+  // Skip splash if already shown this session
+  useEffect(() => {
+    if (sessionStorage.getItem("splashShown") === "1") {
+      setSplashVisible(false);
+      setVisible(true);
+      setMinTimeReady(true);
+      setImagesReady(true);
+    }
+  }, []);
+
   // Splash text sequence
   useEffect(() => {
     const first = setTimeout(() => setFirstLineVisible(true), 500);
@@ -79,7 +89,7 @@ export default function Home() {
   useEffect(() => {
     if (!minTimeReady || !imagesReady) return;
     const fadeOut = setTimeout(() => { setSplashOut(true); setVisible(true); }, 1500);
-    const remove = setTimeout(() => setSplashVisible(false), 2100);
+    const remove = setTimeout(() => { setSplashVisible(false); sessionStorage.setItem("splashShown", "1"); }, 2100);
     return () => { clearTimeout(fadeOut); clearTimeout(remove); };
   }, [minTimeReady, imagesReady]);
 
