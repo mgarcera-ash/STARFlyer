@@ -228,7 +228,7 @@ export default function Home() {
     isFallback: boolean;
   };
 
-  const showGrouped = search !== "" || activeTags.length > 0 || activeEntities.length > 0;
+  const showGrouped = search !== "" || activeTags.length > 0;
 
   const flyerGroups: FlyerGroup[] = showGrouped ? filtered.map(f => {
     const q = search.toLowerCase();
@@ -236,7 +236,11 @@ export default function Home() {
       ? (f.hotspots?.filter(h =>
           h.label?.toLowerCase().includes(q) || h.value.toLowerCase().includes(q)
         ) ?? [])
-      : (f.hotspots ?? []);
+      : (f.hotspots?.filter(h =>
+          activeTags.some(tag =>
+            h.label?.toLowerCase().includes(tag.toLowerCase()) || h.value.toLowerCase().includes(tag.toLowerCase())
+          )
+        ) ?? []);
     const hotspotsByType: Partial<Record<Hotspot["type"], Hotspot[]>> = {};
     for (const h of matchingHotspots) {
       if (!hotspotsByType[h.type]) hotspotsByType[h.type] = [];
