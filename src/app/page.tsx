@@ -215,7 +215,7 @@ export default function Home() {
       );
     const matchTags =
       activeTags.length === 0 ||
-      activeTags.every(t => f.tags?.includes(t));
+      activeTags.some(t => f.tags?.includes(t));
     const matchEntities =
       activeEntities.length === 0 ||
       (f.entity != null && activeEntities.includes(f.entity));
