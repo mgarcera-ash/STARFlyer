@@ -314,11 +314,10 @@ export default function Home() {
                   style={{
                     flexShrink: 0,
                     width: 52, height: 52, borderRadius: "50%",
-                    background: "var(--text)", border: "none",
+                    background: "var(--text)", border: "1.5px solid var(--text)",
                     cursor: "pointer", color: "#fff",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     position: "relative",
-                    border: "1.5px solid var(--text)",
                     transition: "background 0.15s, color 0.15s",
                   }}
                   onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = "#fff"; b.style.color = "var(--text)"; }}
