@@ -24,6 +24,7 @@ export default function UploadPage() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [hotspots, setHotspots] = useState<HotspotType[]>([]);
+  const [compressedBlob, setCompressedBlob] = useState<Blob | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [progressMsg, setProgressMsg] = useState("Reading…");
@@ -57,13 +58,13 @@ export default function UploadPage() {
   }, []);
 
   const reset = () => {
-    setImageFile(null); setImagePreview(null);
+    setImageFile(null); setImagePreview(null); setCompressedBlob(null);
     setOcrStatus("idle"); setOcrProgress(0);
     setForm(emptyForm()); setEntity(""); setTags([]); setTagInput(""); setHotspots([]);
     setSubmitted(false);
   };
 
-  const compressImage = (file: File, maxPx = 1600, quality = 0.82): Promise<string> =>
+  const compressImage = (file: File, maxPx = 1600, quality = 0.82): Promise<{ base64: string; blob: Blob }> =>
     new Promise((resolve, reject) => {
       const img = new Image();
       const url = URL.createObjectURL(file);
@@ -76,7 +77,13 @@ export default function UploadPage() {
         const ctx = canvas.getContext("2d")!;
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         const dataUrl = canvas.toDataURL("image/jpeg", quality);
-        resolve(dataUrl.split(",")[1]);
+        const base64 = dataUrl.split(",")[1];
+        const bytes = atob(base64);
+        const ab = new ArrayBuffer(bytes.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < bytes.length; i++) ia[i] = bytes.charCodeAt(i);
+        const blob = new Blob([ab], { type: "image/jpeg" });
+        resolve({ base64, blob });
       };
       img.onerror = reject;
       img.src = url;
@@ -84,19 +91,20 @@ export default function UploadPage() {
 
   const handleImageSelect = async (file: File) => {
     setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
     setOcrStatus("processing");
     setOcrProgress(0);
 
     try {
-      const base64 = await compressImage(file);
+      const { base64, blob } = await compressImage(file);
+      setCompressedBlob(blob);
+      setImagePreview(URL.createObjectURL(blob));
 
       setOcrProgress(50);
 
       const res = await fetch("/api/ocr", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ base64, mimeType: file.type }),
+        body: JSON.stringify({ base64, mimeType: "image/jpeg" }),
       });
 
       setOcrProgress(100);
@@ -151,12 +159,11 @@ export default function UploadPage() {
   };
 
   const handleSubmit = async () => {
-    if (!imageFile || !form.title.trim()) return;
+    if (!compressedBlob || !form.title.trim()) return;
     setSubmitting(true);
     try {
-      const ext = imageFile.name.split(".").pop();
-      const fileName = `${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from("flyers").upload(fileName, imageFile);
+      const fileName = `${Date.now()}.jpg`;
+      const { error: uploadError } = await supabase.storage.from("flyers").upload(fileName, compressedBlob, { contentType: "image/jpeg" });
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage.from("flyers").getPublicUrl(fileName);
@@ -365,7 +372,7 @@ export default function UploadPage() {
 
             <button
               onClick={handleSubmit}
-              disabled={submitting || !form.title.trim()}
+              disabled={submitting || !form.title.trim() || !compressedBlob}
               className="submit-btn"
               style={{
                 position: "relative", overflow: "hidden", isolation: "isolate",
@@ -374,8 +381,8 @@ export default function UploadPage() {
                 borderRadius: 9999, border: "2px solid var(--border)",
                 background: "var(--surface)", fontSize: 14,
                 fontFamily: "var(--font-sans)", fontWeight: 600, color: "var(--text)",
-                cursor: submitting || !form.title.trim() ? "not-allowed" : "pointer",
-                opacity: submitting || !form.title.trim() ? 0.5 : 1,
+                cursor: submitting || !form.title.trim() || !compressedBlob ? "not-allowed" : "pointer",
+                opacity: submitting || !form.title.trim() || !compressedBlob ? 0.5 : 1,
                 boxShadow: "0 4px 20px rgba(0,0,0,0.07)",
                 transition: "color 0.5s ease",
               }}
