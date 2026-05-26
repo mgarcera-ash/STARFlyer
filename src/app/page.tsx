@@ -228,11 +228,15 @@ export default function Home() {
     isFallback: boolean;
   };
 
-  const flyerGroups: FlyerGroup[] = search !== "" ? filtered.map(f => {
+  const showGrouped = search !== "" || activeTags.length > 0 || activeEntities.length > 0;
+
+  const flyerGroups: FlyerGroup[] = showGrouped ? filtered.map(f => {
     const q = search.toLowerCase();
-    const matchingHotspots = f.hotspots?.filter(h =>
-      h.label?.toLowerCase().includes(q) || h.value.toLowerCase().includes(q)
-    ) ?? [];
+    const matchingHotspots = search !== ""
+      ? (f.hotspots?.filter(h =>
+          h.label?.toLowerCase().includes(q) || h.value.toLowerCase().includes(q)
+        ) ?? [])
+      : (f.hotspots ?? []);
     const hotspotsByType: Partial<Record<Hotspot["type"], Hotspot[]>> = {};
     for (const h of matchingHotspots) {
       if (!hotspotsByType[h.type]) hotspotsByType[h.type] = [];
@@ -362,8 +366,8 @@ export default function Home() {
             <p style={{ fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Loading…</p>
           )}
 
-          {/* Grouped search results */}
-          {!loading && search !== "" && (() => {
+          {/* Grouped search / filter results */}
+          {!loading && showGrouped && (() => {
             const hotspotMeta: Record<Hotspot["type"], { bg: string; label: string; icon: React.ReactNode }> = {
               phone:   { bg: "#22c55e", label: "Phones",    icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3.5 2A1.5 1.5 0 0 0 2 3.5v.75C2 10.28 5.72 14 11.75 14h.75A1.5 1.5 0 0 0 14 12.5v-1.38a1.5 1.5 0 0 0-1.11-1.45l-1.62-.4a1.5 1.5 0 0 0-1.56.6l-.36.48A6.52 6.52 0 0 1 5.65 6.65l.48-.36a1.5 1.5 0 0 0 .6-1.56l-.4-1.62A1.5 1.5 0 0 0 4.88 2H3.5z" fill="#fff"/></svg> },
               sms:     { bg: "#06b6d4", label: "SMS",       icon: <FaSms size={13} color="#fff" /> },
@@ -394,15 +398,15 @@ export default function Home() {
                       onMouseEnter={e => (e.currentTarget.style.background = "var(--bg)")}
                       onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                     >
-                      <div style={{ flexShrink: 0, width: 48, height: 48, borderRadius: "50%", overflow: "hidden", background: "var(--bg)", border: "1px solid var(--border)" }}>
+                      <div style={{ flexShrink: 0, width: 48, height: 48, borderRadius: "50%", overflow: "hidden", background: "var(--bg)", border: "2px solid #d4d4d4" }}>
                         {flyer.image_url
                           ? <img src={flyer.image_url} alt={flyer.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                           : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, color: "var(--muted)" }}>{flyer.title.charAt(0)}</div>
                         }
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        {flyer.entity && <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "var(--muted)", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{flyer.entity}</p>}
-                        <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{flyer.title}</p>
+                        {flyer.entity && <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{flyer.entity}</p>}
+                        <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>{flyer.title}</p>
                       </div>
                       <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, color: "var(--muted)" }}>
                         <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -444,8 +448,8 @@ export default function Home() {
             );
           })()}
 
-          {/* Flyer grid — shown when not actively searching */}
-          {!loading && search === "" && (
+          {/* Flyer grid — shown when no search or filters active */}
+          {!loading && !showGrouped && (
             <div style={{ opacity: searchOpen ? 0 : 1, pointerEvents: searchOpen ? "none" : "auto", transition: "opacity 0.2s ease" }}>
             <div key={gridKey} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, alignItems: "start" }}>
               {filtered.map((flyer, i) => (
