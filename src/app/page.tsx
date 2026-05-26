@@ -429,9 +429,6 @@ export default function Home() {
         >···</button>
       </div>
 
-      {/* Search tap-outside backdrop */}
-      {searchOpen && <div onClick={() => { setSearchOpen(false); setFilterOpen(false); setSearchInput(""); }} style={{ position: "fixed", inset: 0, zIndex: 48 }} />}
-
       {/* Filter tap-outside */}
       {filterOpen && <div onClick={() => setFilterOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 49 }} />}
 
@@ -672,6 +669,19 @@ export default function Home() {
                 outline: "none",
               }}
             />
+
+            {/* Close button */}
+            <button
+              onClick={() => { setSearchOpen(false); setFilterOpen(false); setSearchInput(""); }}
+              style={{
+                flexShrink: 0, marginRight: 10,
+                padding: "6px 12px", borderRadius: 99,
+                border: "1.5px solid #ef4444", background: "transparent",
+                color: "#ef4444", fontSize: 12, fontWeight: 600,
+                fontFamily: "var(--font-sans)", cursor: "pointer",
+                lineHeight: 1,
+              }}
+            >✕</button>
 
           </div>
         </div>
