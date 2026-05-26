@@ -358,6 +358,25 @@ export default function Home() {
         )}
       </button>
 
+      {/* ── Close button — same position as FAB ───────────────────── */}
+      <button
+        onClick={() => { setSearchOpen(false); setFilterOpen(false); setSearchInput(""); }}
+        style={{
+          position: "fixed", top: 20, right: 20, zIndex: 51,
+          width: 52, height: 52, borderRadius: "50%",
+          background: "#ef4444", border: "none",
+          cursor: "pointer", color: "#fff",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
+          opacity: searchOpen ? 1 : 0,
+          pointerEvents: searchOpen ? "auto" : "none",
+          transition: "opacity 0.2s, transform 0.15s",
+          fontSize: 24,
+        }}
+        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#dc2626"; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#ef4444"; }}
+      >×</button>
+
       {/* Filter tap-outside */}
       {filterOpen && <div onClick={() => setFilterOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 49 }} />}
 
@@ -548,9 +567,9 @@ export default function Home() {
         )}
 
         {/* Bar row: pill + close button */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div>
           <div style={{
-            flex: 1, display: "flex", alignItems: "center",
+            display: "flex", alignItems: "center",
             background: "rgba(255,255,255,0.75)", borderRadius: 52,
             border: "1px solid rgba(0,0,0,0.08)",
             backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
@@ -598,21 +617,6 @@ export default function Home() {
             />
 
           </div>
-
-          {/* Close overlay button */}
-          <button
-            onClick={() => { setSearchOpen(false); setFilterOpen(false); setSearchInput(""); }}
-            style={{
-              flexShrink: 0, width: 44, height: 44,
-              borderRadius: "50%", border: "none",
-              background: "#ef4444", color: "#fff",
-              fontSize: 20, lineHeight: 1, cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              transition: "background 0.15s",
-            }}
-            onMouseEnter={e => (e.currentTarget.style.background = "#dc2626")}
-            onMouseLeave={e => (e.currentTarget.style.background = "#ef4444")}
-          >×</button>
         </div>
       </div>
 
