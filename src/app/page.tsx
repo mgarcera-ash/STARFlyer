@@ -380,74 +380,96 @@ export default function Home() {
               website: { bg: "#3b82f6", label: "Websites",  icon: <FaSafari size={13} color="#fff" /> },
             };
             const typeOrder: Hotspot["type"][] = ["phone", "sms", "email", "address", "website"];
+            const fallbacks = flyerGroups.filter(g => g.isFallback);
+            const matched   = flyerGroups.filter(g => !g.isFallback);
             return (
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
                 {flyerGroups.length === 0 && (
                   <p style={{ color: "var(--muted)", fontSize: 14, fontFamily: "var(--font-sans)", paddingTop: 24 }}>
                     No flyers match your search.
                   </p>
                 )}
-                {flyerGroups.map(({ flyer, hotspotsByType, isFallback }) => (
-                  <div key={flyer.id} style={{ background: "var(--surface)", borderRadius: 20, overflow: "hidden", border: "2px solid #d4d4d4" }}>
-                    {/* Flyer header */}
-                    <button
-                      onClick={() => { setPreviewInitialSearch(search); setPreview(flyer); }}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 14,
-                        padding: "14px 16px", width: "100%",
-                        background: "transparent", border: "none", cursor: "pointer", textAlign: "left",
-                        borderBottom: isFallback ? "none" : "1px solid rgba(0,0,0,0.06)",
-                        transition: "background 0.15s",
-                      }}
-                      onMouseEnter={e => (e.currentTarget.style.background = "var(--bg)")}
-                      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                    >
-                      <div style={{ flexShrink: 0, width: 48, height: 48, borderRadius: "50%", overflow: "hidden", background: "var(--bg)", border: "2px solid #d4d4d4" }}>
-                        {flyer.image_url
-                          ? <img src={flyer.image_url} alt={flyer.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                          : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, color: "var(--muted)" }}>{flyer.title.charAt(0)}</div>
-                        }
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        {flyer.entity && <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{flyer.entity}</p>}
-                        <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>{flyer.title}</p>
-                      </div>
-                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, color: "var(--muted)" }}>
-                        <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </button>
 
-                    {/* Contact groups by type */}
-                    {!isFallback && typeOrder.filter(t => hotspotsByType[t]).map(type => (
-                      <div key={type}>
-                        <div style={{ padding: "8px 16px 4px", display: "flex", alignItems: "center", gap: 6 }}>
-                          <div style={{ width: 18, height: 18, borderRadius: "50%", background: hotspotMeta[type].bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                            {hotspotMeta[type].icon}
+                {/* Fallback flyers — normal cards */}
+                {fallbacks.length > 0 && (
+                  <div key={gridKey} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, alignItems: "start" }}>
+                    {fallbacks.map(({ flyer }, i) => (
+                      <FlyerCard
+                        key={flyer.id}
+                        flyer={flyer}
+                        search={search}
+                        showEntity={activeEntities.length > 0}
+                        onQuickLook={(initialSearch = "") => { setPreviewInitialSearch(initialSearch); setQuickLook(flyer); }}
+                        onPreview={(initialSearch = "") => { setPreviewInitialSearch(initialSearch); setPreview(flyer); }}
+                        animationDelay={i * 0.06}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Matched flyers — grouped contact cards */}
+                {matched.length > 0 && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                    {matched.map(({ flyer, hotspotsByType }) => (
+                      <div key={flyer.id} style={{ background: "var(--surface)", borderRadius: 20, overflow: "hidden", border: "2px solid #d4d4d4" }}>
+                        <button
+                          onClick={() => { setPreviewInitialSearch(search); setPreview(flyer); }}
+                          style={{
+                            display: "flex", alignItems: "center", gap: 14,
+                            padding: "14px 16px", width: "100%",
+                            background: "transparent", border: "none", cursor: "pointer", textAlign: "left",
+                            borderBottom: "1px solid rgba(0,0,0,0.06)",
+                            transition: "background 0.15s",
+                          }}
+                          onMouseEnter={e => (e.currentTarget.style.background = "var(--bg)")}
+                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                        >
+                          <div style={{ flexShrink: 0, width: 48, height: 48, borderRadius: "50%", overflow: "hidden", background: "var(--bg)", border: "2px solid #d4d4d4" }}>
+                            {flyer.image_url
+                              ? <img src={flyer.image_url} alt={flyer.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                              : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, color: "var(--muted)" }}>{flyer.title.charAt(0)}</div>
+                            }
                           </div>
-                          <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: "var(--muted)", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{hotspotMeta[type].label}</p>
-                        </div>
-                        {hotspotsByType[type]!.map((h, hi) => (
-                          <button
-                            key={hi}
-                            onClick={() => { setPreviewInitialSearch(search); setPreview(flyer); }}
-                            style={{
-                              display: "flex", flexDirection: "column", alignItems: "flex-start",
-                              padding: "6px 16px 6px 40px", width: "100%",
-                              background: "transparent", border: "none", cursor: "pointer", textAlign: "left",
-                              transition: "background 0.15s",
-                            }}
-                            onMouseEnter={e => (e.currentTarget.style.background = "var(--bg)")}
-                            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                          >
-                            {h.label && <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-sans)" }}>{h.label}</p>}
-                            <p style={{ margin: 0, fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>{h.value}</p>
-                          </button>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            {flyer.entity && <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{flyer.entity}</p>}
+                            <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>{flyer.title}</p>
+                          </div>
+                          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, color: "var(--muted)" }}>
+                            <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </button>
+                        {typeOrder.filter(t => hotspotsByType[t]).map(type => (
+                          <div key={type}>
+                            <div style={{ padding: "8px 16px 4px", display: "flex", alignItems: "center", gap: 6 }}>
+                              <div style={{ width: 18, height: 18, borderRadius: "50%", background: hotspotMeta[type].bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                {hotspotMeta[type].icon}
+                              </div>
+                              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: "var(--muted)", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{hotspotMeta[type].label}</p>
+                            </div>
+                            {hotspotsByType[type]!.map((h, hi) => (
+                              <button
+                                key={hi}
+                                onClick={() => { setPreviewInitialSearch(search); setPreview(flyer); }}
+                                style={{
+                                  display: "flex", flexDirection: "column", alignItems: "flex-start",
+                                  padding: "6px 16px 6px 40px", width: "100%",
+                                  background: "transparent", border: "none", cursor: "pointer", textAlign: "left",
+                                  transition: "background 0.15s",
+                                }}
+                                onMouseEnter={e => (e.currentTarget.style.background = "var(--bg)")}
+                                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                              >
+                                {h.label && <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-sans)" }}>{h.label}</p>}
+                                <p style={{ margin: 0, fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>{h.value}</p>
+                              </button>
+                            ))}
+                            <div style={{ height: 6 }} />
+                          </div>
                         ))}
-                        <div style={{ height: 6 }} />
                       </div>
                     ))}
                   </div>
-                ))}
+                )}
               </div>
             );
           })()}
