@@ -300,13 +300,42 @@ export default function Home() {
               marginBottom: searchOpen ? 0 : 32,
               transition: "max-height 0.3s ease, opacity 0.2s ease, margin-bottom 0.3s ease",
             }}>
-              <div className="fade-up">
-                <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 600, color: "var(--text)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
-                  Find the right resource.
-                </p>
-                <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 400, color: "var(--muted)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
-                  Browse {flyers.length} flyers below.
-                </p>
+              <div className="fade-up" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+                <div>
+                  <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 600, color: "var(--text)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
+                    Find the right resource.
+                  </p>
+                  <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 400, color: "var(--muted)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
+                    Browse {flyers.length} flyers below.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSearchOpen(true)}
+                  style={{
+                    flexShrink: 0,
+                    width: 52, height: 52, borderRadius: "50%",
+                    background: "var(--text)", border: "none",
+                    cursor: "pointer", color: "#fff",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
+                    position: "relative",
+                    transition: "transform 0.15s",
+                  }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.06)"; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <circle cx="9" cy="9" r="5.5" stroke="currentColor" strokeWidth="1.75" />
+                    <path d="M14 14l3.5 3.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+                  </svg>
+                  {(search !== "" || activeTags.length + activeEntities.length > 0) && (
+                    <span style={{
+                      position: "absolute", top: 11, right: 11,
+                      width: 8, height: 8, borderRadius: "50%",
+                      background: "#22c55e", border: "1.5px solid var(--text)",
+                    }} />
+                  )}
+                </button>
               </div>
             </div>
           )}
@@ -347,7 +376,7 @@ export default function Home() {
       {menuOpen && (
         <div onClick={() => setMenuOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 48 }} />
       )}
-      <div style={{ position: "fixed", top: 20, right: 82, zIndex: 50, opacity: searchOpen ? 0 : 1, pointerEvents: searchOpen ? "none" : "auto", transition: "opacity 0.2s" }}>
+      <div style={{ position: "fixed", top: 20, right: 20, zIndex: 50, opacity: searchOpen ? 0 : 1, pointerEvents: searchOpen ? "none" : "auto", transition: "opacity 0.2s" }}>
         {/* Menu card */}
         <div style={{
           position: "absolute", top: "calc(100% + 10px)", right: 0,
@@ -401,37 +430,7 @@ export default function Home() {
         >···</button>
       </div>
 
-      {/* ── Search FAB — upper right ──────────────────────────────── */}
-      <button
-        onClick={() => setSearchOpen(true)}
-        style={{
-          position: "fixed", top: 20, right: 20, zIndex: 50,
-          width: 52, height: 52, borderRadius: "50%",
-          background: "var(--text)", border: "none",
-          cursor: "pointer", color: "#fff",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
-          opacity: searchOpen ? 0 : 1,
-          pointerEvents: searchOpen ? "none" : "auto",
-          transition: "opacity 0.2s, transform 0.15s",
-        }}
-        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.06)"; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
-      >
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-          <circle cx="9" cy="9" r="5.5" stroke="currentColor" strokeWidth="1.75" />
-          <path d="M14 14l3.5 3.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-        </svg>
-        {(search !== "" || activeTags.length + activeEntities.length > 0) && (
-          <span style={{
-            position: "absolute", top: 11, right: 11,
-            width: 8, height: 8, borderRadius: "50%",
-            background: "#22c55e", border: "1.5px solid var(--text)",
-          }} />
-        )}
-      </button>
-
-      {/* ── Close button — same position as FAB ───────────────────── */}
+      {/* ── Close button — same position as menu FAB ─────────────── */}
       <button
         onClick={() => { setSearchOpen(false); setFilterOpen(false); setSearchInput(""); }}
         style={{
@@ -457,7 +456,7 @@ export default function Home() {
       <div style={{
         position: "fixed", top: 0,
         left: "max(24px, calc(50% - 240px))",
-        right: "max(144px, calc(50% - 240px))",
+        right: "max(82px, calc(50% - 240px))",
         zIndex: 50,
         paddingTop: 16, paddingBottom: 12,
         opacity: searchOpen ? 1 : 0,
