@@ -309,47 +309,7 @@ export default function Home() {
                     Browse {flyers.length} flyers below.
                   </p>
                 </div>
-                <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
-                  {/* ··· menu button */}
-                  <div style={{ position: "relative" }}>
-                    <div style={{
-                      position: "absolute", top: "calc(100% + 10px)", right: 0,
-                      background: "rgba(255,255,255,0.82)",
-                      backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-                      borderRadius: 20, border: "1px solid rgba(0,0,0,0.08)",
-                      boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
-                      minWidth: 200, overflow: "hidden",
-                      opacity: menuOpen ? 1 : 0,
-                      transform: menuOpen ? "translateY(0) scale(1)" : "translateY(-8px) scale(0.97)",
-                      pointerEvents: menuOpen ? "auto" : "none",
-                      transition: "opacity 0.2s ease, transform 0.2s ease",
-                      zIndex: 50,
-                    }}>
-                      <div style={{ padding: "10px 18px 4px", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)", fontFamily: "var(--font-sans)" }}>General</div>
-                      <MenuRow label="Help" href="#" onClick={() => setMenuOpen(false)} />
-                      <div style={{ height: 1, background: "rgba(0,0,0,0.06)", margin: "6px 0" }} />
-                      <div style={{ padding: "6px 18px 4px", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Staff</div>
-                      <MenuRow label="Upload a flyer" href="/login?from=/upload" onClick={() => setMenuOpen(false)} />
-                      <div style={{ height: 1, background: "rgba(0,0,0,0.06)", margin: "6px 0" }} />
-                      <div style={{ padding: "6px 18px 4px", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Admin</div>
-                      <MenuRow label="Review submissions" href="/login?from=/admin" onClick={() => setMenuOpen(false)} />
-                      <div style={{ height: 8 }} />
-                    </div>
-                    <button
-                      onClick={() => setMenuOpen(o => !o)}
-                      style={{
-                        width: 52, height: 52, borderRadius: "50%",
-                        background: menuOpen ? "rgba(0,0,0,0.08)" : "var(--surface)",
-                        border: "1.5px solid rgba(0,0,0,0.1)",
-                        cursor: "pointer", color: "var(--text)",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 20, letterSpacing: 2,
-                      }}
-                    >···</button>
-                  </div>
-
-                  {/* Search button */}
-                  <button
+                <button
                   onClick={() => setSearchOpen(true)}
                   style={{
                     flexShrink: 0,
@@ -375,7 +335,6 @@ export default function Home() {
                     }} />
                   )}
                 </button>
-                </div>{/* end flex row */}
               </div>
             </div>
           )}
@@ -416,6 +375,46 @@ export default function Home() {
       {menuOpen && (
         <div onClick={() => setMenuOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 48 }} />
       )}
+
+      {/* ── Menu FAB — fixed bottom-left ─────────────────────────── */}
+      <div style={{ position: "fixed", bottom: 20, left: 20, zIndex: 50 }}>
+        {/* Menu card — opens upward */}
+        <div style={{
+          position: "absolute", bottom: "calc(100% + 10px)", left: 0,
+          background: "rgba(255,255,255,0.82)",
+          backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+          borderRadius: 20, border: "1px solid rgba(0,0,0,0.08)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
+          minWidth: 200, overflow: "hidden",
+          opacity: menuOpen ? 1 : 0,
+          transform: menuOpen ? "translateY(0) scale(1)" : "translateY(8px) scale(0.97)",
+          pointerEvents: menuOpen ? "auto" : "none",
+          transition: "opacity 0.2s ease, transform 0.2s ease",
+        }}>
+          <div style={{ padding: "10px 18px 4px", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)", fontFamily: "var(--font-sans)" }}>General</div>
+          <MenuRow label="Help" href="#" onClick={() => setMenuOpen(false)} />
+          <div style={{ height: 1, background: "rgba(0,0,0,0.06)", margin: "6px 0" }} />
+          <div style={{ padding: "6px 18px 4px", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Staff</div>
+          <MenuRow label="Upload a flyer" href="/login?from=/upload" onClick={() => setMenuOpen(false)} />
+          <div style={{ height: 1, background: "rgba(0,0,0,0.06)", margin: "6px 0" }} />
+          <div style={{ padding: "6px 18px 4px", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Admin</div>
+          <MenuRow label="Review submissions" href="/login?from=/admin" onClick={() => setMenuOpen(false)} />
+          <div style={{ height: 8 }} />
+        </div>
+
+        <button
+          onClick={() => setMenuOpen(o => !o)}
+          style={{
+            width: 52, height: 52, borderRadius: "50%",
+            background: menuOpen ? "rgba(0,0,0,0.08)" : "var(--surface)",
+            border: "1.5px solid rgba(0,0,0,0.1)",
+            cursor: "pointer", color: "var(--text)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+            fontSize: 20, letterSpacing: 2,
+          }}
+        >···</button>
+      </div>
 
       {/* Filter tap-outside */}
       {filterOpen && <div onClick={() => setFilterOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 49 }} />}
