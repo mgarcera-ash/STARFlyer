@@ -73,7 +73,7 @@ function LoginForm() {
         <div style={{
           display: "flex", gap: 6, padding: 4,
           background: "var(--bg)", borderRadius: 99,
-          border: "1.5px solid var(--border)",
+          border: "1.5px solid rgba(0,0,0,0.08)",
           marginBottom: 20,
         }}>
           {tabs.map(tab => (
