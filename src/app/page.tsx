@@ -226,7 +226,7 @@ export default function Home() {
     | { kind: "hotspot"; flyer: Flyer; hotspot: Hotspot }
     | { kind: "flyer"; flyer: Flyer };
 
-  const flatResults: FlatResult[] = search !== "" ? filtered.flatMap(f => {
+  const flatResults: FlatResult[] = search !== "" ? filtered.flatMap((f): FlatResult[] => {
     const q = search.toLowerCase();
     const matchingHotspots = f.hotspots?.filter(h =>
       h.label?.toLowerCase().includes(q) || h.value.toLowerCase().includes(q)
