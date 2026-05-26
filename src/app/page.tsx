@@ -1116,7 +1116,7 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
                         border: `2px solid ${contactFilter === key ? "transparent" : "rgba(255,255,255,0.15)"}`,
                         background: contactFilter === key ? activeBg : "transparent",
                         color: contactFilter === key ? activeColor : "rgba(255,255,255,0.45)",
-                        fontSize: 12, fontWeight: 500, fontFamily: "var(--font-sans)",
+                        fontSize: 12, fontWeight: 700, fontFamily: "var(--font-sans)",
                         cursor: "pointer", transition: "background 0.15s, color 0.15s, border-color 0.15s",
                         whiteSpace: "nowrap",
                       }}
