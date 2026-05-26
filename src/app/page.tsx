@@ -672,7 +672,7 @@ export default function Home() {
 
             {/* Close button */}
             <button
-              onClick={() => { setSearchOpen(false); setFilterOpen(false); setSearchInput(""); }}
+              onClick={() => { setSearchOpen(false); setFilterOpen(false); setSearchInput(""); setActiveTags([]); setActiveEntities([]); setGridKey(k => k + 1); }}
               style={{
                 flexShrink: 0, marginRight: 10,
                 width: 32, height: 32, borderRadius: "50%",
