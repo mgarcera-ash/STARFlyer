@@ -42,6 +42,7 @@ export default function Home() {
   const [minTimeReady, setMinTimeReady] = useState(false);
   const [imagesReady, setImagesReady] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // Skip splash if already shown this session
   useEffect(() => {
@@ -337,12 +338,61 @@ export default function Home() {
           )}
         </div>
 
-        <div style={{ textAlign: "center", paddingTop: 48, paddingBottom: 24 }}>
-          <a href="/login" style={{ fontSize: 12, color: "var(--border)", fontFamily: "var(--font-sans)", textDecoration: "none" }}>
-            Staff
+        <div style={{ textAlign: "center", paddingTop: 48, paddingBottom: 24 }} />
+      </main>
+
+      {/* ── Menu FAB — upper left ────────────────────────────────── */}
+      {menuOpen && (
+        <div onClick={() => setMenuOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 48 }} />
+      )}
+      <div style={{ position: "fixed", top: 20, left: 20, zIndex: 50 }}>
+        {/* Menu card */}
+        <div style={{
+          position: "absolute", top: "calc(100% + 10px)", left: 0,
+          background: "rgba(20,20,20,0.88)",
+          backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+          borderRadius: 20, border: "1px solid rgba(255,255,255,0.1)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+          minWidth: 180, overflow: "hidden",
+          opacity: menuOpen ? 1 : 0,
+          transform: menuOpen ? "translateY(0) scale(1)" : "translateY(-8px) scale(0.97)",
+          pointerEvents: menuOpen ? "auto" : "none",
+          transition: "opacity 0.2s ease, transform 0.2s ease",
+        }}>
+          <a
+            href="/login"
+            onClick={() => setMenuOpen(false)}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "14px 18px",
+              color: "rgba(255,255,255,0.9)", textDecoration: "none",
+              fontSize: 14, fontWeight: 500, fontFamily: "var(--font-sans)",
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}
+            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+          >
+            Staff access
+            <span style={{ opacity: 0.4, fontSize: 16 }}>›</span>
           </a>
         </div>
-      </main>
+
+        {/* ··· button */}
+        <button
+          onClick={() => setMenuOpen(o => !o)}
+          style={{
+            width: 52, height: 52, borderRadius: "50%",
+            background: menuOpen ? "rgba(0,0,0,0.85)" : "var(--text)", border: "none",
+            cursor: "pointer", color: "#fff",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
+            fontSize: 20, letterSpacing: 2,
+            transition: "background 0.2s, transform 0.15s",
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.06)"; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
+        >···</button>
+      </div>
 
       {/* ── Search FAB — upper right ──────────────────────────────── */}
       <button
