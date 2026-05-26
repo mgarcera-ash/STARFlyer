@@ -41,6 +41,7 @@ export default function Home() {
   const [displayCount, setDisplayCount] = useState(0);
   const [minTimeReady, setMinTimeReady] = useState(false);
   const [imagesReady, setImagesReady] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Splash text sequence
   useEffect(() => {
@@ -147,6 +148,7 @@ export default function Home() {
   // Alphabet index
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const panelScrollRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const tagsByLetter = useMemo(() => {
     const groups: Record<string, string[]> = {};
@@ -170,12 +172,22 @@ export default function Home() {
     }
   };
 
-  // Close filter panel on Escape
+  // Auto-focus search input when overlay opens
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") setFilterOpen(false); };
+    if (searchOpen) searchInputRef.current?.focus();
+  }, [searchOpen]);
+
+  // Close search overlay / filter panel on Escape
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (filterOpen) { setFilterOpen(false); }
+        else { setSearchOpen(false); }
+      }
+    };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, []);
+  }, [filterOpen]);
 
   const filtered = flyers.filter(f => {
     const q = search.toLowerCase();
@@ -264,7 +276,7 @@ export default function Home() {
         </div>
       )}
 
-      <main style={{ minHeight: "100vh", padding: "48px 0 180px", opacity: visible ? 1 : 0, transition: "opacity 0.4s ease" }}>
+      <main style={{ minHeight: "100vh", padding: "80px 0 48px", opacity: visible ? 1 : 0, transition: "opacity 0.4s ease" }}>
         <div style={{ maxWidth: 720, margin: "0 auto", paddingLeft: 24, paddingRight: 24 }}>
 
 
@@ -308,25 +320,71 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Tap-outside backdrop — outside the transformed container so it's not trapped in its stacking context */}
-      {filterOpen && <div onClick={() => setFilterOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 48 }} />}
+      {/* ── Search FAB — upper right ──────────────────────────────── */}
+      <button
+        onClick={() => setSearchOpen(true)}
+        style={{
+          position: "fixed", top: 20, right: 20, zIndex: 50,
+          width: 52, height: 52, borderRadius: "50%",
+          background: "var(--text)", border: "none",
+          cursor: "pointer", color: "#fff",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
+          opacity: searchOpen ? 0 : 1,
+          pointerEvents: searchOpen ? "none" : "auto",
+          transition: "opacity 0.2s, transform 0.15s",
+        }}
+        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.06)"; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
+      >
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <circle cx="9" cy="9" r="5.5" stroke="currentColor" strokeWidth="1.75" />
+          <path d="M14 14l3.5 3.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+        </svg>
+        {(search !== "" || activeTags.length + activeEntities.length > 0) && (
+          <span style={{
+            position: "absolute", top: 11, right: 11,
+            width: 8, height: 8, borderRadius: "50%",
+            background: "#22c55e", border: "1.5px solid var(--text)",
+          }} />
+        )}
+      </button>
 
-      {/* ── Floating bottom search + filter bar ───────────────────── */}
+      {/* Search overlay backdrop */}
+      {searchOpen && (
+        <div
+          onClick={() => { setSearchOpen(false); setFilterOpen(false); }}
+          style={{
+            position: "fixed", inset: 0, zIndex: 48,
+            background: "rgba(0,0,0,0.3)",
+            backdropFilter: "blur(4px)",
+            WebkitBackdropFilter: "blur(4px)",
+          }}
+        />
+      )}
+
+      {/* Filter tap-outside (within overlay) */}
+      {filterOpen && <div onClick={() => setFilterOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 49 }} />}
+
+      {/* ── Floating top search bar ────────────────────────────────── */}
       <div style={{
-        position: "fixed", bottom: 20, left: "50%", transform: "translateX(-50%)",
+        position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
         width: "calc(100% - 48px)", maxWidth: 480, zIndex: 50,
+        paddingTop: 16,
+        opacity: searchOpen ? 1 : 0,
+        pointerEvents: searchOpen ? "auto" : "none",
+        transition: "opacity 0.25s ease",
       }}>
 
-        {/* Filter tag panel — opens above bar */}
+        {/* Filter tag panel — opens below bar */}
         {allTags.length > 0 && (
           <>
-
             {/* Outer wrapper — positions both panel and sidebar */}
             <div style={{
-              position: "absolute", bottom: "calc(100% + 10px)", left: 0, right: 0, zIndex: 49,
+              position: "absolute", top: "calc(100% + 10px)", left: 0, right: 0, zIndex: 50,
               opacity: filterOpen ? 1 : 0,
               filter: filterOpen ? "blur(0px)" : "blur(12px)",
-              transform: filterOpen ? "translateY(0) scale(1)" : "translateY(8px) scale(0.97)",
+              transform: filterOpen ? "translateY(0) scale(1)" : "translateY(-8px) scale(0.97)",
               pointerEvents: filterOpen ? "auto" : "none",
               transition: "opacity 0.25s ease, filter 0.25s ease, transform 0.25s ease",
             }}>
@@ -470,7 +528,7 @@ export default function Home() {
                   position: "absolute", top: 0, bottom: 0, right: 4,
                   width: 20, display: "flex", flexDirection: "column",
                   alignItems: "center", justifyContent: "center",
-                  zIndex: 50, pointerEvents: "auto",
+                  zIndex: 51, pointerEvents: "auto",
                 }}>
                   {availableLetters.map(letter => (
                     <button
@@ -493,7 +551,7 @@ export default function Home() {
           </>
         )}
 
-        {/* Bar row: pill + clear button */}
+        {/* Bar row: pill + close button */}
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{
             flex: 1, display: "flex", alignItems: "center",
@@ -528,6 +586,7 @@ export default function Home() {
 
             {/* Search input */}
             <input
+              ref={searchInputRef}
               type="text"
               placeholder={`Search all ${flyers.length} flyers…`}
               value={searchInput}
@@ -539,24 +598,39 @@ export default function Home() {
                 outline: "none",
               }}
             />
+
+            {/* Clear input button */}
+            {searchInput && (
+              <button
+                onClick={() => setSearchInput("")}
+                style={{
+                  flexShrink: 0, width: 36, height: 36, marginRight: 8,
+                  borderRadius: "50%", border: "none",
+                  background: "#ef4444", color: "#fff",
+                  fontSize: 16, lineHeight: 1, cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "background 0.15s",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = "#dc2626")}
+                onMouseLeave={e => (e.currentTarget.style.background = "#ef4444")}
+              >×</button>
+            )}
           </div>
 
-          {/* Clear button — outside the pill */}
-          {searchInput && (
-            <button
-              onClick={() => setSearchInput("")}
-              style={{
-                flexShrink: 0, width: 36, height: 36,
-                borderRadius: "50%", border: "none",
-                background: "#ef4444", color: "#fff",
-                fontSize: 16, lineHeight: 1, cursor: "pointer",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                transition: "background 0.15s",
-              }}
-              onMouseEnter={e => (e.currentTarget.style.background = "#dc2626")}
-              onMouseLeave={e => (e.currentTarget.style.background = "#ef4444")}
-            >×</button>
-          )}
+          {/* Close overlay button */}
+          <button
+            onClick={() => { setSearchOpen(false); setFilterOpen(false); }}
+            style={{
+              flexShrink: 0, width: 44, height: 44,
+              borderRadius: "50%", border: "2px solid var(--border)",
+              background: "var(--surface)", color: "var(--muted)",
+              fontSize: 20, lineHeight: 1, cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = "#f0f0f0")}
+            onMouseLeave={e => (e.currentTarget.style.background = "var(--surface)")}
+          >×</button>
         </div>
       </div>
 
