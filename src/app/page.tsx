@@ -317,7 +317,6 @@ export default function Home() {
                     background: "var(--text)", border: "none",
                     cursor: "pointer", color: "#fff",
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
                     position: "relative",
                     transition: "transform 0.15s",
                   }}
@@ -430,24 +429,8 @@ export default function Home() {
         >···</button>
       </div>
 
-      {/* ── Close button — same position as menu FAB ─────────────── */}
-      <button
-        onClick={() => { setSearchOpen(false); setFilterOpen(false); setSearchInput(""); }}
-        style={{
-          position: "fixed", top: 20, right: 20, zIndex: 51,
-          width: 52, height: 52, borderRadius: "50%",
-          background: "#ef4444", border: "none",
-          cursor: "pointer", color: "#fff",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
-          opacity: searchOpen ? 1 : 0,
-          pointerEvents: searchOpen ? "auto" : "none",
-          transition: "opacity 0.2s, transform 0.15s",
-          fontSize: 24,
-        }}
-        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#dc2626"; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#ef4444"; }}
-      >×</button>
+      {/* Search tap-outside backdrop */}
+      {searchOpen && <div onClick={() => { setSearchOpen(false); setFilterOpen(false); setSearchInput(""); }} style={{ position: "fixed", inset: 0, zIndex: 48 }} />}
 
       {/* Filter tap-outside */}
       {filterOpen && <div onClick={() => setFilterOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 49 }} />}
