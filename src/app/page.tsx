@@ -599,22 +599,6 @@ export default function Home() {
               }}
             />
 
-            {/* Clear input button */}
-            {searchInput && (
-              <button
-                onClick={() => setSearchInput("")}
-                style={{
-                  flexShrink: 0, width: 36, height: 36, marginRight: 8,
-                  borderRadius: "50%", border: "none",
-                  background: "#ef4444", color: "#fff",
-                  fontSize: 16, lineHeight: 1, cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  transition: "background 0.15s",
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = "#dc2626")}
-                onMouseLeave={e => (e.currentTarget.style.background = "#ef4444")}
-              >×</button>
-            )}
           </div>
 
           {/* Close overlay button */}
@@ -622,14 +606,14 @@ export default function Home() {
             onClick={() => { setSearchOpen(false); setFilterOpen(false); }}
             style={{
               flexShrink: 0, width: 44, height: 44,
-              borderRadius: "50%", border: "2px solid var(--border)",
-              background: "var(--surface)", color: "var(--muted)",
+              borderRadius: "50%", border: "none",
+              background: "#ef4444", color: "#fff",
               fontSize: 20, lineHeight: 1, cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center",
               transition: "background 0.15s",
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = "#f0f0f0")}
-            onMouseLeave={e => (e.currentTarget.style.background = "var(--surface)")}
+            onMouseEnter={e => (e.currentTarget.style.background = "#dc2626")}
+            onMouseLeave={e => (e.currentTarget.style.background = "#ef4444")}
           >×</button>
         </div>
       </div>
