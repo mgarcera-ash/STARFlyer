@@ -13,14 +13,11 @@ export default function SignOutButton() {
     <button
       onClick={handleSignOut}
       style={{
-        fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)",
-        fontWeight: 500, padding: "8px 18px", borderRadius: 99,
-        border: "1.5px solid var(--border)", background: "var(--surface)",
-        cursor: "pointer", boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-        transition: "background 0.15s, color 0.15s",
+        fontSize: 13, color: "#ef4444", fontFamily: "var(--font-sans)",
+        fontWeight: 600, padding: "8px 18px", borderRadius: 99,
+        border: "1.5px solid #ef4444", background: "transparent",
+        cursor: "pointer",
       }}
-      onMouseEnter={e => { e.currentTarget.style.background = "var(--bg)"; e.currentTarget.style.color = "var(--text)"; }}
-      onMouseLeave={e => { e.currentTarget.style.background = "var(--surface)"; e.currentTarget.style.color = "var(--muted)"; }}
     >
       Sign out
     </button>

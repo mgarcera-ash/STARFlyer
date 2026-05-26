@@ -251,13 +251,11 @@ function FlyerEditCard({ flyer, animationDelay, entityOptions, onDone }: {
             disabled={!!acting}
             style={{
               padding: "10px 20px", borderRadius: 99,
-              border: "1.5px solid var(--border)", background: "transparent",
-              color: "var(--muted)", fontFamily: "var(--font-sans)",
-              fontSize: 13, cursor: acting ? "not-allowed" : "pointer",
-              transition: "color 0.15s, border-color 0.15s",
+              border: "1.5px solid #ef4444", background: "transparent",
+              color: "#ef4444", fontFamily: "var(--font-sans)",
+              fontSize: 13, fontWeight: 600, cursor: acting ? "not-allowed" : "pointer",
+              opacity: acting ? 0.5 : 1,
             }}
-            onMouseEnter={e => { if (!acting) { e.currentTarget.style.color = "#ef4444"; e.currentTarget.style.borderColor = "#ef4444"; } }}
-            onMouseLeave={e => { e.currentTarget.style.color = "var(--muted)"; e.currentTarget.style.borderColor = "var(--border)"; }}
           >
             {acting === "reject" ? "Rejecting…" : "Reject"}
           </button>
