@@ -376,10 +376,9 @@ export default function Home() {
             <div style={{
               position: "absolute", top: "calc(100% + 10px)", left: 0, right: 0, zIndex: 50,
               opacity: filterOpen ? 1 : 0,
-              filter: filterOpen ? "blur(0px)" : "blur(12px)",
               transform: filterOpen ? "translateY(0) scale(1)" : "translateY(-8px) scale(0.97)",
               pointerEvents: filterOpen ? "auto" : "none",
-              transition: "opacity 0.25s ease, filter 0.25s ease, transform 0.25s ease",
+              transition: "opacity 0.25s ease, transform 0.25s ease",
             }}>
 
               {/* Panel — fixed header + scrollable body */}
