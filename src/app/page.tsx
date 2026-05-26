@@ -341,18 +341,18 @@ export default function Home() {
         <div style={{ textAlign: "center", paddingTop: 48, paddingBottom: 24 }} />
       </main>
 
-      {/* ── Menu FAB — upper left ────────────────────────────────── */}
+      {/* ── Menu FAB — upper right, beside search ────────────────── */}
       {menuOpen && (
         <div onClick={() => setMenuOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 48 }} />
       )}
-      <div style={{ position: "fixed", top: 20, left: 20, zIndex: 50 }}>
+      <div style={{ position: "fixed", top: 20, right: 82, zIndex: 50 }}>
         {/* Menu card */}
         <div style={{
-          position: "absolute", top: "calc(100% + 10px)", left: 0,
-          background: "rgba(20,20,20,0.88)",
+          position: "absolute", top: "calc(100% + 10px)", right: 0,
+          background: "rgba(255,255,255,0.82)",
           backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-          borderRadius: 20, border: "1px solid rgba(255,255,255,0.1)",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+          borderRadius: 20, border: "1px solid rgba(0,0,0,0.08)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
           minWidth: 180, overflow: "hidden",
           opacity: menuOpen ? 1 : 0,
           transform: menuOpen ? "translateY(0) scale(1)" : "translateY(-8px) scale(0.97)",
@@ -365,15 +365,15 @@ export default function Home() {
             style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
               padding: "14px 18px",
-              color: "rgba(255,255,255,0.9)", textDecoration: "none",
+              color: "var(--text)", textDecoration: "none",
               fontSize: 14, fontWeight: 500, fontFamily: "var(--font-sans)",
               transition: "background 0.15s",
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}
+            onMouseEnter={e => (e.currentTarget.style.background = "rgba(0,0,0,0.04)")}
             onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
           >
             Staff access
-            <span style={{ opacity: 0.4, fontSize: 16 }}>›</span>
+            <span style={{ opacity: 0.3, fontSize: 16 }}>›</span>
           </a>
         </div>
 
@@ -382,10 +382,11 @@ export default function Home() {
           onClick={() => setMenuOpen(o => !o)}
           style={{
             width: 52, height: 52, borderRadius: "50%",
-            background: menuOpen ? "rgba(0,0,0,0.85)" : "var(--text)", border: "none",
-            cursor: "pointer", color: "#fff",
+            background: menuOpen ? "rgba(0,0,0,0.08)" : "var(--surface)",
+            border: "1.5px solid rgba(0,0,0,0.1)",
+            cursor: "pointer", color: "var(--text)",
             display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
             fontSize: 20, letterSpacing: 2,
             transition: "background 0.2s, transform 0.15s",
           }}
@@ -450,7 +451,7 @@ export default function Home() {
       <div style={{
         position: "fixed", top: 0,
         left: "max(24px, calc(50% - 240px))",
-        right: "max(80px, calc(50% - 240px))",
+        right: "max(144px, calc(50% - 240px))",
         zIndex: 50,
         paddingTop: 16, paddingBottom: 12,
         opacity: searchOpen ? 1 : 0,
