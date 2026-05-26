@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --bg:      #f8f7f4;
+  --bg:      #ffffff;
   --surface: #ffffff;
-  --border:  #e8e5df;
-  --muted:   #a09d97;
-  --text:    #1a1916;
-  --accent:  #2c5f8a;
+  --border:  #000000;
+  --muted:   #737373;
+  --text:    #000000;
+  --accent:  #000000;
   --ease:    cubic-bezier(0.22, 1, 0.36, 1);
 }
 
