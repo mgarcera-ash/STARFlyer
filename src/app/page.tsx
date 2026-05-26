@@ -315,7 +315,7 @@ export default function Home() {
 
           {/* Flyer grid */}
           {!loading && (
-            <div style={{ filter: searchOpen && search === "" ? "blur(6px)" : "blur(0px)", opacity: searchOpen && search === "" ? 0.5 : 1, transition: "filter 0.3s ease, opacity 0.3s ease", pointerEvents: searchOpen && search === "" ? "none" : "auto" }}>
+            <div style={{ filter: searchOpen && search === "" && activeTags.length === 0 && activeEntities.length === 0 ? "blur(6px)" : "blur(0px)", opacity: searchOpen && search === "" && activeTags.length === 0 && activeEntities.length === 0 ? 0.5 : 1, transition: "filter 0.3s ease, opacity 0.3s ease", pointerEvents: searchOpen && search === "" && activeTags.length === 0 && activeEntities.length === 0 ? "none" : "auto" }}>
             <div key={gridKey} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, alignItems: "start" }}>
               {filtered.map((flyer, i) => (
                 <FlyerCard
@@ -512,16 +512,16 @@ export default function Home() {
                     <button
                       onClick={() => { setActiveTags([]); setActiveEntities([]); setGridKey(k => k + 1); }}
                       style={{
-                        flexShrink: 0, width: 36, height: 36, borderRadius: "50%",
-                        border: "none", background: "#ef4444",
-                        color: "#fff", fontSize: 20, lineHeight: 1,
+                        flexShrink: 0, borderRadius: 99,
+                        border: "1.5px solid #ef4444", background: "transparent",
+                        color: "#ef4444", fontSize: 12, fontWeight: 600, lineHeight: 1,
                         fontFamily: "var(--font-sans)", cursor: "pointer",
-                        display: "flex", alignItems: "center", justifyContent: "center",
+                        padding: "5px 12px",
                         transition: "background 0.15s",
                       }}
-                      onMouseEnter={e => (e.currentTarget.style.background = "#dc2626")}
-                      onMouseLeave={e => (e.currentTarget.style.background = "#ef4444")}
-                    >×</button>
+                      onMouseEnter={e => (e.currentTarget.style.background = "rgba(239,68,68,0.08)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                    >Clear {activeTags.length + activeEntities.length}</button>
                   )}
                 </div>
 
