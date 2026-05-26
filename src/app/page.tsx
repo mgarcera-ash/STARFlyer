@@ -492,18 +492,18 @@ export default function Home() {
                   padding: "12px 14px 10px",
                   flexShrink: 0,
                 }}>
-                  <div style={{ display: "flex", gap: 6, flex: 1 }}>
+                  <div style={{ display: "flex", gap: 4, flex: 1, padding: 3, borderRadius: 99, border: "1.5px solid rgba(0,0,0,0.08)" }}>
                     {(["agency", "topics"] as const).map(tab => (
                       <button
                         key={tab}
                         onClick={() => setFilterTab(tab)}
                         style={{
                           flex: 1, padding: "6px 0", borderRadius: 99,
-                          border: `2px solid ${filterTab === tab ? "transparent" : "var(--border)"}`,
+                          border: "none",
                           background: filterTab === tab ? "var(--text)" : "transparent",
                           color: filterTab === tab ? "#fff" : "var(--muted)",
                           fontSize: 12, fontWeight: 500, fontFamily: "var(--font-sans)",
-                          cursor: "pointer", transition: "background 0.15s, color 0.15s, border-color 0.15s",
+                          cursor: "pointer", transition: "background 0.15s, color 0.15s",
                         }}
                       >{tab === "topics" ? "By Topic" : "By Agency"}</button>
                     ))}
