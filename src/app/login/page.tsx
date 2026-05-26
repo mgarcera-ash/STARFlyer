@@ -2,12 +2,18 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+type Role = "staff" | "admin";
+
 function LoginForm() {
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from") || "";
+  const defaultRole: Role = from.startsWith("/admin") ? "admin" : "staff";
+
+  const [role, setRole] = useState<Role>(defaultRole);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,16 +23,21 @@ function LoginForm() {
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ password, role }),
     });
 
     if (res.ok) {
-      router.push(searchParams.get("from") || "/upload");
+      router.push(from || (role === "admin" ? "/admin" : "/upload"));
     } else {
       setError("Incorrect passphrase.");
       setLoading(false);
     }
   };
+
+  const tabs: { value: Role; label: string }[] = [
+    { value: "staff", label: "Staff Upload" },
+    { value: "admin", label: "Admin Portal" },
+  ];
 
   return (
     <div style={{
@@ -34,15 +45,52 @@ function LoginForm() {
       background: "var(--bg)", fontFamily: "var(--font-sans)",
     }}>
       <div style={{ width: "100%", maxWidth: 360, padding: "0 24px" }}>
+
+        {/* Back */}
+        <a href="/" style={{
+          display: "inline-flex", alignItems: "center",
+          fontSize: 13, color: "var(--muted)", textDecoration: "none",
+          fontFamily: "var(--font-sans)", marginBottom: 32,
+          transition: "color 0.15s",
+        }}
+          onMouseEnter={e => (e.currentTarget.style.color = "var(--text)")}
+          onMouseLeave={e => (e.currentTarget.style.color = "var(--muted)")}
+        >← Back</a>
+
         <p style={{ fontSize: 22, fontWeight: 600, color: "var(--text)", marginBottom: 6, letterSpacing: "-0.02em" }}>
           Staff access
         </p>
-        <p style={{ fontSize: 14, color: "var(--muted)", marginBottom: 32, lineHeight: 1.5 }}>
-          Enter the staff passphrase to continue.
+        <p style={{ fontSize: 14, color: "var(--muted)", marginBottom: 28, lineHeight: 1.5 }}>
+          Enter the passphrase for your access level.
         </p>
 
+        {/* Segmented control */}
+        <div style={{
+          display: "flex", gap: 6, padding: 4,
+          background: "var(--bg)", borderRadius: 99,
+          border: "1.5px solid var(--border)",
+          marginBottom: 20,
+        }}>
+          {tabs.map(tab => (
+            <button
+              key={tab.value}
+              onClick={() => { setRole(tab.value); setPassword(""); setError(""); }}
+              style={{
+                flex: 1, padding: "8px 0", borderRadius: 99,
+                border: "none",
+                background: role === tab.value ? "var(--text)" : "transparent",
+                color: role === tab.value ? "#fff" : "var(--muted)",
+                fontSize: 13, fontWeight: 500, fontFamily: "var(--font-sans)",
+                cursor: "pointer", transition: "background 0.15s, color 0.15s",
+              }}
+            >{tab.label}</button>
+          ))}
+        </div>
+
+        {/* Form */}
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <input
+            key={role}
             type="password"
             placeholder="Passphrase"
             value={password}
