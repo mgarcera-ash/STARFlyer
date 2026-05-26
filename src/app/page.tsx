@@ -676,7 +676,7 @@ function FlyerCard({ flyer, search, showEntity, onQuickLook, onPreview, animatio
           alignItems: "center",
           gap: 12,
           background: "#ffffff",
-          border: "2px solid transparent",
+          border: "2px solid #000000",
           borderRadius: 52,
           padding: "10px 20px 10px 10px",
           cursor: "pointer",
