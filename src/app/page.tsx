@@ -641,6 +641,9 @@ export default function Home() {
   );
 }
 
+// Tracks URLs that have already been loaded this session — survives remounts
+const loadedImageUrls = new Set<string>();
+
 // ── Flyer card ────────────────────────────────────────────────────────────────
 function FlyerCard({ flyer, search, showEntity, onQuickLook, onPreview, animationDelay = 0 }: {
   flyer: Flyer;
@@ -651,13 +654,18 @@ function FlyerCard({ flyer, search, showEntity, onQuickLook, onPreview, animatio
   animationDelay?: number;
 }) {
   const [pressed, setPressed] = useState(false);
-  const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(() =>
+    flyer.image_url ? loadedImageUrls.has(flyer.image_url) : true
+  );
   const imgRef = useRef<HTMLImageElement>(null);
 
-  // Cached images never fire onLoad — check .complete after mount
+  // Catch cached images that won't fire onLoad
   useEffect(() => {
-    if (imgRef.current?.complete) setImgLoaded(true);
-  }, []);
+    if (imgRef.current?.complete && flyer.image_url) {
+      loadedImageUrls.add(flyer.image_url);
+      setImgLoaded(true);
+    }
+  }, [flyer.image_url]);
 
   return (
     <div
@@ -710,7 +718,7 @@ function FlyerCard({ flyer, search, showEntity, onQuickLook, onPreview, animatio
               ref={imgRef}
               src={flyer.image_url}
               alt={flyer.title}
-              onLoad={() => setImgLoaded(true)}
+              onLoad={() => { if (flyer.image_url) loadedImageUrls.add(flyer.image_url); setImgLoaded(true); }}
               style={{ width: "100%", height: "100%", objectFit: "cover", opacity: imgLoaded ? 1 : 0, transition: "opacity 0.4s ease" }}
             />
           ) : (
