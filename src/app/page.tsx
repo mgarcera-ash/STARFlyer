@@ -919,9 +919,9 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
         )}
       </div>
 
-      {/* Close button — top center */}
+      {/* Close button — bottom center */}
       <button onClick={handleClose} style={{
-        position: "absolute", top: 20, left: "50%", transform: "translateX(-50%)", zIndex: 20,
+        position: "absolute", bottom: 28, left: "50%", transform: "translateX(-50%)", zIndex: 20,
         height: 44, borderRadius: 99, padding: "0 18px 0 14px",
         background: "#ef4444", border: "none",
         color: "#fff", fontSize: 14, fontWeight: 600, fontFamily: "var(--font-sans)",
@@ -946,9 +946,9 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
         />
       )}
 
-      {/* Bottom bar: pill area */}
+      {/* Top bar: pill area */}
       <div style={{
-        position: "absolute", bottom: 28, left: "50%",
+        position: "absolute", top: 20, left: "50%",
         transform: "translateX(-50%)",
         width: "calc(100% - 48px)", maxWidth: 400,
         display: "flex", alignItems: "center", gap: 8,
@@ -956,12 +956,12 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
         transition: "opacity 0.35s ease 0.1s",
         zIndex: 10,
       }}>
-        {/* Pill + floating contacts panel above */}
+        {/* Pill + floating contacts panel below */}
         <div style={{ flex: 1, minWidth: 0, position: "relative" }}>
 
-          {/* Contacts panel — floats above pill, same pattern as filter panel */}
+          {/* Contacts panel — floats below pill */}
           <div style={{
-            position: "absolute", bottom: "calc(100% + 10px)", left: 0, right: 0,
+            position: "absolute", top: "calc(100% + 10px)", left: 0, right: 0,
             background: "rgba(20,20,20,0.85)",
             backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
             borderRadius: 28,
@@ -971,7 +971,7 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
             display: "flex", flexDirection: "column",
             opacity: sheetOpen ? 1 : 0,
             filter: sheetOpen ? "blur(0px)" : "blur(12px)",
-            transform: sheetOpen ? "translateY(0) scale(1)" : "translateY(8px) scale(0.97)",
+            transform: sheetOpen ? "translateY(0) scale(1)" : "translateY(-8px) scale(0.97)",
             pointerEvents: sheetOpen ? "auto" : "none",
             transition: "opacity 0.25s ease, filter 0.25s ease, transform 0.25s ease",
           }}>
