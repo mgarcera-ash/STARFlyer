@@ -407,34 +407,34 @@ export default function Home() {
                   </div>
                 )}
 
-                {/* Matched flyers — grouped contact cards */}
+                {/* Matched flyers — dark grouped contact cards */}
                 {matched.length > 0 && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                     {matched.map(({ flyer, hotspotsByType }) => (
-                      <div key={flyer.id} style={{ background: "var(--surface)", borderRadius: 20, overflow: "hidden", border: "2px solid #d4d4d4" }}>
+                      <div key={flyer.id} style={{ background: "#1c1c1e", borderRadius: 20, overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)" }}>
                         <button
                           onClick={() => { setPreviewInitialSearch(search); setPreview(flyer); }}
                           style={{
                             display: "flex", alignItems: "center", gap: 14,
                             padding: "14px 16px", width: "100%",
                             background: "transparent", border: "none", cursor: "pointer", textAlign: "left",
-                            borderBottom: "1px solid rgba(0,0,0,0.06)",
+                            borderBottom: "1px solid rgba(255,255,255,0.08)",
                             transition: "background 0.15s",
                           }}
-                          onMouseEnter={e => (e.currentTarget.style.background = "var(--bg)")}
+                          onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
                           onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                         >
-                          <div style={{ flexShrink: 0, width: 48, height: 48, borderRadius: "50%", overflow: "hidden", background: "var(--bg)", border: "2px solid #d4d4d4" }}>
+                          <div style={{ flexShrink: 0, width: 48, height: 48, borderRadius: "50%", overflow: "hidden", background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)" }}>
                             {flyer.image_url
                               ? <img src={flyer.image_url} alt={flyer.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                              : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, color: "var(--muted)" }}>{flyer.title.charAt(0)}</div>
+                              : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, color: "rgba(255,255,255,0.4)" }}>{flyer.title.charAt(0)}</div>
                             }
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            {flyer.entity && <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{flyer.entity}</p>}
-                            <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>{flyer.title}</p>
+                            {flyer.entity && <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.45)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{flyer.entity}</p>}
+                            <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "#fff", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>{flyer.title}</p>
                           </div>
-                          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, color: "var(--muted)" }}>
+                          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, color: "rgba(255,255,255,0.35)" }}>
                             <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
                         </button>
@@ -444,7 +444,7 @@ export default function Home() {
                               <div style={{ width: 18, height: 18, borderRadius: "50%", background: hotspotMeta[type].bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                                 {hotspotMeta[type].icon}
                               </div>
-                              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: "var(--muted)", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{hotspotMeta[type].label}</p>
+                              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.45)", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{hotspotMeta[type].label}</p>
                             </div>
                             {hotspotsByType[type]!.map((h, hi) => (
                               <button
@@ -456,11 +456,11 @@ export default function Home() {
                                   background: "transparent", border: "none", cursor: "pointer", textAlign: "left",
                                   transition: "background 0.15s",
                                 }}
-                                onMouseEnter={e => (e.currentTarget.style.background = "var(--bg)")}
+                                onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
                                 onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                               >
-                                {h.label && <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-sans)" }}>{h.label}</p>}
-                                <p style={{ margin: 0, fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>{h.value}</p>
+                                {h.label && <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#fff", fontFamily: "var(--font-sans)" }}>{h.label}</p>}
+                                <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.5)", fontFamily: "var(--font-sans)" }}>{h.value}</p>
                               </button>
                             ))}
                             <div style={{ height: 6 }} />
