@@ -516,7 +516,7 @@ export default function Home() {
                         border: "1.5px solid #ef4444", background: "transparent",
                         color: "#ef4444", fontSize: 12, fontWeight: 600, lineHeight: 1,
                         fontFamily: "var(--font-sans)", cursor: "pointer",
-                        padding: "5px 12px",
+                        padding: "9px 16px",
                         transition: "background 0.15s",
                       }}
                       onMouseEnter={e => (e.currentTarget.style.background = "rgba(239,68,68,0.08)")}
