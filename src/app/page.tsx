@@ -675,11 +675,11 @@ export default function Home() {
               onClick={() => { setSearchOpen(false); setFilterOpen(false); setSearchInput(""); }}
               style={{
                 flexShrink: 0, marginRight: 10,
-                padding: "6px 12px", borderRadius: 99,
+                width: 32, height: 32, borderRadius: "50%",
                 border: "1.5px solid #ef4444", background: "transparent",
-                color: "#ef4444", fontSize: 12, fontWeight: 600,
+                color: "#ef4444", fontSize: 14, fontWeight: 600,
                 fontFamily: "var(--font-sans)", cursor: "pointer",
-                lineHeight: 1,
+                display: "flex", alignItems: "center", justifyContent: "center",
               }}
             >✕</button>
 
