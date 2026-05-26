@@ -413,7 +413,7 @@ export default function Home() {
                     {matched.map(({ flyer, hotspotsByType }) => (
                       <div key={flyer.id} style={{ background: "#1c1c1e", borderRadius: 20, overflow: "hidden", border: "2px solid #d4d4d4" }}>
                         <button
-                          onClick={() => { setPreviewInitialSearch(search || activeTags[0] || ""); setPreview(flyer); }}
+                          onClick={() => { setPreviewInitialSearch(""); setPreview(flyer); }}
                           style={{
                             display: "flex", alignItems: "center", gap: 14,
                             padding: "14px 16px", width: "100%",
@@ -446,7 +446,7 @@ export default function Home() {
                             {hotspotsByType[type]!.map((h, hi) => (
                               <button
                                 key={hi}
-                                onClick={() => { setPreviewInitialSearch(""); setPreview(flyer); }}
+                                onClick={() => { setPreviewInitialSearch(h.label || h.value); setPreview(flyer); }}
                                 style={{
                                   display: "flex", flexDirection: "column", alignItems: "flex-start",
                                   padding: "6px 16px 6px 40px", width: "100%",
