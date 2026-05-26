@@ -222,6 +222,21 @@ export default function Home() {
     return matchSearch && matchTags && matchEntities;
   });
 
+  type FlatResult =
+    | { kind: "hotspot"; flyer: Flyer; hotspot: Hotspot }
+    | { kind: "flyer"; flyer: Flyer };
+
+  const flatResults: FlatResult[] = search !== "" ? filtered.flatMap(f => {
+    const q = search.toLowerCase();
+    const matchingHotspots = f.hotspots?.filter(h =>
+      h.label?.toLowerCase().includes(q) || h.value.toLowerCase().includes(q)
+    ) ?? [];
+    if (matchingHotspots.length > 0) {
+      return matchingHotspots.map(h => ({ kind: "hotspot" as const, flyer: f, hotspot: h }));
+    }
+    return [{ kind: "flyer" as const, flyer: f }];
+  }) : [];
+
   return (
     <>
 
@@ -343,9 +358,93 @@ export default function Home() {
             <p style={{ fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Loading…</p>
           )}
 
-          {/* Flyer grid */}
-          {!loading && (
-            <div style={{ filter: searchOpen && search === "" && activeTags.length === 0 && activeEntities.length === 0 ? "blur(6px)" : "blur(0px)", opacity: searchOpen && search === "" && activeTags.length === 0 && activeEntities.length === 0 ? 0.5 : 1, transition: "filter 0.3s ease, opacity 0.3s ease", pointerEvents: searchOpen && search === "" && activeTags.length === 0 && activeEntities.length === 0 ? "none" : "auto" }}>
+          {/* Flat search results */}
+          {!loading && search !== "" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              {flatResults.length === 0 && (
+                <p style={{ color: "var(--muted)", fontSize: 14, fontFamily: "var(--font-sans)", paddingTop: 24 }}>
+                  No flyers match your search.
+                </p>
+              )}
+              {flatResults.map((result, i) => {
+                const hotspotMeta: Record<Hotspot["type"], { bg: string; icon: React.ReactNode }> = {
+                  phone:   { bg: "#22c55e", icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3.5 2A1.5 1.5 0 0 0 2 3.5v.75C2 10.28 5.72 14 11.75 14h.75A1.5 1.5 0 0 0 14 12.5v-1.38a1.5 1.5 0 0 0-1.11-1.45l-1.62-.4a1.5 1.5 0 0 0-1.56.6l-.36.48A6.52 6.52 0 0 1 5.65 6.65l.48-.36a1.5 1.5 0 0 0 .6-1.56l-.4-1.62A1.5 1.5 0 0 0 4.88 2H3.5z" fill="#fff"/></svg> },
+                  sms:     { bg: "#06b6d4", icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H5l-3 2V3z" fill="#fff"/></svg> },
+                  email:   { bg: "#f97316", icon: <MdEmail size={13} color="#fff" /> },
+                  address: { bg: "#ef4444", icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.75 4.5 8.5 4.5 8.5s4.5-4.75 4.5-8.5C12.5 3.515 10.485 1.5 8 1.5zm0 6a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" fill="#fff"/></svg> },
+                  website: { bg: "#3b82f6", icon: <FaSafari size={13} color="#fff" /> },
+                };
+                if (result.kind === "hotspot") {
+                  const { flyer, hotspot } = result;
+                  const meta = hotspotMeta[hotspot.type];
+                  return (
+                    <button
+                      key={`${flyer.id}-${i}`}
+                      onClick={() => { setPreviewInitialSearch(search); setPreview(flyer); }}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 12,
+                        padding: "10px 12px", borderRadius: 14,
+                        background: "var(--surface)", border: "none",
+                        cursor: "pointer", textAlign: "left", width: "100%",
+                        transition: "background 0.15s",
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "var(--bg)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "var(--surface)")}
+                    >
+                      <div style={{ flexShrink: 0, width: 36, height: 36, borderRadius: "50%", background: meta.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {meta.icon}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        {hotspot.label && (
+                          <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-sans)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{hotspot.label}</p>
+                        )}
+                        <p style={{ margin: 0, fontSize: 13, color: hotspot.label ? "var(--muted)" : "var(--text)", fontFamily: "var(--font-sans)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontWeight: hotspot.label ? 400 : 600 }}>{hotspot.value}</p>
+                      </div>
+                      <div style={{ flexShrink: 0, textAlign: "right", maxWidth: 140 }}>
+                        <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-sans)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{flyer.title}</p>
+                        {flyer.entity && <p style={{ margin: 0, fontSize: 11, color: "var(--muted)", fontFamily: "var(--font-sans)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{flyer.entity}</p>}
+                      </div>
+                    </button>
+                  );
+                }
+                // Flyer fallback
+                const { flyer } = result;
+                return (
+                  <button
+                    key={`${flyer.id}-fallback`}
+                    onClick={() => { setPreviewInitialSearch(search); setPreview(flyer); }}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 12,
+                      padding: "10px 12px", borderRadius: 14,
+                      background: "var(--surface)", border: "none",
+                      cursor: "pointer", textAlign: "left", width: "100%",
+                      transition: "background 0.15s",
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "var(--bg)")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "var(--surface)")}
+                  >
+                    <div style={{ flexShrink: 0, width: 36, height: 36, borderRadius: 10, overflow: "hidden", background: "var(--bg)", border: "1px solid var(--border)" }}>
+                      {flyer.image_url
+                        ? <img src={flyer.image_url} alt={flyer.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: "var(--muted)" }}>{flyer.title.charAt(0)}</div>
+                      }
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-sans)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{flyer.title}</p>
+                      {flyer.entity && <p style={{ margin: 0, fontSize: 11, color: "var(--muted)", fontFamily: "var(--font-sans)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{flyer.entity}</p>}
+                    </div>
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, color: "var(--muted)" }}>
+                      <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Flyer grid — shown when not actively searching */}
+          {!loading && search === "" && (
+            <div style={{ filter: searchOpen && activeTags.length === 0 && activeEntities.length === 0 ? "blur(6px)" : "blur(0px)", opacity: searchOpen && activeTags.length === 0 && activeEntities.length === 0 ? 0.5 : 1, transition: "filter 0.3s ease, opacity 0.3s ease", pointerEvents: searchOpen && activeTags.length === 0 && activeEntities.length === 0 ? "none" : "auto" }}>
             <div key={gridKey} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, alignItems: "start" }}>
               {filtered.map((flyer, i) => (
                 <FlyerCard
@@ -360,7 +459,7 @@ export default function Home() {
               ))}
               {filtered.length === 0 && (
                 <p style={{ color: "var(--muted)", fontSize: 14, fontFamily: "var(--font-sans)", gridColumn: "1/-1", paddingTop: 24 }}>
-                  No flyers match your search.
+                  No flyers match your filters.
                 </p>
               )}
             </div>
