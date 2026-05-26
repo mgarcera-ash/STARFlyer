@@ -676,7 +676,7 @@ function FlyerCard({ flyer, search, showEntity, onQuickLook, onPreview, animatio
           alignItems: "center",
           gap: 12,
           background: "#ffffff",
-          border: "2px solid #000000",
+          border: "2px solid #d4d4d4",
           borderRadius: 52,
           padding: "10px 20px 10px 10px",
           cursor: "pointer",
@@ -686,7 +686,7 @@ function FlyerCard({ flyer, search, showEntity, onQuickLook, onPreview, animatio
       >
         {/* Circular image */}
         <div
-          style={{ position: "relative", flexShrink: 0, width: 64, height: 64, borderRadius: "50%", overflow: "hidden", border: "2px solid #000000" }}
+          style={{ position: "relative", flexShrink: 0, width: 64, height: 64, borderRadius: "50%", overflow: "hidden", border: "2px solid #d4d4d4" }}
         >
           {/* Skeleton */}
           <div style={{
