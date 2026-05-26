@@ -345,7 +345,7 @@ export default function Home() {
       {menuOpen && (
         <div onClick={() => setMenuOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 48 }} />
       )}
-      <div style={{ position: "fixed", top: 20, right: 82, zIndex: 50 }}>
+      <div style={{ position: "fixed", top: 20, right: 82, zIndex: 50, opacity: searchOpen ? 0 : 1, pointerEvents: searchOpen ? "none" : "auto", transition: "opacity 0.2s" }}>
         {/* Menu card */}
         <div style={{
           position: "absolute", top: "calc(100% + 10px)", right: 0,
