@@ -434,9 +434,6 @@ export default function Home() {
                             {flyer.entity && <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.45)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{flyer.entity}</p>}
                             <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "#fff", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>{flyer.title}</p>
                           </div>
-                          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, color: "rgba(255,255,255,0.35)" }}>
-                            <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
                         </button>
                         {typeOrder.filter(t => hotspotsByType[t]).map(type => (
                           <div key={type}>
@@ -449,7 +446,7 @@ export default function Home() {
                             {hotspotsByType[type]!.map((h, hi) => (
                               <button
                                 key={hi}
-                                onClick={() => { setPreviewInitialSearch(h.label || h.value); setPreview(flyer); }}
+                                onClick={() => { setPreviewInitialSearch(""); setPreview(flyer); }}
                                 style={{
                                   display: "flex", flexDirection: "column", alignItems: "flex-start",
                                   padding: "6px 16px 6px 40px", width: "100%",
