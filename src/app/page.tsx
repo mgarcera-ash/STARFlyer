@@ -504,8 +504,8 @@ export default function Home() {
               {/* New arrivals */}
               {flyers.length > 0 && (
                 <SectionRow
-                  label="New"
                   title="Recently Added"
+                  dot="#3b82f6"
                   flyers={flyers.slice(0, 5)}
                   onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
                 />
@@ -516,7 +516,6 @@ export default function Home() {
               <div style={{ marginBottom: 16 }}>
                 <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 16 }}>
                   <div>
-                    <p style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase", margin: "0 0 2px", fontFamily: "var(--font-sans)" }}>All</p>
                     <p style={{ fontSize: 22, fontWeight: 600, color: "var(--text)", margin: 0, letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>Browse {flyers.length} Flyers</p>
                   </div>
                 </div>
@@ -970,7 +969,7 @@ function FeaturedCard({ flyers, onPreview }: { flyers: Flyer[]; onPreview: (f: F
         style={{
           position: "relative", width: "100%", paddingBottom: "52%",
           borderRadius: 24, overflow: "hidden", cursor: "pointer",
-          background: "#1c1c1e",
+          background: "#1c1c1e", border: "2px solid #d4d4d4",
         }}
       >
         {flyer.image_url && (
@@ -983,7 +982,7 @@ function FeaturedCard({ flyers, onPreview }: { flyers: Flyer[]; onPreview: (f: F
         )}
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 25%, rgba(0,0,0,0.85) 100%)" }} />
         <div style={{ position: "absolute", inset: 0, backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", maskImage: "linear-gradient(to bottom, transparent 25%, black 60%)", WebkitMaskImage: "linear-gradient(to bottom, transparent 25%, black 60%)" }} />
-        <div style={{ position: "absolute", top: 14, left: 14, background: "rgba(0,0,0,0.45)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", borderRadius: 99, padding: "4px 10px" }}>
+        <div style={{ position: "absolute", top: 14, left: 14, background: "#3b82f6", borderRadius: 99, padding: "4px 10px" }}>
           <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: "#fff", fontFamily: "var(--font-sans)", letterSpacing: "0.08em", textTransform: "uppercase" }}>Featured</p>
         </div>
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "16px 18px 20px", opacity: fading ? 0 : 1, transition: "opacity 0.3s ease" }}>
@@ -1042,15 +1041,15 @@ function PosterCard({ flyer, onQuickLook }: { flyer: Flyer; onQuickLook: () => v
 }
 
 // ── Section row ───────────────────────────────────────────────────────────────
-function SectionRow({ label, title, flyers, onSeeAll, onQuickLook }: {
-  label: string; title: string; flyers: Flyer[];
+function SectionRow({ title, dot, flyers, onSeeAll, onQuickLook }: {
+  title: string; dot?: string; flyers: Flyer[];
   onSeeAll?: () => void; onQuickLook: (f: Flyer) => void;
 }) {
   return (
     <div style={{ marginBottom: 40 }}>
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 14 }}>
-        <div>
-          <p style={{ margin: "0 0 1px", fontSize: 11, fontWeight: 700, color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "var(--font-sans)" }}>{label}</p>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {dot && <div style={{ width: 8, height: 8, borderRadius: "50%", background: dot, flexShrink: 0, marginBottom: 2 }} />}
           <p style={{ margin: 0, fontSize: 22, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>{title}</p>
         </div>
         {onSeeAll && (
