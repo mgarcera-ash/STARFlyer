@@ -45,6 +45,7 @@ export default function Home() {
   const [imagesReady, setImagesReady] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   // Skip splash if already shown this session
   useEffect(() => {
@@ -197,7 +198,8 @@ export default function Home() {
       const inInput = tag === "INPUT" || tag === "TEXTAREA";
 
       if (e.key === "Escape") {
-        if (filterOpen) { setFilterOpen(false); }
+        if (shortcutsOpen) { setShortcutsOpen(false); }
+        else if (filterOpen) { setFilterOpen(false); }
         else if (searchOpen) { setSearchOpen(false); setSearchInput(""); setActiveTags([]); setActiveEntities([]); setGridKey(k => k + 1); searchInputRef.current?.blur(); }
         return;
       }
@@ -211,7 +213,7 @@ export default function Home() {
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [filterOpen, searchOpen]);
+  }, [filterOpen, searchOpen, shortcutsOpen]);
 
   const filtered = flyers.filter(f => {
     const q = search.toLowerCase();
@@ -525,7 +527,7 @@ export default function Home() {
         }}>
           <div style={{ padding: "10px 18px 4px", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)", fontFamily: "var(--font-sans)" }}>General</div>
           <MenuRow label="Help" href="#" onClick={() => setMenuOpen(false)} />
-          <MenuRow label="Keyboard Shortcuts" href="/shortcuts" onClick={() => setMenuOpen(false)} />
+          <MenuRow label="Keyboard Shortcuts" href="#" onClick={() => { setMenuOpen(false); setShortcutsOpen(true); }} />
           <div style={{ height: 1, background: "rgba(0,0,0,0.06)", margin: "6px 0" }} />
           <div style={{ padding: "6px 18px 4px", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Staff</div>
           <MenuRow label="Upload a flyer" href="/login?from=/upload" onClick={() => setMenuOpen(false)} />
@@ -823,6 +825,83 @@ export default function Home() {
           initialSearch={previewInitialSearch}
           onClose={() => { setPreview(null); setPreviewInitialSearch(""); }}
         />
+      )}
+
+      {/* Keyboard shortcuts modal */}
+      {shortcutsOpen && (
+        <div
+          onClick={() => setShortcutsOpen(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 200,
+            background: "rgba(0,0,0,0.65)",
+            backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: 24,
+            animation: "fadeIn 0.2s ease forwards",
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: "#1c1c1e",
+              borderRadius: 28,
+              border: "1.5px solid rgba(255,255,255,0.1)",
+              boxShadow: "0 24px 80px rgba(0,0,0,0.5)",
+              width: "100%", maxWidth: 380,
+              padding: "28px 28px 24px",
+              animation: "fadeScale 0.22s cubic-bezier(0.34,1.4,0.64,1) forwards",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+              <p style={{ margin: 0, fontSize: 17, fontWeight: 600, color: "#fff", fontFamily: "var(--font-sans)", letterSpacing: "-0.02em" }}>
+                Keyboard Shortcuts
+              </p>
+              <button
+                onClick={() => setShortcutsOpen(false)}
+                style={{
+                  width: 28, height: 28, borderRadius: "50%",
+                  background: "rgba(255,255,255,0.1)", border: "none",
+                  color: "rgba(255,255,255,0.6)", fontSize: 14, fontWeight: 600,
+                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                  fontFamily: "var(--font-sans)",
+                }}
+              >✕</button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              {[
+                { keys: ["A–Z", "0–9"], description: "Start searching" },
+                { keys: ["Esc"], description: "Clear search & close" },
+              ].map(({ keys, description }, i, arr) => (
+                <div key={i} style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16,
+                  padding: "13px 0",
+                  borderBottom: i < arr.length - 1 ? "1px solid rgba(255,255,255,0.08)" : "none",
+                }}>
+                  <span style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", fontFamily: "var(--font-sans)", fontWeight: 400 }}>
+                    {description}
+                  </span>
+                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                    {keys.map(k => (
+                      <kbd key={k} style={{
+                        display: "inline-flex", alignItems: "center", justifyContent: "center",
+                        padding: "4px 10px", borderRadius: 8,
+                        background: "rgba(255,255,255,0.1)",
+                        border: "1px solid rgba(255,255,255,0.18)",
+                        fontSize: 12, fontWeight: 600, color: "#fff",
+                        fontFamily: "var(--font-sans)", letterSpacing: "0.02em",
+                      }}>{k}</kbd>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <p style={{ margin: "20px 0 0", fontSize: 12, color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-sans)", lineHeight: 1.5 }}>
+              Available on desktop. Press Esc or tap outside to close.
+            </p>
+          </div>
+        </div>
       )}
     </>
   );
