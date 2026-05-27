@@ -190,17 +190,28 @@ export default function Home() {
     if (searchOpen) searchInputRef.current?.focus();
   }, [searchOpen]);
 
-  // Close search overlay / filter panel on Escape
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
+      const tag = (document.activeElement as HTMLElement)?.tagName;
+      const inInput = tag === "INPUT" || tag === "TEXTAREA";
+
       if (e.key === "Escape") {
         if (filterOpen) { setFilterOpen(false); }
-        else { setSearchOpen(false); }
+        else if (searchOpen) { setSearchOpen(false); setSearchInput(""); setActiveTags([]); setActiveEntities([]); setGridKey(k => k + 1); }
+        return;
+      }
+
+      // Type to search — printable single char, not in an input, no modifiers
+      if (!searchOpen && !inInput && e.key.length === 1 && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        setSearchOpen(true);
+        setSearchInput(e.key);
+        e.preventDefault();
       }
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [filterOpen]);
+  }, [filterOpen, searchOpen]);
 
   const filtered = flyers.filter(f => {
     const q = search.toLowerCase();
@@ -521,6 +532,7 @@ export default function Home() {
         }}>
           <div style={{ padding: "10px 18px 4px", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)", fontFamily: "var(--font-sans)" }}>General</div>
           <MenuRow label="Help" href="#" onClick={() => setMenuOpen(false)} />
+          <MenuRow label="Keyboard Shortcuts" href="/shortcuts" onClick={() => setMenuOpen(false)} />
           <div style={{ height: 1, background: "rgba(0,0,0,0.06)", margin: "6px 0" }} />
           <div style={{ padding: "6px 18px 4px", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Staff</div>
           <MenuRow label="Upload a flyer" href="/login?from=/upload" onClick={() => setMenuOpen(false)} />
