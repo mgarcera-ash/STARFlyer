@@ -365,13 +365,6 @@ export default function Home() {
                     <circle cx="9" cy="9" r="5.5" stroke="currentColor" strokeWidth="1.75" />
                     <path d="M14 14l3.5 3.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
                   </svg>
-                  {(search !== "" || activeTags.length + activeEntities.length > 0) && (
-                    <span style={{
-                      position: "absolute", top: 11, right: 11,
-                      width: 8, height: 8, borderRadius: "50%",
-                      background: "#22c55e", border: "1.5px solid var(--text)",
-                    }} />
-                  )}
                 </button>
               </div>
             </div>
