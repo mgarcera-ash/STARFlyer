@@ -1055,8 +1055,8 @@ function PosterCard({ flyer, onQuickLook }: { flyer: Flyer; onQuickLook: () => v
         )}
       </div>
       <div style={{ padding: "9px 11px 11px" }}>
-        {flyer.entity && <p style={{ margin: "0 0 2px", fontSize: 10, fontWeight: 600, color: "var(--muted)", fontFamily: "var(--font-sans)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{flyer.entity}</p>}
-        <p style={{ margin: 0, fontSize: 12, fontWeight: 500, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.35, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" } as React.CSSProperties}>{flyer.title}</p>
+        {flyer.entity && <p style={{ margin: "0 0 2px", fontSize: 10, fontWeight: 600, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>{flyer.entity}</p>}
+        <p style={{ margin: 0, fontSize: 12, fontWeight: 500, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.35 }}>{flyer.title}</p>
       </div>
     </div>
   );
