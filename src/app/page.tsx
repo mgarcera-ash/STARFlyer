@@ -176,6 +176,18 @@ export default function Home() {
 
   const availableLetters = useMemo(() => Object.keys(tagsByLetter).sort(), [tagsByLetter]);
 
+  const topicRows = useMemo(() => {
+    return allTags
+      .map(tag => ({ tag, flyers: flyers.filter(f => f.tags?.includes(tag)) }))
+      .filter(r => r.flyers.length >= 3);
+  }, [allTags, flyers]);
+
+  const entityRows = useMemo(() => {
+    return allEntities
+      .map(entity => ({ entity, flyers: flyers.filter(f => f.entity === entity) }))
+      .filter(r => r.flyers.length >= 3);
+  }, [allEntities, flyers]);
+
   const scrollToLetter = (letter: string) => {
     const el = sectionRefs.current[letter];
     const container = panelScrollRef.current;
@@ -477,27 +489,74 @@ export default function Home() {
             );
           })()}
 
-          {/* Flyer grid — shown when no search or filters active */}
+          {/* App Store layout — shown when no search or filters active */}
           {!loading && !showGrouped && (
-            <div style={{ opacity: searchOpen && activeEntities.length === 0 ? 0 : 1, pointerEvents: searchOpen && activeEntities.length === 0 ? "none" : "auto", transition: "opacity 0.2s ease" }}>
-            <div key={gridKey} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, alignItems: "start" }}>
-              {filtered.map((flyer, i) => (
-                <FlyerCard
-                  key={flyer.id}
-                  flyer={flyer}
-                  search={search}
-                  showEntity={activeEntities.length > 0}
-                  onQuickLook={(initialSearch = "") => { setPreviewInitialSearch(initialSearch); setQuickLook(flyer); }}
-                  onPreview={(initialSearch = "") => { setPreviewInitialSearch(initialSearch); setPreview(flyer); }}
-                  animationDelay={i * 0.06}
+            <div style={{ opacity: searchOpen ? 0 : 1, pointerEvents: searchOpen ? "none" : "auto", transition: "opacity 0.2s ease" }}>
+
+              {/* Featured */}
+              {flyers.length > 0 && (
+                <FeaturedCard
+                  flyers={flyers.slice(0, 5)}
+                  onPreview={f => { setPreviewInitialSearch(""); setPreview(f); }}
+                />
+              )}
+
+              {/* New arrivals */}
+              {flyers.length > 0 && (
+                <SectionRow
+                  label="New"
+                  title="Recently Added"
+                  flyers={flyers.slice(0, 5)}
+                  onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
+                />
+              )}
+
+              {/* By topic */}
+              {topicRows.map(({ tag, flyers: rowFlyers }) => (
+                <SectionRow
+                  key={tag}
+                  label="Topic"
+                  title={tag}
+                  flyers={rowFlyers}
+                  onSeeAll={() => { toggleTag(tag); setFilterTab("topics"); setSearchOpen(true); }}
+                  onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
                 />
               ))}
-              {filtered.length === 0 && (
-                <p style={{ color: "var(--muted)", fontSize: 14, fontFamily: "var(--font-sans)", gridColumn: "1/-1", paddingTop: 24 }}>
-                  No flyers match your filters.
-                </p>
-              )}
-            </div>
+
+              {/* By organization */}
+              {entityRows.map(({ entity, flyers: rowFlyers }) => (
+                <SectionRow
+                  key={entity}
+                  label="Organization"
+                  title={entity}
+                  flyers={rowFlyers}
+                  onSeeAll={() => { toggleEntity(entity); setFilterTab("agency"); setSearchOpen(true); }}
+                  onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
+                />
+              ))}
+
+              {/* All flyers */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 16 }}>
+                  <div>
+                    <p style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase", margin: "0 0 2px", fontFamily: "var(--font-sans)" }}>All</p>
+                    <p style={{ fontSize: 22, fontWeight: 600, color: "var(--text)", margin: 0, letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>Browse {flyers.length} Flyers</p>
+                  </div>
+                </div>
+                <div key={gridKey} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, alignItems: "start" }}>
+                  {flyers.map((flyer, i) => (
+                    <FlyerCard
+                      key={flyer.id}
+                      flyer={flyer}
+                      search=""
+                      showEntity={false}
+                      onQuickLook={() => { setPreviewInitialSearch(""); setQuickLook(flyer); }}
+                      onPreview={() => { setPreviewInitialSearch(""); setPreview(flyer); }}
+                      animationDelay={i * 0.04}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -909,6 +968,124 @@ export default function Home() {
 
 // Tracks URLs that have already been loaded this session — survives remounts
 const loadedImageUrls = new Set<string>();
+
+// ── Featured card ─────────────────────────────────────────────────────────────
+function FeaturedCard({ flyers, onPreview }: { flyers: Flyer[]; onPreview: (f: Flyer) => void }) {
+  const [idx, setIdx] = useState(0);
+  const [fading, setFading] = useState(false);
+
+  useEffect(() => {
+    if (flyers.length <= 1) return;
+    const t = setInterval(() => {
+      setFading(true);
+      setTimeout(() => { setIdx(i => (i + 1) % flyers.length); setFading(false); }, 300);
+    }, 4500);
+    return () => clearInterval(t);
+  }, [flyers.length]);
+
+  const flyer = flyers[idx];
+  if (!flyer) return null;
+
+  return (
+    <div style={{ marginBottom: 40 }}>
+      <div
+        onClick={() => onPreview(flyer)}
+        style={{
+          position: "relative", width: "100%", paddingBottom: "52%",
+          borderRadius: 24, overflow: "hidden", cursor: "pointer",
+          background: "#1c1c1e",
+        }}
+      >
+        {flyer.image_url && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={flyer.image_url} alt={flyer.title} style={{
+            position: "absolute", inset: 0, width: "100%", height: "100%",
+            objectFit: "cover",
+            opacity: fading ? 0 : 1, transition: "opacity 0.3s ease",
+          }} />
+        )}
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.1) 30%, rgba(0,0,0,0.75) 100%)" }} />
+        <div style={{ position: "absolute", top: 14, left: 14, background: "rgba(0,0,0,0.45)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", borderRadius: 99, padding: "4px 10px" }}>
+          <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: "#fff", fontFamily: "var(--font-sans)", letterSpacing: "0.08em", textTransform: "uppercase" }}>Featured</p>
+        </div>
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "16px 18px 20px", opacity: fading ? 0 : 1, transition: "opacity 0.3s ease" }}>
+          {flyer.entity && <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.6)", fontFamily: "var(--font-sans)", letterSpacing: "0.04em" }}>{flyer.entity}</p>}
+          <p style={{ margin: 0, fontSize: 20, fontWeight: 600, color: "#fff", fontFamily: "var(--font-sans)", letterSpacing: "-0.02em", lineHeight: 1.3 }}>{flyer.title}</p>
+        </div>
+        {flyers.length > 1 && (
+          <div style={{ position: "absolute", bottom: 16, right: 16, display: "flex", gap: 5, alignItems: "center" }}>
+            {flyers.map((_, i) => (
+              <div key={i} style={{
+                height: 5, borderRadius: 99,
+                width: i === idx ? 16 : 5,
+                background: i === idx ? "#fff" : "rgba(255,255,255,0.4)",
+                transition: "width 0.3s ease",
+              }} />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Poster card ───────────────────────────────────────────────────────────────
+function PosterCard({ flyer, onQuickLook }: { flyer: Flyer; onQuickLook: () => void }) {
+  const [pressed, setPressed] = useState(false);
+  return (
+    <div
+      onClick={onQuickLook}
+      onMouseDown={() => setPressed(true)}
+      onMouseUp={() => setPressed(false)}
+      onMouseLeave={() => setPressed(false)}
+      style={{
+        flexShrink: 0, width: 148, borderRadius: 16, overflow: "hidden",
+        cursor: "pointer", background: "var(--surface)", border: "1.5px solid var(--border)",
+        transform: pressed ? "scale(0.97)" : "scale(1)", transition: "transform 0.15s ease",
+      }}
+    >
+      <div style={{ width: "100%", paddingBottom: "133%", position: "relative", background: "var(--bg)" }}>
+        {flyer.image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={flyer.image_url} alt={flyer.title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+        ) : (
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ fontSize: 40, fontWeight: 700, color: "var(--accent)", opacity: 0.2, fontFamily: "var(--font-sans)" }}>{flyer.title.charAt(0)}</span>
+          </div>
+        )}
+      </div>
+      <div style={{ padding: "9px 11px 11px" }}>
+        {flyer.entity && <p style={{ margin: "0 0 2px", fontSize: 10, fontWeight: 600, color: "var(--muted)", fontFamily: "var(--font-sans)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{flyer.entity}</p>}
+        <p style={{ margin: 0, fontSize: 12, fontWeight: 500, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.35, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" } as React.CSSProperties}>{flyer.title}</p>
+      </div>
+    </div>
+  );
+}
+
+// ── Section row ───────────────────────────────────────────────────────────────
+function SectionRow({ label, title, flyers, onSeeAll, onQuickLook }: {
+  label: string; title: string; flyers: Flyer[];
+  onSeeAll?: () => void; onQuickLook: (f: Flyer) => void;
+}) {
+  return (
+    <div style={{ marginBottom: 40 }}>
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 14 }}>
+        <div>
+          <p style={{ margin: "0 0 1px", fontSize: 11, fontWeight: 700, color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "var(--font-sans)" }}>{label}</p>
+          <p style={{ margin: 0, fontSize: 22, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>{title}</p>
+        </div>
+        {onSeeAll && (
+          <button onClick={onSeeAll} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 500, color: "var(--accent)", fontFamily: "var(--font-sans)", padding: "0 0 3px", flexShrink: 0 }}>
+            See All →
+          </button>
+        )}
+      </div>
+      <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 6, scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}>
+        {flyers.map(f => <PosterCard key={f.id} flyer={f} onQuickLook={() => onQuickLook(f)} />)}
+      </div>
+    </div>
+  );
+}
 
 // ── Menu row ──────────────────────────────────────────────────────────────────
 function MenuRow({ label, href, onClick }: { label: string; href: string; onClick: () => void }) {
