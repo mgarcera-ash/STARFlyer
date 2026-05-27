@@ -511,29 +511,6 @@ export default function Home() {
                 />
               )}
 
-              {/* By topic */}
-              {topicRows.map(({ tag, flyers: rowFlyers }) => (
-                <SectionRow
-                  key={tag}
-                  label="Topic"
-                  title={tag}
-                  flyers={rowFlyers}
-                  onSeeAll={() => { toggleTag(tag); setFilterTab("topics"); setSearchOpen(true); }}
-                  onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
-                />
-              ))}
-
-              {/* By organization */}
-              {entityRows.map(({ entity, flyers: rowFlyers }) => (
-                <SectionRow
-                  key={entity}
-                  label="Organization"
-                  title={entity}
-                  flyers={rowFlyers}
-                  onSeeAll={() => { toggleEntity(entity); setFilterTab("agency"); setSearchOpen(true); }}
-                  onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
-                />
-              ))}
 
               {/* All flyers */}
               <div style={{ marginBottom: 16 }}>
