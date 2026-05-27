@@ -1040,7 +1040,7 @@ function PosterCard({ flyer, onQuickLook }: { flyer: Flyer; onQuickLook: () => v
       onMouseLeave={() => setPressed(false)}
       style={{
         flexShrink: 0, width: 148, borderRadius: 16, overflow: "hidden",
-        cursor: "pointer", background: "var(--surface)",
+        cursor: "pointer", background: "var(--surface)", border: "2px solid #d4d4d4",
         transform: pressed ? "scale(0.97)" : "scale(1)", transition: "transform 0.15s ease",
       }}
     >
