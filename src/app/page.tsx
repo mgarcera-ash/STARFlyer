@@ -516,7 +516,7 @@ export default function Home() {
               <div style={{ marginBottom: 16 }}>
                 <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 16 }}>
                   <div>
-                    <p style={{ fontSize: 22, fontWeight: 600, color: "var(--text)", margin: 0, letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>Browse {flyers.length} Flyers</p>
+                    <p style={{ fontSize: 22, fontWeight: 600, color: "var(--text)", margin: 0, letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>Our Top Picks</p>
                   </div>
                 </div>
                 <div key={gridKey} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, alignItems: "start" }}>
@@ -983,7 +983,7 @@ function FeaturedCard({ flyers, onPreview }: { flyers: Flyer[]; onPreview: (f: F
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 25%, rgba(0,0,0,0.85) 100%)" }} />
         <div style={{ position: "absolute", inset: 0, backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", maskImage: "linear-gradient(to bottom, transparent 25%, black 60%)", WebkitMaskImage: "linear-gradient(to bottom, transparent 25%, black 60%)" }} />
         <div style={{ position: "absolute", top: 14, left: 14, background: "#3b82f6", borderRadius: 99, padding: "4px 10px" }}>
-          <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: "#fff", fontFamily: "var(--font-sans)", letterSpacing: "0.08em", textTransform: "uppercase" }}>Featured</p>
+          <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "#fff", fontFamily: "var(--font-sans)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Featured</p>
         </div>
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "16px 18px 20px", opacity: fading ? 0 : 1, transition: "opacity 0.3s ease" }}>
           {flyer.entity && <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.6)", fontFamily: "var(--font-sans)", letterSpacing: "0.04em" }}>{flyer.entity}</p>}
