@@ -198,7 +198,7 @@ export default function Home() {
 
       if (e.key === "Escape") {
         if (filterOpen) { setFilterOpen(false); }
-        else if (searchOpen) { setSearchOpen(false); setSearchInput(""); setActiveTags([]); setActiveEntities([]); setGridKey(k => k + 1); }
+        else if (searchOpen) { setSearchOpen(false); setSearchInput(""); setActiveTags([]); setActiveEntities([]); setGridKey(k => k + 1); searchInputRef.current?.blur(); }
         return;
       }
 
