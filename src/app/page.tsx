@@ -343,7 +343,7 @@ export default function Home() {
             {/* Loading indicator */}
             <p style={{
               fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 400,
-              color: "rgba(255,255,255,0.4)", margin: "16px 0 0", letterSpacing: "0.01em",
+              color: "rgba(255,255,255,0.75)", margin: "16px 0 0", letterSpacing: "0.01em",
               opacity: countVisible && !imagesReady ? 1 : 0,
               transition: "opacity 0.5s ease",
             }}>
@@ -640,8 +640,8 @@ export default function Home() {
                       onClick={() => { setActiveTags([]); setActiveEntities([]); setGridKey(k => k + 1); }}
                       style={{
                         flexShrink: 0, borderRadius: 99,
-                        border: "1.5px solid #ef4444", background: "transparent",
-                        color: "#ef4444", fontSize: 12, fontWeight: 600, lineHeight: 1,
+                        border: "1.5px solid #b91c1c", background: "transparent",
+                        color: "#b91c1c", fontSize: 12, fontWeight: 600, lineHeight: 1,
                         fontFamily: "var(--font-sans)", cursor: "pointer",
                         padding: "9px 16px",
                         transition: "background 0.15s",
@@ -792,7 +792,7 @@ export default function Home() {
               }}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M1 3h14M4 8h8M7 13h2" stroke={activeTags.length > 0 || activeEntities.length > 0 || filterOpen ? "#22c55e" : "var(--muted)"} strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M1 3h14M4 8h8M7 13h2" stroke={activeTags.length > 0 || activeEntities.length > 0 || filterOpen ? "#22c55e" : "#404040"} strokeWidth="1.5" strokeLinecap="round" />
               </svg>
               {(activeTags.length + activeEntities.length) > 0 && (
                 <span style={{
@@ -826,8 +826,8 @@ export default function Home() {
               style={{
                 flexShrink: 0, marginRight: 10,
                 width: 32, height: 32, borderRadius: "50%",
-                border: "1.5px solid #ef4444", background: "transparent",
-                color: "#ef4444", fontSize: 14, fontWeight: 600,
+                border: "1.5px solid #b91c1c", background: "transparent",
+                color: "#b91c1c", fontSize: 14, fontWeight: 600,
                 fontFamily: "var(--font-sans)", cursor: "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}
@@ -871,7 +871,7 @@ export default function Home() {
             style={{
               position: "fixed", top: 20, right: 24,
               background: "none", border: "none", cursor: "pointer",
-              fontSize: 13, fontWeight: 500, color: "var(--muted)",
+              fontSize: 13, fontWeight: 500, color: "#404040",
               fontFamily: "var(--font-sans)", padding: 0,
             }}
           >Close</button>
