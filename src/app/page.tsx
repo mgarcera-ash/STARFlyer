@@ -45,6 +45,11 @@ export default function Home() {
   const [imagesReady, setImagesReady] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [shortcutsClosing, setShortcutsClosing] = useState(false);
+  const closeShortcuts = () => {
+    setShortcutsClosing(true);
+    setTimeout(() => { setShortcutsOpen(false); setShortcutsClosing(false); }, 180);
+  };
 
   // Skip splash if already shown this session
   useEffect(() => {
@@ -209,7 +214,7 @@ export default function Home() {
       const inInput = tag === "INPUT" || tag === "TEXTAREA";
 
       if (e.key === "Escape") {
-        if (shortcutsOpen) { setShortcutsOpen(false); }
+        if (shortcutsOpen) { closeShortcuts(); }
         else if (filterOpen) { setFilterOpen(false); }
         else if (searchOpen) { setSearchOpen(false); setSearchInput(""); setActiveTags([]); setActiveEntities([]); setGridKey(k => k + 1); searchInputRef.current?.blur(); }
         return;
@@ -833,14 +838,14 @@ export default function Home() {
       {/* Keyboard shortcuts modal */}
       {shortcutsOpen && (
         <div
-          onClick={() => setShortcutsOpen(false)}
+          onClick={closeShortcuts}
           style={{
             position: "fixed", inset: 0, zIndex: 200,
             background: "rgba(0,0,0,0.65)",
             backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
             display: "flex", alignItems: "center", justifyContent: "center",
             padding: 24,
-            animation: "fadeIn 0.2s ease forwards",
+            animation: shortcutsClosing ? "fadeOut 0.18s ease forwards" : "fadeIn 0.2s ease forwards",
           }}
         >
           <div
@@ -852,7 +857,7 @@ export default function Home() {
               boxShadow: "0 24px 80px rgba(0,0,0,0.5)",
               width: "100%", maxWidth: 380,
               padding: "28px 28px 24px",
-              animation: "fadeScale 0.22s cubic-bezier(0.34,1.4,0.64,1) forwards",
+              animation: shortcutsClosing ? "fadeScaleOut 0.18s ease forwards" : "fadeScale 0.22s cubic-bezier(0.34,1.4,0.64,1) forwards",
             }}
           >
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
@@ -860,7 +865,7 @@ export default function Home() {
                 Keyboard Shortcuts
               </p>
               <button
-                onClick={() => setShortcutsOpen(false)}
+                onClick={closeShortcuts}
                 style={{
                   width: 28, height: 28, borderRadius: "50%",
                   background: "rgba(255,255,255,0.1)", border: "none",
