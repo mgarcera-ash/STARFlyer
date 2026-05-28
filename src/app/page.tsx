@@ -291,7 +291,7 @@ export default function Home() {
 
       {/* Splash screen */}
       {splashVisible && (
-        <div style={{
+        <div role="status" aria-label="Loading" style={{
           position: "fixed", inset: 0, zIndex: 200,
           background: "#000",
           display: "flex", alignItems: "center", justifyContent: "center",
@@ -374,6 +374,7 @@ export default function Home() {
                   </p>
                 </div>
                 <button
+                  aria-label="Open search"
                   onClick={() => setSearchOpen(true)}
                   style={{
                     flexShrink: 0,
@@ -655,6 +656,9 @@ export default function Home() {
                 <div
                   ref={panelScrollRef}
                   className="tag-panel"
+                  tabIndex={0}
+                  role="region"
+                  aria-label="Filters"
                   style={{ overflowY: "auto", flex: 1, padding: "6px 30px 14px 14px" }}
                 >
 
@@ -777,6 +781,7 @@ export default function Home() {
           }}>
             {/* Filter icon button */}
             <button
+              aria-label="Open filters"
               onClick={() => setFilterOpen(o => !o)}
               style={{
                 flexShrink: 0, padding: "14px 16px 14px 20px",
@@ -851,7 +856,7 @@ export default function Home() {
       )}
 
       {/* Help overlay */}
-      <div style={{
+      <div role="region" aria-label="Help" aria-hidden={!helpOpen} style={{
         position: "fixed", inset: 0, zIndex: 150,
         pointerEvents: helpOpen ? "auto" : "none",
         opacity: helpOpen ? 1 : 0,
@@ -893,6 +898,7 @@ export default function Home() {
       {/* Keyboard shortcuts modal */}
       {shortcutsOpen && (
         <div
+          role="presentation"
           onClick={closeShortcuts}
           style={{
             position: "fixed", inset: 0, zIndex: 200,
@@ -904,6 +910,9 @@ export default function Home() {
           }}
         >
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Keyboard shortcuts"
             onClick={e => e.stopPropagation()}
             style={{
               background: "#1c1c1e",
