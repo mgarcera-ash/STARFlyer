@@ -18,10 +18,12 @@ type Flyer = {
   created_at: string | null;
   approved_at: string | null;
   hotspots: Hotspot[] | null;
+  featured: boolean;
 };
 
 export default function Home() {
   const [flyers, setFlyers] = useState<Flyer[]>([]);
+  const [featuredFlyers, setFeaturedFlyers] = useState<Flyer[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
   const [allEntities, setAllEntities] = useState<string[]>([]);
   const [searchInput, setSearchInput] = useState("");
@@ -133,6 +135,7 @@ export default function Home() {
         .order("created_at", { ascending: false });
       const flyerList = data || [];
       setFlyers(flyerList);
+      setFeaturedFlyers(flyerList.filter(f => f.featured));
 
       // Collect unique tags and entities across all flyers
       const tagSet = new Set<string>();
@@ -505,9 +508,9 @@ export default function Home() {
             <div key={gridKey} style={{ opacity: searchOpen ? 0 : 1, pointerEvents: searchOpen ? "none" : "auto", transition: "opacity 0.2s ease" }}>
 
               {/* Featured */}
-              {flyers.length > 0 && (
+              {(featuredFlyers.length > 0 || flyers.length > 0) && (
                 <FeaturedCard
-                  flyers={flyers.slice(0, 5)}
+                  flyers={featuredFlyers.length > 0 ? featuredFlyers : flyers.slice(0, 5)}
                   animationDelay={0}
                   onPreview={f => { setPreviewInitialSearch(""); setPreview(f); }}
                 />
