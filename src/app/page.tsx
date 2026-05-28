@@ -44,7 +44,6 @@ export default function Home() {
   const [minTimeReady, setMinTimeReady] = useState(false);
   const [imagesReady, setImagesReady] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   // Skip splash if already shown this session
@@ -534,58 +533,26 @@ export default function Home() {
                   ))}
                 </div>
               </div>
+
+              {/* Quick Links */}
+              <div className="stagger-item" style={{ marginBottom: 40, animationDelay: "0.20s" }}>
+                <p style={{ fontSize: 22, fontWeight: 600, color: "var(--text)", margin: "0 0 12px", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>Quick Links</p>
+                <a href="#" style={{ display: "block", fontSize: 17, fontWeight: 500, color: "var(--accent)", textDecoration: "none", fontFamily: "var(--font-sans)", padding: "6px 0" }}>Help</a>
+                <a href="#" onClick={e => { e.preventDefault(); setShortcutsOpen(true); }} style={{ display: "block", fontSize: 17, fontWeight: 500, color: "var(--accent)", textDecoration: "none", fontFamily: "var(--font-sans)", padding: "6px 0" }}>Keyboard Shortcuts</a>
+              </div>
+
+              {/* Staff */}
+              <div className="stagger-item" style={{ marginBottom: 40, animationDelay: "0.24s" }}>
+                <p style={{ fontSize: 22, fontWeight: 600, color: "var(--text)", margin: "0 0 12px", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>Staff</p>
+                <a href="/login?from=/upload" style={{ display: "block", fontSize: 17, fontWeight: 500, color: "var(--accent)", textDecoration: "none", fontFamily: "var(--font-sans)", padding: "6px 0" }}>Upload a Flyer</a>
+                <a href="/login?from=/admin" style={{ display: "block", fontSize: 17, fontWeight: 500, color: "var(--accent)", textDecoration: "none", fontFamily: "var(--font-sans)", padding: "6px 0" }}>Review Flyer Submissions</a>
+              </div>
             </div>
           )}
         </div>
 
         <div style={{ textAlign: "center", paddingTop: 48, paddingBottom: 24 }} />
       </main>
-
-      {/* Menu tap-outside */}
-      {menuOpen && (
-        <div onClick={() => setMenuOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 48 }} />
-      )}
-
-      {/* ── Menu FAB — fixed bottom-left ─────────────────────────── */}
-      <div style={{ position: "fixed", bottom: 20, left: 20, zIndex: 50 }}>
-        {/* Menu card — opens upward */}
-        <div style={{
-          position: "absolute", bottom: "calc(100% + 10px)", left: 0,
-          background: "rgba(255,255,255,0.82)",
-          backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-          borderRadius: 20, border: "1px solid rgba(0,0,0,0.08)",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
-          minWidth: 200, overflow: "hidden",
-          opacity: menuOpen ? 1 : 0,
-          transform: menuOpen ? "translateY(0) scale(1)" : "translateY(8px) scale(0.97)",
-          pointerEvents: menuOpen ? "auto" : "none",
-          transition: "opacity 0.2s ease, transform 0.2s ease",
-        }}>
-          <div style={{ padding: "10px 18px 4px", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)", fontFamily: "var(--font-sans)" }}>General</div>
-          <MenuRow label="Help" href="#" onClick={() => setMenuOpen(false)} />
-          <MenuRow label="Keyboard Shortcuts" href="#" onClick={() => { setMenuOpen(false); setShortcutsOpen(true); }} />
-          <div style={{ height: 1, background: "rgba(0,0,0,0.06)", margin: "6px 0" }} />
-          <div style={{ padding: "6px 18px 4px", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Staff</div>
-          <MenuRow label="Upload a flyer" href="/login?from=/upload" onClick={() => setMenuOpen(false)} />
-          <div style={{ height: 1, background: "rgba(0,0,0,0.06)", margin: "6px 0" }} />
-          <div style={{ padding: "6px 18px 4px", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Admin</div>
-          <MenuRow label="Review submissions" href="/login?from=/admin" onClick={() => setMenuOpen(false)} />
-          <div style={{ height: 8 }} />
-        </div>
-
-        <button
-          onClick={() => setMenuOpen(o => !o)}
-          style={{
-            width: 52, height: 52, borderRadius: "50%",
-            background: menuOpen ? "rgba(0,0,0,0.08)" : "var(--surface)",
-            border: "1.5px solid rgba(0,0,0,0.1)",
-            cursor: "pointer", color: "var(--text)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-            fontSize: 20, letterSpacing: 2,
-          }}
-        >···</button>
-      </div>
 
       {/* Filter tap-outside */}
       {filterOpen && <div onClick={() => setFilterOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 49 }} />}
@@ -1065,28 +1032,6 @@ function SectionRow({ title, dot, flyers, onSeeAll, onQuickLook, animationDelay 
         {flyers.map((f, i) => <PosterCard key={f.id} flyer={f} onQuickLook={() => onQuickLook(f)} animationDelay={animationDelay + i * 0.04} />)}
       </div>
     </div>
-  );
-}
-
-// ── Menu row ──────────────────────────────────────────────────────────────────
-function MenuRow({ label, href, onClick }: { label: string; href: string; onClick: () => void }) {
-  return (
-    <a
-      href={href}
-      onClick={onClick}
-      style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "9px 18px",
-        color: "var(--text)", textDecoration: "none",
-        fontSize: 14, fontWeight: 500, fontFamily: "var(--font-sans)",
-        transition: "background 0.15s",
-      }}
-      onMouseEnter={e => (e.currentTarget.style.background = "rgba(0,0,0,0.04)")}
-      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-    >
-      {label}
-      <span style={{ opacity: 0.25, fontSize: 16 }}>›</span>
-    </a>
   );
 }
 
