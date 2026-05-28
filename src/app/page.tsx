@@ -491,12 +491,13 @@ export default function Home() {
 
           {/* App Store layout — shown when no search or filters active */}
           {!loading && !showGrouped && (
-            <div style={{ opacity: searchOpen ? 0 : 1, pointerEvents: searchOpen ? "none" : "auto", transition: "opacity 0.2s ease" }}>
+            <div key={gridKey} style={{ opacity: searchOpen ? 0 : 1, pointerEvents: searchOpen ? "none" : "auto", transition: "opacity 0.2s ease" }}>
 
               {/* Featured */}
               {flyers.length > 0 && (
                 <FeaturedCard
                   flyers={flyers.slice(0, 5)}
+                  animationDelay={0}
                   onPreview={f => { setPreviewInitialSearch(""); setPreview(f); }}
                 />
               )}
@@ -507,19 +508,19 @@ export default function Home() {
                   title="Recently Added"
                   dot="#3b82f6"
                   flyers={flyers.slice(0, 5)}
+                  animationDelay={0.08}
                   onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
                 />
               )}
 
-
               {/* All flyers */}
-              <div style={{ marginBottom: 16 }}>
+              <div className="stagger-item" style={{ marginBottom: 16, animationDelay: "0.16s" }}>
                 <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 16 }}>
                   <div>
                     <p style={{ fontSize: 22, fontWeight: 600, color: "var(--text)", margin: 0, letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>Our Top Picks</p>
                   </div>
                 </div>
-                <div key={gridKey} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, alignItems: "start" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, alignItems: "start" }}>
                   {flyers.map((flyer, i) => (
                     <FlyerCard
                       key={flyer.id}
@@ -528,7 +529,7 @@ export default function Home() {
                       showEntity={false}
                       onQuickLook={() => { setPreviewInitialSearch(""); setQuickLook(flyer); }}
                       onPreview={() => { setPreviewInitialSearch(""); setPreview(flyer); }}
-                      animationDelay={i * 0.04}
+                      animationDelay={0.16 + i * 0.04}
                     />
                   ))}
                 </div>
@@ -946,7 +947,7 @@ export default function Home() {
 const loadedImageUrls = new Set<string>();
 
 // ── Featured card ─────────────────────────────────────────────────────────────
-function FeaturedCard({ flyers, onPreview }: { flyers: Flyer[]; onPreview: (f: Flyer) => void }) {
+function FeaturedCard({ flyers, animationDelay = 0, onPreview }: { flyers: Flyer[]; animationDelay?: number; onPreview: (f: Flyer) => void }) {
   const [idx, setIdx] = useState(0);
   const [fading, setFading] = useState(false);
 
@@ -963,7 +964,7 @@ function FeaturedCard({ flyers, onPreview }: { flyers: Flyer[]; onPreview: (f: F
   if (!flyer) return null;
 
   return (
-    <div style={{ marginBottom: 40 }}>
+    <div className="stagger-item" style={{ marginBottom: 40, animationDelay: `${animationDelay}s` }}>
       <div
         onClick={() => onPreview(flyer)}
         style={{
@@ -1007,10 +1008,11 @@ function FeaturedCard({ flyers, onPreview }: { flyers: Flyer[]; onPreview: (f: F
 }
 
 // ── Poster card ───────────────────────────────────────────────────────────────
-function PosterCard({ flyer, onQuickLook }: { flyer: Flyer; onQuickLook: () => void }) {
+function PosterCard({ flyer, onQuickLook, animationDelay = 0 }: { flyer: Flyer; onQuickLook: () => void; animationDelay?: number }) {
   const [pressed, setPressed] = useState(false);
   return (
     <div
+      className="stagger-item"
       onClick={onQuickLook}
       onMouseDown={() => setPressed(true)}
       onMouseUp={() => setPressed(false)}
@@ -1020,6 +1022,7 @@ function PosterCard({ flyer, onQuickLook }: { flyer: Flyer; onQuickLook: () => v
         cursor: "pointer", background: "#1c1c1e", border: "2px solid #d4d4d4",
         position: "relative",
         transform: pressed ? "scale(0.97)" : "scale(1)", transition: "transform 0.15s ease",
+        animationDelay: `${animationDelay}s`,
       }}
     >
       {flyer.image_url ? (
@@ -1041,12 +1044,12 @@ function PosterCard({ flyer, onQuickLook }: { flyer: Flyer; onQuickLook: () => v
 }
 
 // ── Section row ───────────────────────────────────────────────────────────────
-function SectionRow({ title, dot, flyers, onSeeAll, onQuickLook }: {
+function SectionRow({ title, dot, flyers, onSeeAll, onQuickLook, animationDelay = 0 }: {
   title: string; dot?: string; flyers: Flyer[];
-  onSeeAll?: () => void; onQuickLook: (f: Flyer) => void;
+  onSeeAll?: () => void; onQuickLook: (f: Flyer) => void; animationDelay?: number;
 }) {
   return (
-    <div style={{ marginBottom: 40 }}>
+    <div className="stagger-item" style={{ marginBottom: 40, animationDelay: `${animationDelay}s` }}>
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 14 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {dot && <div style={{ width: 8, height: 8, borderRadius: "50%", background: dot, flexShrink: 0, marginBottom: 2 }} />}
@@ -1059,7 +1062,7 @@ function SectionRow({ title, dot, flyers, onSeeAll, onQuickLook }: {
         )}
       </div>
       <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 6, scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}>
-        {flyers.map(f => <PosterCard key={f.id} flyer={f} onQuickLook={() => onQuickLook(f)} />)}
+        {flyers.map((f, i) => <PosterCard key={f.id} flyer={f} onQuickLook={() => onQuickLook(f)} animationDelay={animationDelay + i * 0.04} />)}
       </div>
     </div>
   );
