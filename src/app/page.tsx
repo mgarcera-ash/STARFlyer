@@ -458,7 +458,7 @@ export default function Home() {
                 {/* Matched flyers — dark grouped contact cards */}
                 {matched.length > 0 && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                    <div style={{ marginBottom: 40 }}>
+                    <div style={{ marginBottom: 14 }}>
                       <p style={{ margin: "0 0 4px", fontSize: 22, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>
                         These flyers have more inside.
                       </p>
