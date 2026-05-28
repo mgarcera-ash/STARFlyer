@@ -405,7 +405,7 @@ export default function Home() {
             const fallbacks = flyerGroups.filter(g => g.isFallback);
             const matched   = flyerGroups.filter(g => !g.isFallback);
             return (
-              <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
                 {flyerGroups.length === 0 && (
                   <p style={{ color: "var(--muted)", fontSize: 14, fontFamily: "var(--font-sans)", paddingTop: 24 }}>
                     No flyers match your search.
@@ -437,11 +437,11 @@ export default function Home() {
                 {/* Matched flyers — dark grouped contact cards */}
                 {matched.length > 0 && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                    <div style={{ marginBottom: 2 }}>
+                    <div style={{ marginBottom: 40 }}>
                       <p style={{ margin: "0 0 4px", fontSize: 22, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>
-                        Here&apos;s more inside these flyers.
+                        These flyers have more inside.
                       </p>
-                      <p style={{ margin: 0, fontSize: 14, fontWeight: 400, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>
+                      <p style={{ margin: 0, fontSize: 22, fontWeight: 400, color: "var(--muted)", fontFamily: "var(--font-sans)", letterSpacing: "-0.02em" }}>
                         Tap directly on information to view.
                       </p>
                     </div>
