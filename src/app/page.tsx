@@ -54,6 +54,7 @@ export default function Home() {
     setShortcutsClosing(true);
     setTimeout(() => { setShortcutsOpen(false); setShortcutsClosing(false); }, 180);
   };
+  const [helpOpen, setHelpOpen] = useState(false);
 
   // Skip splash if already shown this session
   useEffect(() => {
@@ -221,6 +222,7 @@ export default function Home() {
 
       if (e.key === "Escape") {
         if (shortcutsOpen) { closeShortcuts(); }
+        else if (helpOpen) { setHelpOpen(false); }
         else if (filterOpen) { setFilterOpen(false); }
         else if (searchOpen) { setSearchOpen(false); setSearchInput(""); setActiveTags([]); setActiveEntities([]); setGridKey(k => k + 1); searchInputRef.current?.blur(); }
         return;
@@ -235,7 +237,7 @@ export default function Home() {
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [filterOpen, searchOpen, shortcutsOpen]);
+  }, [filterOpen, searchOpen, shortcutsOpen, helpOpen]);
 
   const filtered = flyers.filter(f => {
     const q = search.toLowerCase();
@@ -357,9 +359,9 @@ export default function Home() {
           {!loading && (
             <div style={{
               overflow: "hidden",
-              maxHeight: searchOpen ? 0 : 120,
-              opacity: searchOpen ? 0 : 1,
-              marginBottom: searchOpen ? 0 : 32,
+              maxHeight: (searchOpen || helpOpen) ? 0 : 120,
+              opacity: (searchOpen || helpOpen) ? 0 : 1,
+              marginBottom: (searchOpen || helpOpen) ? 0 : 32,
               transition: "max-height 0.3s ease, opacity 0.2s ease, margin-bottom 0.3s ease",
             }}>
               <div className="fade-up" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
@@ -508,7 +510,7 @@ export default function Home() {
 
           {/* App Store layout — shown when no search or filters active */}
           {!loading && !showGrouped && (
-            <div key={gridKey} style={{ opacity: searchOpen ? 0 : 1, pointerEvents: searchOpen ? "none" : "auto", transition: "opacity 0.2s ease" }}>
+            <div key={gridKey} style={{ opacity: (searchOpen || helpOpen) ? 0 : 1, pointerEvents: (searchOpen || helpOpen) ? "none" : "auto", transition: "opacity 0.2s ease" }}>
 
               {/* Featured */}
               {(featuredFlyers.length > 0 || flyers.length > 0) && (
@@ -555,7 +557,7 @@ export default function Home() {
               {/* Quick Links */}
               <div className="stagger-item" style={{ marginBottom: 40, animationDelay: "0.20s" }}>
                 <p style={{ fontSize: 22, fontWeight: 600, color: "var(--text)", margin: "0 0 12px", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>Quick Links</p>
-                <a href="#" style={{ display: "block", fontSize: 17, fontWeight: 500, color: "#3b82f6", textDecoration: "none", fontFamily: "var(--font-sans)", padding: "6px 0" }}>Help</a>
+                <a href="#" onClick={e => { e.preventDefault(); setHelpOpen(true); }} style={{ display: "block", fontSize: 17, fontWeight: 500, color: "#3b82f6", textDecoration: "none", fontFamily: "var(--font-sans)", padding: "6px 0" }}>Help</a>
                 <a href="#" onClick={e => { e.preventDefault(); setShortcutsOpen(true); }} style={{ display: "block", fontSize: 17, fontWeight: 500, color: "#3b82f6", textDecoration: "none", fontFamily: "var(--font-sans)", padding: "6px 0" }}>Keyboard Shortcuts</a>
               </div>
 
@@ -847,6 +849,46 @@ export default function Home() {
           onClose={() => { setPreview(null); setPreviewInitialSearch(""); }}
         />
       )}
+
+      {/* Help overlay */}
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 150,
+        pointerEvents: helpOpen ? "auto" : "none",
+        opacity: helpOpen ? 1 : 0,
+        transition: "opacity 0.25s ease",
+        overflowY: "auto",
+        background: "var(--bg)",
+        padding: "88px 24px 64px",
+      }}>
+        <div style={{ maxWidth: 720, margin: "0 auto" }}>
+          <button
+            onClick={() => setHelpOpen(false)}
+            style={{
+              position: "fixed", top: 20, right: 24,
+              background: "none", border: "none", cursor: "pointer",
+              fontSize: 13, fontWeight: 500, color: "var(--muted)",
+              fontFamily: "var(--font-sans)", padding: 0,
+            }}
+          >Close</button>
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <p style={{ margin: 0, fontSize: 22, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>
+              We want to get you to safety <em>and</em> get you the right information.
+            </p>
+            <p style={{ margin: 0, fontSize: 17, fontWeight: 400, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.6 }}>
+              Flyers were piling up around our office instead of reaching the people who needed them.
+            </p>
+            <p style={{ margin: 0, fontSize: 17, fontWeight: 400, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.6 }}>
+              STARFlyer is our answer. Everything staff receive, find, or see posted, searchable and always in your pocket.
+            </p>
+            <p style={{ margin: 0, fontSize: 17, fontWeight: 400, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.6 }}>
+              What was once a piece of paper becomes a versatile tool. Phone numbers, addresses, websites, and more are pulled out and made tappable, so you can act on information the moment you find it.
+            </p>
+            <p style={{ margin: 0, fontSize: 17, fontWeight: 400, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.6 }}>
+              We&apos;re also committed to making this accessible to everyone, and are working on aligning STARFlyer with WCAG 2.2 accessibility guidelines.
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Keyboard shortcuts modal */}
       {shortcutsOpen && (
