@@ -1017,8 +1017,8 @@ function FeaturedCard({ flyers, animationDelay = 0, onPreview }: { flyers: Flyer
             opacity: fading ? 0 : 1, transition: "opacity 0.3s ease",
           }} />
         )}
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.85) 100%)" }} />
-        <div style={{ position: "absolute", inset: 0, backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", maskImage: "linear-gradient(to bottom, transparent 50%, black 75%)", WebkitMaskImage: "linear-gradient(to bottom, transparent 50%, black 75%)" }} />
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.85) 100%)" }} />
+        <div style={{ position: "absolute", inset: 0, backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", maskImage: "linear-gradient(to bottom, transparent 30%, black 60%)", WebkitMaskImage: "linear-gradient(to bottom, transparent 30%, black 60%)" }} />
         <div style={{ position: "absolute", top: 14, left: 14, background: "#3b82f6", borderRadius: 99, padding: "4px 10px" }}>
           <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#fff", fontFamily: "var(--font-sans)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Featured</p>
         </div>
