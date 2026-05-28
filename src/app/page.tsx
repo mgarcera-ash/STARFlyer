@@ -887,10 +887,10 @@ export default function Home() {
               </p>
             </div>
             <p style={{ margin: 0, fontSize: 17, fontWeight: 400, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.6 }}>
-              As the STAR team, our goal is to get you to safety <em>and</em> make sure you have access to information. We noticed that flyers were piling up in our office instead of being in your hands. That&apos;s a problem because it means information is stuck instead of flowing out of our building.
+              As the STAR team, our goal is to get you to safety <em>and</em>{" "}make sure you have access to information. We noticed that flyers were piling up in our office instead of being in your hands. That&apos;s a problem because it means information is stuck instead of flowing out of our building.
             </p>
             <p style={{ margin: 0, fontSize: 17, fontWeight: 400, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.6 }}>
-              STARFlyer is our answer. Everything our teams receive, find, or see gets uploaded here. The result: all our information gets carried with you. Every flyer was made with a purpose. We take all that paper and pull out phone numbers, addresses, websites and more, so you can spend less time handling documents and more time getting connected to what you need.
+              STARFlyer is our answer. Everything our teams receive, find, or see gets uploaded here. <strong>The result: all our information flows through you.</strong> Every flyer was made with a purpose. We take all that paper and pull out phone numbers, addresses, websites and more, so you can spend less time handling documents and more time getting connected to what you need.
             </p>
             <p style={{ margin: 0, fontSize: 17, fontWeight: 400, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.6 }}>
               We&apos;re committed to making this accessible to everyone, and are aligning STARFlyer with WCAG 2.2 accessibility guidelines.
