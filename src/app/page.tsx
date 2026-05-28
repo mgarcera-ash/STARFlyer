@@ -19,11 +19,13 @@ type Flyer = {
   approved_at: string | null;
   hotspots: Hotspot[] | null;
   featured: boolean;
+  top_pick: boolean;
 };
 
 export default function Home() {
   const [flyers, setFlyers] = useState<Flyer[]>([]);
   const [featuredFlyers, setFeaturedFlyers] = useState<Flyer[]>([]);
+  const [topPickFlyers, setTopPickFlyers] = useState<Flyer[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
   const [allEntities, setAllEntities] = useState<string[]>([]);
   const [searchInput, setSearchInput] = useState("");
@@ -136,6 +138,7 @@ export default function Home() {
       const flyerList = data || [];
       setFlyers(flyerList);
       setFeaturedFlyers(flyerList.filter(f => f.featured));
+      setTopPickFlyers(flyerList.filter(f => f.top_pick));
 
       // Collect unique tags and entities across all flyers
       const tagSet = new Set<string>();
@@ -535,7 +538,7 @@ export default function Home() {
                   </div>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, alignItems: "start" }}>
-                  {flyers.map((flyer, i) => (
+                  {(topPickFlyers.length > 0 ? topPickFlyers : flyers).map((flyer, i) => (
                     <FlyerCard
                       key={flyer.id}
                       flyer={flyer}
