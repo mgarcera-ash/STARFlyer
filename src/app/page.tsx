@@ -392,13 +392,13 @@ export default function Home() {
                     flexShrink: 0,
                     width: 52, height: 52, borderRadius: "50%",
                     background: "var(--text)", border: "1.5px solid var(--text)",
-                    cursor: "pointer", color: "#fff",
+                    cursor: "pointer", color: "var(--bg)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     position: "relative",
                     transition: "background 0.15s, color 0.15s",
                   }}
-                  onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = "#fff"; b.style.color = "var(--text)"; }}
-                  onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = "var(--text)"; b.style.color = "#fff"; }}
+                  onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = "var(--bg)"; b.style.color = "var(--text)"; }}
+                  onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = "var(--text)"; b.style.color = "var(--bg)"; }}
                 >
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                     <circle cx="9" cy="9" r="5.5" stroke="currentColor" strokeWidth="1.75" />
@@ -467,7 +467,7 @@ export default function Home() {
                       </p>
                     </div>
                     {matched.map(({ flyer, hotspotsByType }, i) => (
-                      <div key={flyer.id} className="stagger-item" style={{ animationDelay: `${i * 0.06}s`, background: "#1c1c1e", borderRadius: 32, overflow: "hidden", border: "2px solid #d4d4d4" }}>
+                      <div key={flyer.id} className="stagger-item" style={{ animationDelay: `${i * 0.06}s`, background: "#1c1c1e", borderRadius: 32, overflow: "hidden", border: "2px solid var(--card-border)" }}>
                         <div style={{
                             display: "flex", alignItems: "center", gap: 14,
                             padding: "14px 16px",
@@ -641,7 +641,7 @@ export default function Home() {
                           flex: 1, padding: "6px 0", borderRadius: 99,
                           border: "none",
                           background: filterTab === tab ? "var(--text)" : "transparent",
-                          color: filterTab === tab ? "#fff" : "var(--muted)",
+                          color: filterTab === tab ? "var(--bg)" : "var(--muted)",
                           fontSize: 12, fontWeight: 500, fontFamily: "var(--font-sans)",
                           cursor: "pointer", transition: "background 0.15s, color 0.15s",
                         }}
@@ -653,8 +653,8 @@ export default function Home() {
                       onClick={() => { setActiveTags([]); setActiveEntities([]); setGridKey(k => k + 1); }}
                       style={{
                         flexShrink: 0, borderRadius: 99,
-                        border: "1.5px solid #b91c1c", background: "transparent",
-                        color: "#b91c1c", fontSize: 12, fontWeight: 600, lineHeight: 1,
+                        border: "1.5px solid var(--danger)", background: "transparent",
+                        color: "var(--danger)", fontSize: 12, fontWeight: 600, lineHeight: 1,
                         fontFamily: "var(--font-sans)", cursor: "pointer",
                         padding: "9px 16px",
                         transition: "background 0.15s",
@@ -805,7 +805,7 @@ export default function Home() {
               }}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M1 3h14M4 8h8M7 13h2" stroke={activeTags.length > 0 || activeEntities.length > 0 || filterOpen ? "#22c55e" : "var(--muted)"} strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M1 3h14M4 8h8M7 13h2" stroke={activeTags.length > 0 || activeEntities.length > 0 || filterOpen ? "#22c55e" : "var(--text)"} strokeWidth="1.5" strokeLinecap="round" />
               </svg>
               {(activeTags.length + activeEntities.length) > 0 && (
                 <span style={{
@@ -839,8 +839,8 @@ export default function Home() {
               style={{
                 flexShrink: 0, marginRight: 10,
                 width: 32, height: 32, borderRadius: "50%",
-                border: "1.5px solid #b91c1c", background: "transparent",
-                color: "#b91c1c", fontSize: 14, fontWeight: 600,
+                border: "1.5px solid var(--danger)", background: "transparent",
+                color: "var(--danger)", fontSize: 14, fontWeight: 600,
                 fontFamily: "var(--font-sans)", cursor: "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}
@@ -1019,7 +1019,7 @@ function FeaturedCard({ flyers, animationDelay = 0, onPreview }: { flyers: Flyer
         style={{
           position: "relative", width: "100%", paddingBottom: "52%",
           borderRadius: 24, overflow: "hidden", cursor: "pointer",
-          background: "#1c1c1e", border: "2px solid #d4d4d4",
+          background: "#1c1c1e", border: "2px solid var(--card-border)",
         }}
       >
         {flyer.image_url && (
@@ -1068,7 +1068,7 @@ function PosterCard({ flyer, onQuickLook, animationDelay = 0 }: { flyer: Flyer; 
       onMouseLeave={() => setPressed(false)}
       style={{
         flexShrink: 0, width: 168, height: 224, borderRadius: 30, overflow: "hidden",
-        cursor: "pointer", background: "#1c1c1e", border: "2px solid #d4d4d4",
+        cursor: "pointer", background: "#1c1c1e", border: "2px solid var(--card-border)",
         position: "relative",
         transform: pressed ? "scale(0.97)" : "scale(1)", transition: "transform 0.15s ease",
         animationDelay: `${animationDelay}s`,
