@@ -538,7 +538,7 @@ export default function Home() {
                   </div>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, alignItems: "start" }}>
-                  {(topPickFlyers.length > 0 ? topPickFlyers : flyers).map((flyer, i) => (
+                  {(topPickFlyers.length > 0 ? topPickFlyers : flyers.slice(0, 5)).map((flyer, i) => (
                     <FlyerCard
                       key={flyer.id}
                       flyer={flyer}
