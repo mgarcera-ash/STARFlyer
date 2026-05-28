@@ -469,7 +469,7 @@ export default function Home() {
                             }
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            {flyer.entity && <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "#22c55e", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{flyer.entity}</p>}
+                            {flyer.entity && <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "#3b82f6", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{flyer.entity}</p>}
                             <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "#fff", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>{flyer.title}</p>
                           </div>
                         </div>
@@ -1023,7 +1023,7 @@ function FeaturedCard({ flyers, animationDelay = 0, onPreview }: { flyers: Flyer
           <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#fff", fontFamily: "var(--font-sans)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Featured</p>
         </div>
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "16px 18px 20px", opacity: fading ? 0 : 1, transition: "opacity 0.3s ease" }}>
-          {flyer.entity && <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 600, color: "#22c55e", fontFamily: "var(--font-sans)", letterSpacing: "0.04em" }}>{flyer.entity}</p>}
+          {flyer.entity && <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 600, color: "#3b82f6", fontFamily: "var(--font-sans)", letterSpacing: "0.04em" }}>{flyer.entity}</p>}
           <p style={{ margin: 0, fontSize: 20, fontWeight: 600, color: "#fff", fontFamily: "var(--font-sans)", letterSpacing: "-0.02em", lineHeight: 1.3 }}>{flyer.title}</p>
         </div>
         {flyers.length > 1 && (
@@ -1072,7 +1072,7 @@ function PosterCard({ flyer, onQuickLook, animationDelay = 0 }: { flyer: Flyer; 
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 45%, rgba(0,0,0,0.85) 100%)" }} />
       <div style={{ position: "absolute", inset: 0, backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", maskImage: "linear-gradient(to bottom, transparent 45%, black 70%)", WebkitMaskImage: "linear-gradient(to bottom, transparent 45%, black 70%)" }} />
       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "10px 11px 12px" }}>
-        {flyer.entity && <p style={{ margin: "0 0 2px", fontSize: 10, fontWeight: 600, color: "#22c55e", fontFamily: "var(--font-sans)" }}>{flyer.entity}</p>}
+        {flyer.entity && <p style={{ margin: "0 0 2px", fontSize: 10, fontWeight: 600, color: "#3b82f6", fontFamily: "var(--font-sans)" }}>{flyer.entity}</p>}
         <p style={{ margin: 0, fontSize: 12, fontWeight: 500, color: "#fff", fontFamily: "var(--font-sans)", lineHeight: 1.35 }}>{flyer.title}</p>
       </div>
     </div>
@@ -1238,7 +1238,7 @@ function FlyerCard({ flyer, search, showEntity, onQuickLook, onPreview, animatio
                 ) : (
                   <>
                     {flyer.entity && (
-                      <p style={{ fontSize: 11, fontWeight: 600, fontFamily: "var(--font-sans)", color: "#16a34a", lineHeight: 1.3, margin: 0 }}>
+                      <p style={{ fontSize: 11, fontWeight: 600, fontFamily: "var(--font-sans)", color: "#1d4ed8", lineHeight: 1.3, margin: 0 }}>
                         {flyer.entity}
                       </p>
                     )}
