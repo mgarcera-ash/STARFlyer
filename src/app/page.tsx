@@ -447,17 +447,11 @@ export default function Home() {
                     </div>
                     {matched.map(({ flyer, hotspotsByType }, i) => (
                       <div key={flyer.id} className="stagger-item" style={{ animationDelay: `${i * 0.06}s`, background: "#1c1c1e", borderRadius: 32, overflow: "hidden", border: "2px solid #d4d4d4" }}>
-                        <button
-                          onClick={() => { setPreviewInitialSearch(""); setPreview(flyer); }}
-                          style={{
+                        <div style={{
                             display: "flex", alignItems: "center", gap: 14,
-                            padding: "14px 16px", width: "100%",
-                            background: "transparent", border: "none", cursor: "pointer", textAlign: "left",
+                            padding: "14px 16px",
                             borderBottom: "1px solid rgba(255,255,255,0.08)",
-                            transition: "background 0.15s",
                           }}
-                          onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
-                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                         >
                           <div style={{ flexShrink: 0, width: 48, height: 48, borderRadius: "50%", overflow: "hidden", background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)" }}>
                             {flyer.image_url
@@ -469,7 +463,7 @@ export default function Home() {
                             {flyer.entity && <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.45)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{flyer.entity}</p>}
                             <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "#fff", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>{flyer.title}</p>
                           </div>
-                        </button>
+                        </div>
                         {typeOrder.filter(t => hotspotsByType[t]).map(type => (
                           <div key={type}>
                             <div style={{ padding: "8px 16px 4px", display: "flex", alignItems: "center", gap: 6 }}>
