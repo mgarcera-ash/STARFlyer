@@ -570,7 +570,7 @@ export default function Home() {
               {/* Quick Links */}
               <div className="stagger-item" style={{ marginBottom: 40, animationDelay: "0.20s" }}>
                 <p style={{ fontSize: 22, fontWeight: 600, color: "var(--text)", margin: "0 0 12px", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>Quick Links</p>
-                <a href="#" onClick={e => { e.preventDefault(); setHelpOpen(true); }} style={{ display: "block", fontSize: 17, fontWeight: 500, color: "#3b82f6", textDecoration: "none", fontFamily: "var(--font-sans)", padding: "6px 0" }}>Help</a>
+                <a href="#" onClick={e => { e.preventDefault(); setHelpOpen(true); }} style={{ display: "block", fontSize: 17, fontWeight: 500, color: "#3b82f6", textDecoration: "none", fontFamily: "var(--font-sans)", padding: "6px 0" }}>About</a>
                 <a href="#" onClick={e => { e.preventDefault(); setShortcutsOpen(true); }} style={{ display: "block", fontSize: 17, fontWeight: 500, color: "#3b82f6", textDecoration: "none", fontFamily: "var(--font-sans)", padding: "6px 0" }}>Keyboard Shortcuts</a>
                 <a href="#" onClick={e => { e.preventDefault(); setDarkMode(d => !d); }} style={{ display: "block", fontSize: 17, fontWeight: 500, color: "#3b82f6", textDecoration: "none", fontFamily: "var(--font-sans)", padding: "6px 0" }}>{darkMode ? "Light Mode" : "Dark Mode"}</a>
               </div>
@@ -869,7 +869,7 @@ export default function Home() {
       )}
 
       {/* Help overlay */}
-      <div role="region" aria-label="Help" aria-hidden={!helpOpen} style={{
+      <div role="region" aria-label="About" aria-hidden={!helpOpen} style={{
         position: "fixed", inset: 0, zIndex: 150,
         pointerEvents: helpOpen ? "auto" : "none",
         opacity: helpOpen ? 1 : 0,
@@ -878,20 +878,22 @@ export default function Home() {
       }}>
         <div style={{ overflowY: "auto", height: "100%", padding: "88px 24px 100px" }}>
           <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
-            <p style={{ margin: 0, fontSize: 22, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>
-              We want to get you to safety <em>and</em> get you the right information.
+            <div>
+              <p style={{ margin: "0 0 4px", fontSize: 34, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.03em", fontFamily: "var(--font-sans)", lineHeight: 1.1 }}>
+                About
+              </p>
+              <p style={{ margin: 0, fontSize: 22, fontWeight: 400, color: "var(--muted)", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>
+                The Story behind STARFlyer
+              </p>
+            </div>
+            <p style={{ margin: 0, fontSize: 17, fontWeight: 400, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.6 }}>
+              As the STAR team, our goal is to get you to safety and make sure you&apos;re equipped with information. First we noticed that flyers were piling up in our office instead of being in your hands. That was a problem, because it meant information was stuck instead of flowing out of our building.
             </p>
             <p style={{ margin: 0, fontSize: 17, fontWeight: 400, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.6 }}>
-              Flyers were piling up around our office instead of reaching the people who needed them.
+              STARFlyer is our answer. Everything our teams receive, find, or see gets uploaded here. The result: all our information gets carried with you, searchable and always in your pocket. Every paper flyer has a function, and we&apos;re bringing life to those functions. Phone numbers, addresses, websites and more are pulled out and made tappable, so you can act on it the moment you find it.
             </p>
             <p style={{ margin: 0, fontSize: 17, fontWeight: 400, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.6 }}>
-              STARFlyer is our answer. Everything staff receive, find, or see posted, searchable and always in your pocket.
-            </p>
-            <p style={{ margin: 0, fontSize: 17, fontWeight: 400, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.6 }}>
-              What was once a piece of paper becomes a versatile tool. Phone numbers, addresses, websites, and more are pulled out and made tappable, so you can act on information the moment you find it.
-            </p>
-            <p style={{ margin: 0, fontSize: 17, fontWeight: 400, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.6 }}>
-              We&apos;re also committed to making this accessible to everyone, and are working on aligning STARFlyer with WCAG 2.2 accessibility guidelines.
+              We&apos;re committed to making this accessible to everyone, and are aligning STARFlyer with WCAG 2.2 accessibility guidelines.
             </p>
           </div>
         </div>
