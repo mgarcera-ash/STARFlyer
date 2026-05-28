@@ -513,7 +513,7 @@ export default function Home() {
               )}
 
               {/* All flyers */}
-              <div className="stagger-item" style={{ marginBottom: 16, animationDelay: "0.16s" }}>
+              <div className="stagger-item" style={{ marginBottom: 40, animationDelay: "0.16s" }}>
                 <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 16 }}>
                   <div>
                     <p style={{ fontSize: 22, fontWeight: 600, color: "var(--text)", margin: 0, letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>Our Top Picks</p>
