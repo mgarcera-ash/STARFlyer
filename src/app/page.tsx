@@ -530,7 +530,7 @@ export default function Home() {
                 <FeaturedCard
                   flyers={featuredFlyers.length > 0 ? featuredFlyers : flyers.slice(0, 5)}
                   animationDelay={0}
-                  onPreview={f => { setPreviewInitialSearch(""); setPreview(f); }}
+                  onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
                 />
               )}
 
@@ -986,7 +986,7 @@ export default function Home() {
 const loadedImageUrls = new Set<string>();
 
 // ── Featured card ─────────────────────────────────────────────────────────────
-function FeaturedCard({ flyers, animationDelay = 0, onPreview }: { flyers: Flyer[]; animationDelay?: number; onPreview: (f: Flyer) => void }) {
+function FeaturedCard({ flyers, animationDelay = 0, onQuickLook }: { flyers: Flyer[]; animationDelay?: number; onQuickLook: (f: Flyer) => void }) {
   const [idx, setIdx] = useState(0);
   const [fading, setFading] = useState(false);
 
@@ -1005,7 +1005,7 @@ function FeaturedCard({ flyers, animationDelay = 0, onPreview }: { flyers: Flyer
   return (
     <div className="stagger-item" style={{ marginBottom: 40, animationDelay: `${animationDelay}s` }}>
       <div
-        onClick={() => onPreview(flyer)}
+        onClick={() => onQuickLook(flyer)}
         style={{
           position: "relative", width: "100%", paddingBottom: "52%",
           borderRadius: 24, overflow: "hidden", cursor: "pointer",
