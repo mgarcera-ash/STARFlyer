@@ -18,10 +18,14 @@ type Flyer = {
   created_at: string | null;
   approved_at: string | null;
   hotspots: Hotspot[] | null;
+  featured: boolean;
+  top_pick: boolean;
 };
 
 export default function Home() {
   const [flyers, setFlyers] = useState<Flyer[]>([]);
+  const [featuredFlyers, setFeaturedFlyers] = useState<Flyer[]>([]);
+  const [topPickFlyers, setTopPickFlyers] = useState<Flyer[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
   const [allEntities, setAllEntities] = useState<string[]>([]);
   const [searchInput, setSearchInput] = useState("");
@@ -44,7 +48,14 @@ export default function Home() {
   const [minTimeReady, setMinTimeReady] = useState(false);
   const [imagesReady, setImagesReady] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [shortcutsClosing, setShortcutsClosing] = useState(false);
+  const closeShortcuts = () => {
+    setShortcutsClosing(true);
+    setTimeout(() => { setShortcutsOpen(false); setShortcutsClosing(false); }, 180);
+  };
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
 
   // Skip splash if already shown this session
   useEffect(() => {
@@ -128,6 +139,8 @@ export default function Home() {
         .order("created_at", { ascending: false });
       const flyerList = data || [];
       setFlyers(flyerList);
+      setFeaturedFlyers(flyerList.filter(f => f.featured));
+      setTopPickFlyers(flyerList.filter(f => f.top_pick));
 
       // Collect unique tags and entities across all flyers
       const tagSet = new Set<string>();
@@ -143,6 +156,17 @@ export default function Home() {
     }
     fetchFlyers();
   }, []);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("theme");
+    if (stored) { setDarkMode(stored === "dark"); }
+    else if (window.matchMedia("(prefers-color-scheme: dark)").matches) { setDarkMode(true); }
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", darkMode ? "dark" : "light");
+    localStorage.setItem("theme", darkMode ? "dark" : "light");
+  }, [darkMode]);
 
   const toggleTag = (tag: string) => {
     setActiveTags(prev =>
@@ -175,6 +199,18 @@ export default function Home() {
 
   const availableLetters = useMemo(() => Object.keys(tagsByLetter).sort(), [tagsByLetter]);
 
+  const topicRows = useMemo(() => {
+    return allTags
+      .map(tag => ({ tag, flyers: flyers.filter(f => f.tags?.includes(tag)) }))
+      .filter(r => r.flyers.length >= 3);
+  }, [allTags, flyers]);
+
+  const entityRows = useMemo(() => {
+    return allEntities
+      .map(entity => ({ entity, flyers: flyers.filter(f => f.entity === entity) }))
+      .filter(r => r.flyers.length >= 3);
+  }, [allEntities, flyers]);
+
   const scrollToLetter = (letter: string) => {
     const el = sectionRefs.current[letter];
     const container = panelScrollRef.current;
@@ -197,7 +233,9 @@ export default function Home() {
       const inInput = tag === "INPUT" || tag === "TEXTAREA";
 
       if (e.key === "Escape") {
-        if (filterOpen) { setFilterOpen(false); }
+        if (shortcutsOpen) { closeShortcuts(); }
+        else if (helpOpen) { setHelpOpen(false); }
+        else if (filterOpen) { setFilterOpen(false); }
         else if (searchOpen) { setSearchOpen(false); setSearchInput(""); setActiveTags([]); setActiveEntities([]); setGridKey(k => k + 1); searchInputRef.current?.blur(); }
         return;
       }
@@ -211,7 +249,7 @@ export default function Home() {
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [filterOpen, searchOpen]);
+  }, [filterOpen, searchOpen, shortcutsOpen, helpOpen]);
 
   const filtered = flyers.filter(f => {
     const q = search.toLowerCase();
@@ -265,7 +303,7 @@ export default function Home() {
 
       {/* Splash screen */}
       {splashVisible && (
-        <div style={{
+        <div role="status" aria-label="Loading" style={{
           position: "fixed", inset: 0, zIndex: 200,
           background: "#000",
           display: "flex", alignItems: "center", justifyContent: "center",
@@ -317,7 +355,7 @@ export default function Home() {
             {/* Loading indicator */}
             <p style={{
               fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 400,
-              color: "rgba(255,255,255,0.4)", margin: "16px 0 0", letterSpacing: "0.01em",
+              color: "rgba(255,255,255,0.75)", margin: "16px 0 0", letterSpacing: "0.01em",
               opacity: countVisible && !imagesReady ? 1 : 0,
               transition: "opacity 0.5s ease",
             }}>
@@ -333,9 +371,9 @@ export default function Home() {
           {!loading && (
             <div style={{
               overflow: "hidden",
-              maxHeight: searchOpen ? 0 : 120,
-              opacity: searchOpen ? 0 : 1,
-              marginBottom: searchOpen ? 0 : 32,
+              maxHeight: (searchOpen || helpOpen) ? 0 : 120,
+              opacity: (searchOpen || helpOpen) ? 0 : 1,
+              marginBottom: (searchOpen || helpOpen) ? 0 : 32,
               transition: "max-height 0.3s ease, opacity 0.2s ease, margin-bottom 0.3s ease",
             }}>
               <div className="fade-up" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
@@ -348,18 +386,19 @@ export default function Home() {
                   </p>
                 </div>
                 <button
+                  aria-label="Open search"
                   onClick={() => setSearchOpen(true)}
                   style={{
                     flexShrink: 0,
                     width: 52, height: 52, borderRadius: "50%",
                     background: "var(--text)", border: "1.5px solid var(--text)",
-                    cursor: "pointer", color: "#fff",
+                    cursor: "pointer", color: "var(--bg)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     position: "relative",
                     transition: "background 0.15s, color 0.15s",
                   }}
-                  onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = "#fff"; b.style.color = "var(--text)"; }}
-                  onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = "var(--text)"; b.style.color = "#fff"; }}
+                  onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = "var(--bg)"; b.style.color = "var(--text)"; }}
+                  onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = "var(--text)"; b.style.color = "var(--bg)"; }}
                 >
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                     <circle cx="9" cy="9" r="5.5" stroke="currentColor" strokeWidth="1.75" />
@@ -387,7 +426,7 @@ export default function Home() {
             const fallbacks = flyerGroups.filter(g => g.isFallback);
             const matched   = flyerGroups.filter(g => !g.isFallback);
             return (
-              <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
                 {flyerGroups.length === 0 && (
                   <p style={{ color: "var(--muted)", fontSize: 14, fontFamily: "var(--font-sans)", paddingTop: 24 }}>
                     No flyers match your search.
@@ -396,37 +435,44 @@ export default function Home() {
 
                 {/* Fallback flyers — normal cards */}
                 {fallbacks.length > 0 && (
-                  <div key={gridKey} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, alignItems: "start" }}>
-                    {fallbacks.map(({ flyer }, i) => (
-                      <FlyerCard
-                        key={flyer.id}
-                        flyer={flyer}
-                        search={search}
-                        showEntity={activeEntities.length > 0}
-                        onQuickLook={(initialSearch = "") => { setPreviewInitialSearch(initialSearch); setQuickLook(flyer); }}
-                        onPreview={(initialSearch = "") => { setPreviewInitialSearch(initialSearch); setPreview(flyer); }}
-                        animationDelay={i * 0.06}
-                      />
-                    ))}
+                  <div>
+                    <p style={{ margin: "0 0 14px", fontSize: 22, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>
+                      {fallbacks.length} {fallbacks.length === 1 ? "flyer" : "flyers"} found.
+                    </p>
+                    <div key={gridKey} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, alignItems: "start" }}>
+                      {fallbacks.map(({ flyer }, i) => (
+                        <FlyerCard
+                          key={flyer.id}
+                          flyer={flyer}
+                          search={search}
+                          showEntity={activeEntities.length > 0}
+                          onQuickLook={(initialSearch = "") => { setPreviewInitialSearch(initialSearch); setQuickLook(flyer); }}
+                          onPreview={(initialSearch = "") => { setPreviewInitialSearch(initialSearch); setPreview(flyer); }}
+                          animationDelay={i * 0.06}
+                        />
+                      ))}
+                    </div>
                   </div>
                 )}
 
                 {/* Matched flyers — dark grouped contact cards */}
                 {matched.length > 0 && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                    <div style={{ marginBottom: 40 }}>
+                      <p style={{ margin: "0 0 4px", fontSize: 22, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>
+                        These flyers have more inside.
+                      </p>
+                      <p style={{ margin: 0, fontSize: 14, fontWeight: 400, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>
+                        Tap directly on information to view.
+                      </p>
+                    </div>
                     {matched.map(({ flyer, hotspotsByType }, i) => (
-                      <div key={flyer.id} className="stagger-item" style={{ animationDelay: `${i * 0.06}s`, background: "#1c1c1e", borderRadius: 32, overflow: "hidden", border: "2px solid #d4d4d4" }}>
-                        <button
-                          onClick={() => { setPreviewInitialSearch(""); setPreview(flyer); }}
-                          style={{
+                      <div key={flyer.id} className="stagger-item" style={{ animationDelay: `${i * 0.06}s`, background: "#1c1c1e", borderRadius: 32, overflow: "hidden", border: "2px solid var(--card-border)" }}>
+                        <div style={{
                             display: "flex", alignItems: "center", gap: 14,
-                            padding: "14px 16px", width: "100%",
-                            background: "transparent", border: "none", cursor: "pointer", textAlign: "left",
+                            padding: "14px 16px",
                             borderBottom: "1px solid rgba(255,255,255,0.08)",
-                            transition: "background 0.15s",
                           }}
-                          onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
-                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                         >
                           <div style={{ flexShrink: 0, width: 48, height: 48, borderRadius: "50%", overflow: "hidden", background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)" }}>
                             {flyer.image_url
@@ -435,10 +481,10 @@ export default function Home() {
                             }
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            {flyer.entity && <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.45)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{flyer.entity}</p>}
+                            {flyer.entity && <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{flyer.entity}</p>}
                             <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "#fff", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>{flyer.title}</p>
                           </div>
-                        </button>
+                        </div>
                         {typeOrder.filter(t => hotspotsByType[t]).map(type => (
                           <div key={type}>
                             <div style={{ padding: "8px 16px 4px", display: "flex", alignItems: "center", gap: 6 }}>
@@ -475,79 +521,72 @@ export default function Home() {
             );
           })()}
 
-          {/* Flyer grid — shown when no search or filters active */}
+          {/* App Store layout — shown when no search or filters active */}
           {!loading && !showGrouped && (
-            <div style={{ opacity: searchOpen && activeEntities.length === 0 ? 0 : 1, pointerEvents: searchOpen && activeEntities.length === 0 ? "none" : "auto", transition: "opacity 0.2s ease" }}>
-            <div key={gridKey} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, alignItems: "start" }}>
-              {filtered.map((flyer, i) => (
-                <FlyerCard
-                  key={flyer.id}
-                  flyer={flyer}
-                  search={search}
-                  showEntity={activeEntities.length > 0}
-                  onQuickLook={(initialSearch = "") => { setPreviewInitialSearch(initialSearch); setQuickLook(flyer); }}
-                  onPreview={(initialSearch = "") => { setPreviewInitialSearch(initialSearch); setPreview(flyer); }}
-                  animationDelay={i * 0.06}
+            <div key={gridKey} style={{ opacity: (searchOpen || helpOpen) ? 0 : 1, pointerEvents: (searchOpen || helpOpen) ? "none" : "auto", transition: "opacity 0.2s ease" }}>
+
+              {/* Featured */}
+              {(featuredFlyers.length > 0 || flyers.length > 0) && (
+                <FeaturedCard
+                  flyers={featuredFlyers.length > 0 ? featuredFlyers : flyers.slice(0, 5)}
+                  animationDelay={0}
+                  onPreview={f => { setPreviewInitialSearch(""); setPreview(f); }}
                 />
-              ))}
-              {filtered.length === 0 && (
-                <p style={{ color: "var(--muted)", fontSize: 14, fontFamily: "var(--font-sans)", gridColumn: "1/-1", paddingTop: 24 }}>
-                  No flyers match your filters.
-                </p>
               )}
-            </div>
+
+              {/* New arrivals */}
+              {flyers.length > 0 && (
+                <SectionRow
+                  title="Recently Added"
+                  dot="#3b82f6"
+                  flyers={flyers.slice(0, 5)}
+                  animationDelay={0.08}
+                  onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
+                />
+              )}
+
+              {/* All flyers */}
+              <div className="stagger-item" style={{ marginBottom: 40, animationDelay: "0.16s" }}>
+                <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 16 }}>
+                  <div>
+                    <p style={{ fontSize: 22, fontWeight: 600, color: "var(--text)", margin: 0, letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>Our Top Picks</p>
+                  </div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, alignItems: "start" }}>
+                  {(topPickFlyers.length > 0 ? topPickFlyers : flyers.slice(0, 5)).map((flyer, i) => (
+                    <FlyerCard
+                      key={flyer.id}
+                      flyer={flyer}
+                      search=""
+                      showEntity={false}
+                      onQuickLook={() => { setPreviewInitialSearch(""); setQuickLook(flyer); }}
+                      onPreview={() => { setPreviewInitialSearch(""); setPreview(flyer); }}
+                      animationDelay={0.16 + i * 0.04}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Quick Links */}
+              <div className="stagger-item" style={{ marginBottom: 40, animationDelay: "0.20s" }}>
+                <p style={{ fontSize: 22, fontWeight: 600, color: "var(--text)", margin: "0 0 12px", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>Quick Links</p>
+                <a href="#" onClick={e => { e.preventDefault(); setHelpOpen(true); }} style={{ display: "block", fontSize: 17, fontWeight: 500, color: "#3b82f6", textDecoration: "none", fontFamily: "var(--font-sans)", padding: "6px 0" }}>Help</a>
+                <a href="#" onClick={e => { e.preventDefault(); setShortcutsOpen(true); }} style={{ display: "block", fontSize: 17, fontWeight: 500, color: "#3b82f6", textDecoration: "none", fontFamily: "var(--font-sans)", padding: "6px 0" }}>Keyboard Shortcuts</a>
+                <a href="#" onClick={e => { e.preventDefault(); setDarkMode(d => !d); }} style={{ display: "block", fontSize: 17, fontWeight: 500, color: "#3b82f6", textDecoration: "none", fontFamily: "var(--font-sans)", padding: "6px 0" }}>{darkMode ? "Light Mode" : "Dark Mode"}</a>
+              </div>
+
+              {/* Staff */}
+              <div className="stagger-item" style={{ marginBottom: 40, animationDelay: "0.24s" }}>
+                <p style={{ fontSize: 22, fontWeight: 600, color: "var(--text)", margin: "0 0 12px", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>Staff</p>
+                <a href="/login?from=/upload" style={{ display: "block", fontSize: 17, fontWeight: 500, color: "#3b82f6", textDecoration: "none", fontFamily: "var(--font-sans)", padding: "6px 0" }}>Upload a Flyer</a>
+                <a href="/login?from=/admin" style={{ display: "block", fontSize: 17, fontWeight: 500, color: "#3b82f6", textDecoration: "none", fontFamily: "var(--font-sans)", padding: "6px 0" }}>Review Flyer Submissions</a>
+              </div>
             </div>
           )}
         </div>
 
         <div style={{ textAlign: "center", paddingTop: 48, paddingBottom: 24 }} />
       </main>
-
-      {/* Menu tap-outside */}
-      {menuOpen && (
-        <div onClick={() => setMenuOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 48 }} />
-      )}
-
-      {/* ── Menu FAB — fixed bottom-left ─────────────────────────── */}
-      <div style={{ position: "fixed", bottom: 20, left: 20, zIndex: 50 }}>
-        {/* Menu card — opens upward */}
-        <div style={{
-          position: "absolute", bottom: "calc(100% + 10px)", left: 0,
-          background: "rgba(255,255,255,0.82)",
-          backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-          borderRadius: 20, border: "1px solid rgba(0,0,0,0.08)",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
-          minWidth: 200, overflow: "hidden",
-          opacity: menuOpen ? 1 : 0,
-          transform: menuOpen ? "translateY(0) scale(1)" : "translateY(8px) scale(0.97)",
-          pointerEvents: menuOpen ? "auto" : "none",
-          transition: "opacity 0.2s ease, transform 0.2s ease",
-        }}>
-          <div style={{ padding: "10px 18px 4px", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)", fontFamily: "var(--font-sans)" }}>General</div>
-          <MenuRow label="Help" href="#" onClick={() => setMenuOpen(false)} />
-          <MenuRow label="Keyboard Shortcuts" href="/shortcuts" onClick={() => setMenuOpen(false)} />
-          <div style={{ height: 1, background: "rgba(0,0,0,0.06)", margin: "6px 0" }} />
-          <div style={{ padding: "6px 18px 4px", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Staff</div>
-          <MenuRow label="Upload a flyer" href="/login?from=/upload" onClick={() => setMenuOpen(false)} />
-          <div style={{ height: 1, background: "rgba(0,0,0,0.06)", margin: "6px 0" }} />
-          <div style={{ padding: "6px 18px 4px", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Admin</div>
-          <MenuRow label="Review submissions" href="/login?from=/admin" onClick={() => setMenuOpen(false)} />
-          <div style={{ height: 8 }} />
-        </div>
-
-        <button
-          onClick={() => setMenuOpen(o => !o)}
-          style={{
-            width: 52, height: 52, borderRadius: "50%",
-            background: menuOpen ? "rgba(0,0,0,0.08)" : "var(--surface)",
-            border: "1.5px solid rgba(0,0,0,0.1)",
-            cursor: "pointer", color: "var(--text)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-            fontSize: 20, letterSpacing: 2,
-          }}
-        >···</button>
-      </div>
 
       {/* Filter tap-outside */}
       {filterOpen && <div onClick={() => setFilterOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 49 }} />}
@@ -578,10 +617,10 @@ export default function Home() {
 
               {/* Panel — fixed header + scrollable body */}
               <div style={{
-                background: "rgba(255,255,255,0.82)",
+                background: "var(--bar-bg)",
                 backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
                 borderRadius: 28,
-                border: "1px solid rgba(0,0,0,0.08)",
+                border: "1px solid var(--bar-border)",
                 boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
                 display: "flex", flexDirection: "column",
                 maxHeight: 360, overflow: "hidden",
@@ -593,7 +632,7 @@ export default function Home() {
                   padding: "12px 14px 10px",
                   flexShrink: 0,
                 }}>
-                  <div style={{ display: "flex", gap: 4, flex: 1, padding: 3, borderRadius: 99, border: "1.5px solid rgba(0,0,0,0.08)" }}>
+                  <div style={{ display: "flex", gap: 4, flex: 1, padding: 3, borderRadius: 99, border: "1.5px solid var(--bar-border)" }}>
                     {(["agency", "topics"] as const).map(tab => (
                       <button
                         key={tab}
@@ -602,7 +641,7 @@ export default function Home() {
                           flex: 1, padding: "6px 0", borderRadius: 99,
                           border: "none",
                           background: filterTab === tab ? "var(--text)" : "transparent",
-                          color: filterTab === tab ? "#fff" : "var(--muted)",
+                          color: filterTab === tab ? "var(--bg)" : "var(--muted)",
                           fontSize: 12, fontWeight: 500, fontFamily: "var(--font-sans)",
                           cursor: "pointer", transition: "background 0.15s, color 0.15s",
                         }}
@@ -614,8 +653,8 @@ export default function Home() {
                       onClick={() => { setActiveTags([]); setActiveEntities([]); setGridKey(k => k + 1); }}
                       style={{
                         flexShrink: 0, borderRadius: 99,
-                        border: "1.5px solid #ef4444", background: "transparent",
-                        color: "#ef4444", fontSize: 12, fontWeight: 600, lineHeight: 1,
+                        border: "1.5px solid var(--danger)", background: "transparent",
+                        color: "var(--danger)", fontSize: 12, fontWeight: 600, lineHeight: 1,
                         fontFamily: "var(--font-sans)", cursor: "pointer",
                         padding: "9px 16px",
                         transition: "background 0.15s",
@@ -630,6 +669,9 @@ export default function Home() {
                 <div
                   ref={panelScrollRef}
                   className="tag-panel"
+                  tabIndex={0}
+                  role="region"
+                  aria-label="Filters"
                   style={{ overflowY: "auto", flex: 1, padding: "6px 30px 14px 14px" }}
                 >
 
@@ -662,7 +704,7 @@ export default function Home() {
                               animation: `ios-fadeInUp 0.35s cubic-bezier(0.28, 0.11, 0.32, 1) ${0.04 + (globalOffset + tagIdx) * 0.02}s forwards`,
                               transition: "background 0.15s, border-color 0.15s",
                             }}
-                            onMouseEnter={e => { if (!active) e.currentTarget.style.background = "#f7f7f8"; }}
+                            onMouseEnter={e => { if (!active) e.currentTarget.style.background = "var(--hover-bg)"; }}
                             onMouseLeave={e => { e.currentTarget.style.background = active ? "rgba(34,197,94,0.1)" : "transparent"; }}
                             onMouseDown={e => { (e.currentTarget as HTMLElement).style.transform = "scale(0.97)"; }}
                             onMouseUp={e => { (e.currentTarget as HTMLElement).style.transform = "scale(1)"; }}
@@ -696,7 +738,7 @@ export default function Home() {
                         animation: `ios-fadeInUp 0.35s cubic-bezier(0.28, 0.11, 0.32, 1) ${0.04 + idx * 0.04}s forwards`,
                         transition: "background 0.15s, border-color 0.15s",
                       }}
-                      onMouseEnter={e => { if (!active) e.currentTarget.style.background = "#f7f7f8"; }}
+                      onMouseEnter={e => { if (!active) e.currentTarget.style.background = "var(--hover-bg)"; }}
                       onMouseLeave={e => { e.currentTarget.style.background = active ? "rgba(34,197,94,0.1)" : "transparent"; }}
                       onMouseDown={e => { (e.currentTarget as HTMLElement).style.transform = "scale(0.97)"; }}
                       onMouseUp={e => { (e.currentTarget as HTMLElement).style.transform = "scale(1)"; }}
@@ -744,25 +786,26 @@ export default function Home() {
         <div>
           <div style={{
             display: "flex", alignItems: "center",
-            background: "rgba(255,255,255,0.75)", borderRadius: 52,
-            border: "1px solid rgba(0,0,0,0.08)",
+            background: "var(--bar-bg)", borderRadius: 52,
+            border: "1px solid var(--bar-border)",
             backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
             boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
             overflow: "hidden",
           }}>
             {/* Filter icon button */}
             <button
+              aria-label="Open filters"
               onClick={() => setFilterOpen(o => !o)}
               style={{
                 flexShrink: 0, padding: "14px 16px 14px 20px",
                 background: "transparent",
-                border: "none", borderRight: "1px solid rgba(0,0,0,0.08)",
+                border: "none", borderRight: "1px solid var(--bar-border)",
                 cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
                 transition: "background 0.15s", position: "relative",
               }}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M1 3h14M4 8h8M7 13h2" stroke={activeTags.length > 0 || activeEntities.length > 0 || filterOpen ? "#22c55e" : "var(--muted)"} strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M1 3h14M4 8h8M7 13h2" stroke={activeTags.length > 0 || activeEntities.length > 0 || filterOpen ? "#22c55e" : "var(--text)"} strokeWidth="1.5" strokeLinecap="round" />
               </svg>
               {(activeTags.length + activeEntities.length) > 0 && (
                 <span style={{
@@ -796,8 +839,8 @@ export default function Home() {
               style={{
                 flexShrink: 0, marginRight: 10,
                 width: 32, height: 32, borderRadius: "50%",
-                border: "1.5px solid #ef4444", background: "transparent",
-                color: "#ef4444", fontSize: 14, fontWeight: 600,
+                border: "1.5px solid var(--danger)", background: "transparent",
+                color: "var(--danger)", fontSize: 14, fontWeight: 600,
                 fontFamily: "var(--font-sans)", cursor: "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}
@@ -824,6 +867,117 @@ export default function Home() {
           onClose={() => { setPreview(null); setPreviewInitialSearch(""); }}
         />
       )}
+
+      {/* Help overlay */}
+      <div role="region" aria-label="Help" aria-hidden={!helpOpen} style={{
+        position: "fixed", inset: 0, zIndex: 150,
+        pointerEvents: helpOpen ? "auto" : "none",
+        opacity: helpOpen ? 1 : 0,
+        transition: "opacity 0.25s ease",
+        background: "var(--bg)",
+      }}>
+        <div style={{ overflowY: "auto", height: "100%", padding: "88px 24px 100px" }}>
+          <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
+            <p style={{ margin: 0, fontSize: 22, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>
+              We want to get you to safety <em>and</em> get you the right information.
+            </p>
+            <p style={{ margin: 0, fontSize: 17, fontWeight: 400, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.6 }}>
+              Flyers were piling up around our office instead of reaching the people who needed them.
+            </p>
+            <p style={{ margin: 0, fontSize: 17, fontWeight: 400, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.6 }}>
+              STARFlyer is our answer. Everything staff receive, find, or see posted, searchable and always in your pocket.
+            </p>
+            <p style={{ margin: 0, fontSize: 17, fontWeight: 400, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.6 }}>
+              What was once a piece of paper becomes a versatile tool. Phone numbers, addresses, websites, and more are pulled out and made tappable, so you can act on information the moment you find it.
+            </p>
+            <p style={{ margin: 0, fontSize: 17, fontWeight: 400, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.6 }}>
+              We&apos;re also committed to making this accessible to everyone, and are working on aligning STARFlyer with WCAG 2.2 accessibility guidelines.
+            </p>
+          </div>
+        </div>
+        <CloseButton onClose={() => setHelpOpen(false)} />
+      </div>
+
+      {/* Keyboard shortcuts modal */}
+      {shortcutsOpen && (
+        <div
+          role="presentation"
+          onClick={closeShortcuts}
+          style={{
+            position: "fixed", inset: 0, zIndex: 200,
+            background: "rgba(0,0,0,0.65)",
+            backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: 24,
+            animation: shortcutsClosing ? "fadeOut 0.18s ease forwards" : "fadeIn 0.2s ease forwards",
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Keyboard shortcuts"
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: "#1c1c1e",
+              borderRadius: 28,
+              border: "1.5px solid rgba(255,255,255,0.1)",
+              boxShadow: "0 24px 80px rgba(0,0,0,0.5)",
+              width: "100%", maxWidth: 380,
+              padding: "28px 28px 24px",
+              animation: shortcutsClosing ? "fadeScaleOut 0.18s ease forwards" : "fadeScale 0.22s cubic-bezier(0.34,1.4,0.64,1) forwards",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+              <p style={{ margin: 0, fontSize: 17, fontWeight: 600, color: "#fff", fontFamily: "var(--font-sans)", letterSpacing: "-0.02em" }}>
+                Keyboard Shortcuts
+              </p>
+              <button
+                onClick={closeShortcuts}
+                style={{
+                  width: 28, height: 28, borderRadius: "50%",
+                  background: "rgba(255,255,255,0.1)", border: "none",
+                  color: "rgba(255,255,255,0.6)", fontSize: 14, fontWeight: 600,
+                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                  fontFamily: "var(--font-sans)",
+                }}
+              >✕</button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              {[
+                { keys: ["A–Z", "0–9"], description: "Start searching" },
+                { keys: ["Esc"], description: "Clear search & close" },
+              ].map(({ keys, description }, i, arr) => (
+                <div key={i} style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16,
+                  padding: "13px 0",
+                  borderBottom: i < arr.length - 1 ? "1px solid rgba(255,255,255,0.08)" : "none",
+                }}>
+                  <span style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", fontFamily: "var(--font-sans)", fontWeight: 400 }}>
+                    {description}
+                  </span>
+                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                    {keys.map(k => (
+                      <kbd key={k} style={{
+                        display: "inline-flex", alignItems: "center", justifyContent: "center",
+                        padding: "4px 10px", borderRadius: 8,
+                        background: "rgba(255,255,255,0.1)",
+                        border: "1px solid rgba(255,255,255,0.18)",
+                        fontSize: 12, fontWeight: 600, color: "#fff",
+                        fontFamily: "var(--font-sans)", letterSpacing: "0.02em",
+                      }}>{k}</kbd>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <p style={{ margin: "20px 0 0", fontSize: 12, color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-sans)", lineHeight: 1.5 }}>
+              Available on desktop. Press Esc or tap outside to close.
+            </p>
+          </div>
+        </div>
+      )}
     </>
   );
 }
@@ -831,25 +985,150 @@ export default function Home() {
 // Tracks URLs that have already been loaded this session — survives remounts
 const loadedImageUrls = new Set<string>();
 
-// ── Menu row ──────────────────────────────────────────────────────────────────
-function MenuRow({ label, href, onClick }: { label: string; href: string; onClick: () => void }) {
+// ── Featured card ─────────────────────────────────────────────────────────────
+function FeaturedCard({ flyers, animationDelay = 0, onPreview }: { flyers: Flyer[]; animationDelay?: number; onPreview: (f: Flyer) => void }) {
+  const [idx, setIdx] = useState(0);
+  const [fading, setFading] = useState(false);
+
+  useEffect(() => {
+    if (flyers.length <= 1) return;
+    const t = setInterval(() => {
+      setFading(true);
+      setTimeout(() => { setIdx(i => (i + 1) % flyers.length); setFading(false); }, 300);
+    }, 4500);
+    return () => clearInterval(t);
+  }, [flyers.length]);
+
+  const flyer = flyers[idx];
+  if (!flyer) return null;
+
   return (
-    <a
-      href={href}
-      onClick={onClick}
+    <div className="stagger-item" style={{ marginBottom: 40, animationDelay: `${animationDelay}s` }}>
+      <div
+        onClick={() => onPreview(flyer)}
+        style={{
+          position: "relative", width: "100%", paddingBottom: "52%",
+          borderRadius: 24, overflow: "hidden", cursor: "pointer",
+          background: "#1c1c1e", border: "2px solid var(--card-border)",
+        }}
+      >
+        {flyer.image_url && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={flyer.image_url} alt={flyer.title} style={{
+            position: "absolute", inset: 0, width: "100%", height: "100%",
+            objectFit: "cover",
+            opacity: fading ? 0 : 1, transition: "opacity 0.3s ease",
+          }} />
+        )}
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.85) 100%)" }} />
+        <div style={{ position: "absolute", inset: 0, backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", maskImage: "linear-gradient(to bottom, transparent 30%, black 60%)", WebkitMaskImage: "linear-gradient(to bottom, transparent 30%, black 60%)" }} />
+        <div style={{ position: "absolute", top: 14, left: 14, background: "#3b82f6", borderRadius: 99, padding: "4px 10px" }}>
+          <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#fff", fontFamily: "var(--font-sans)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Featured</p>
+        </div>
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "16px 18px 20px", opacity: fading ? 0 : 1, transition: "opacity 0.3s ease" }}>
+          {flyer.entity && <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "var(--font-sans)", letterSpacing: "0.04em" }}>{flyer.entity}</p>}
+          <p style={{ margin: 0, fontSize: 20, fontWeight: 600, color: "#fff", fontFamily: "var(--font-sans)", letterSpacing: "-0.02em", lineHeight: 1.3 }}>{flyer.title}</p>
+        </div>
+        {flyers.length > 1 && (
+          <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 5, alignItems: "center" }}>
+            {flyers.map((_, i) => (
+              <div key={i} style={{
+                height: 5, borderRadius: 99,
+                width: i === idx ? 16 : 5,
+                background: i === idx ? "#fff" : "rgba(255,255,255,0.4)",
+                transition: "width 0.3s ease",
+              }} />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Close button ──────────────────────────────────────────────────────────────
+function CloseButton({ onClose, visible = true }: { onClose: () => void; visible?: boolean }) {
+  return (
+    <button
+      onClick={onClose}
       style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "9px 18px",
-        color: "var(--text)", textDecoration: "none",
-        fontSize: 14, fontWeight: 500, fontFamily: "var(--font-sans)",
-        transition: "background 0.15s",
+        position: "absolute", bottom: 28, left: "50%", transform: "translateX(-50%)", zIndex: 20,
+        height: 44, borderRadius: 99, padding: "0 18px 0 14px",
+        background: "#dc2626", border: "none",
+        color: "#fff", fontSize: 14, fontWeight: 600, fontFamily: "var(--font-sans)",
+        cursor: "pointer", display: "flex", alignItems: "center", gap: 7,
+        boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
+        opacity: visible ? 1 : 0,
+        transition: "background 0.15s, opacity 0.35s ease 0.1s",
+        whiteSpace: "nowrap",
       }}
-      onMouseEnter={e => (e.currentTarget.style.background = "rgba(0,0,0,0.04)")}
-      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+      onMouseEnter={e => (e.currentTarget.style.background = "#991b1b")}
+      onMouseLeave={e => (e.currentTarget.style.background = "#dc2626")}
     >
-      {label}
-      <span style={{ opacity: 0.25, fontSize: 16 }}>›</span>
-    </a>
+      <span style={{ fontSize: 20, lineHeight: 1 }}>×</span>
+      Close
+    </button>
+  );
+}
+
+// ── Poster card ───────────────────────────────────────────────────────────────
+function PosterCard({ flyer, onQuickLook, animationDelay = 0 }: { flyer: Flyer; onQuickLook: () => void; animationDelay?: number }) {
+  const [pressed, setPressed] = useState(false);
+  return (
+    <div
+      className="stagger-item"
+      onClick={onQuickLook}
+      onMouseDown={() => setPressed(true)}
+      onMouseUp={() => setPressed(false)}
+      onMouseLeave={() => setPressed(false)}
+      style={{
+        flexShrink: 0, width: 148, height: 224, borderRadius: 30, overflow: "hidden",
+        cursor: "pointer", background: "#1c1c1e", border: "2px solid var(--card-border)",
+        position: "relative",
+        transform: pressed ? "scale(0.97)" : "scale(1)", transition: "transform 0.15s ease",
+        animationDelay: `${animationDelay}s`,
+      }}
+    >
+      {flyer.image_url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={flyer.image_url} alt={flyer.title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+      ) : (
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <span style={{ fontSize: 40, fontWeight: 700, color: "rgba(255,255,255,0.15)", fontFamily: "var(--font-sans)" }}>{flyer.title.charAt(0)}</span>
+        </div>
+      )}
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.85) 100%)" }} />
+      <div style={{ position: "absolute", inset: 0, backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", maskImage: "linear-gradient(to bottom, transparent 35%, black 60%)", WebkitMaskImage: "linear-gradient(to bottom, transparent 35%, black 60%)" }} />
+      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "10px 11px 12px" }}>
+        {flyer.entity && <p style={{ margin: "0 0 5px", fontSize: 10, fontWeight: 600, color: "#fff", fontFamily: "var(--font-sans)" }}>{flyer.entity}</p>}
+        <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#fff", fontFamily: "var(--font-sans)", lineHeight: 1.35 }}>{flyer.title}</p>
+      </div>
+    </div>
+  );
+}
+
+// ── Section row ───────────────────────────────────────────────────────────────
+function SectionRow({ title, dot, flyers, onSeeAll, onQuickLook, animationDelay = 0 }: {
+  title: string; dot?: string; flyers: Flyer[];
+  onSeeAll?: () => void; onQuickLook: (f: Flyer) => void; animationDelay?: number;
+}) {
+  return (
+    <div className="stagger-item" style={{ marginBottom: 40, animationDelay: `${animationDelay}s` }}>
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {dot && <div style={{ width: 8, height: 8, borderRadius: "50%", background: dot, flexShrink: 0, marginBottom: 2 }} />}
+          <p style={{ margin: 0, fontSize: 22, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>{title}</p>
+        </div>
+        {onSeeAll && (
+          <button onClick={onSeeAll} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 500, color: "var(--accent)", fontFamily: "var(--font-sans)", padding: "0 0 3px", flexShrink: 0 }}>
+            See All →
+          </button>
+        )}
+      </div>
+      <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 6, scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}>
+        {flyers.map((f, i) => <PosterCard key={f.id} flyer={f} onQuickLook={() => onQuickLook(f)} animationDelay={animationDelay + i * 0.04} />)}
+      </div>
+    </div>
   );
 }
 
@@ -901,8 +1180,8 @@ function FlyerCard({ flyer, search, showEntity, onQuickLook, onPreview, animatio
           display: "flex",
           alignItems: "center",
           gap: 12,
-          background: "#ffffff",
-          border: "2px solid #d4d4d4",
+          background: "var(--card-bg)",
+          border: "2px solid var(--card-border)",
           borderRadius: 52,
           padding: "10px 20px 10px 10px",
           cursor: "pointer",
@@ -912,7 +1191,7 @@ function FlyerCard({ flyer, search, showEntity, onQuickLook, onPreview, animatio
       >
         {/* Circular image */}
         <div
-          style={{ position: "relative", flexShrink: 0, width: 64, height: 64, borderRadius: "50%", overflow: "hidden", border: "2px solid #d4d4d4" }}
+          style={{ position: "relative", flexShrink: 0, width: 64, height: 64, borderRadius: "50%", overflow: "hidden", border: "2px solid var(--card-border)" }}
         >
           {/* Skeleton */}
           <div style={{
@@ -1146,23 +1425,7 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
       </div>
 
       {/* Close button — bottom center */}
-      <button onClick={handleClose} style={{
-        position: "absolute", bottom: 28, left: "50%", transform: "translateX(-50%)", zIndex: 20,
-        height: 44, borderRadius: 99, padding: "0 18px 0 14px",
-        background: "#ef4444", border: "none",
-        color: "#fff", fontSize: 14, fontWeight: 600, fontFamily: "var(--font-sans)",
-        cursor: "pointer", display: "flex", alignItems: "center", gap: 7,
-        boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
-        opacity: open ? 1 : 0,
-        transition: "background 0.15s, opacity 0.35s ease 0.1s",
-        whiteSpace: "nowrap",
-      }}
-        onMouseEnter={e => (e.currentTarget.style.background = "#dc2626")}
-        onMouseLeave={e => (e.currentTarget.style.background = "#ef4444")}
-      >
-        <span style={{ fontSize: 20, lineHeight: 1 }}>×</span>
-        Close
-      </button>
+      <CloseButton onClose={handleClose} visible={open} />
 
       {/* Panel backdrop — dismisses contacts panel on outside tap */}
       {sheetOpen && (
