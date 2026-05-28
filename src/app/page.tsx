@@ -958,7 +958,7 @@ function FeaturedCard({ flyers, animationDelay = 0, onPreview }: { flyers: Flyer
           <p style={{ margin: 0, fontSize: 20, fontWeight: 600, color: "#fff", fontFamily: "var(--font-sans)", letterSpacing: "-0.02em", lineHeight: 1.3 }}>{flyer.title}</p>
         </div>
         {flyers.length > 1 && (
-          <div style={{ position: "absolute", bottom: 16, right: 16, display: "flex", gap: 5, alignItems: "center" }}>
+          <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 5, alignItems: "center" }}>
             {flyers.map((_, i) => (
               <div key={i} style={{
                 height: 5, borderRadius: 99,
