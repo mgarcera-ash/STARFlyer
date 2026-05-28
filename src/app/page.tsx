@@ -441,7 +441,7 @@ export default function Home() {
                       <p style={{ margin: "0 0 4px", fontSize: 22, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>
                         These flyers have more inside.
                       </p>
-                      <p style={{ margin: 0, fontSize: 22, fontWeight: 400, color: "var(--muted)", fontFamily: "var(--font-sans)", letterSpacing: "-0.02em" }}>
+                      <p style={{ margin: 0, fontSize: 14, fontWeight: 400, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>
                         Tap directly on information to view.
                       </p>
                     </div>
