@@ -874,21 +874,10 @@ export default function Home() {
         pointerEvents: helpOpen ? "auto" : "none",
         opacity: helpOpen ? 1 : 0,
         transition: "opacity 0.25s ease",
-        overflowY: "auto",
         background: "var(--bg)",
-        padding: "88px 24px 64px",
       }}>
-        <div style={{ maxWidth: 720, margin: "0 auto" }}>
-          <button
-            onClick={() => setHelpOpen(false)}
-            style={{
-              position: "fixed", top: 20, right: 24,
-              background: "none", border: "none", cursor: "pointer",
-              fontSize: 13, fontWeight: 500, color: "var(--muted)",
-              fontFamily: "var(--font-sans)", padding: 0,
-            }}
-          >Close</button>
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div style={{ overflowY: "auto", height: "100%", padding: "88px 24px 100px" }}>
+          <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
             <p style={{ margin: 0, fontSize: 22, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>
               We want to get you to safety <em>and</em> get you the right information.
             </p>
@@ -906,6 +895,7 @@ export default function Home() {
             </p>
           </div>
         </div>
+        <CloseButton onClose={() => setHelpOpen(false)} />
       </div>
 
       {/* Keyboard shortcuts modal */}
@@ -1053,6 +1043,31 @@ function FeaturedCard({ flyers, animationDelay = 0, onPreview }: { flyers: Flyer
         )}
       </div>
     </div>
+  );
+}
+
+// ── Close button ──────────────────────────────────────────────────────────────
+function CloseButton({ onClose, visible = true }: { onClose: () => void; visible?: boolean }) {
+  return (
+    <button
+      onClick={onClose}
+      style={{
+        position: "absolute", bottom: 28, left: "50%", transform: "translateX(-50%)", zIndex: 20,
+        height: 44, borderRadius: 99, padding: "0 18px 0 14px",
+        background: "#dc2626", border: "none",
+        color: "#fff", fontSize: 14, fontWeight: 600, fontFamily: "var(--font-sans)",
+        cursor: "pointer", display: "flex", alignItems: "center", gap: 7,
+        boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
+        opacity: visible ? 1 : 0,
+        transition: "background 0.15s, opacity 0.35s ease 0.1s",
+        whiteSpace: "nowrap",
+      }}
+      onMouseEnter={e => (e.currentTarget.style.background = "#991b1b")}
+      onMouseLeave={e => (e.currentTarget.style.background = "#dc2626")}
+    >
+      <span style={{ fontSize: 20, lineHeight: 1 }}>×</span>
+      Close
+    </button>
   );
 }
 
@@ -1410,23 +1425,7 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
       </div>
 
       {/* Close button — bottom center */}
-      <button onClick={handleClose} style={{
-        position: "absolute", bottom: 28, left: "50%", transform: "translateX(-50%)", zIndex: 20,
-        height: 44, borderRadius: 99, padding: "0 18px 0 14px",
-        background: "#dc2626", border: "none",
-        color: "#fff", fontSize: 14, fontWeight: 600, fontFamily: "var(--font-sans)",
-        cursor: "pointer", display: "flex", alignItems: "center", gap: 7,
-        boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
-        opacity: open ? 1 : 0,
-        transition: "background 0.15s, opacity 0.35s ease 0.1s",
-        whiteSpace: "nowrap",
-      }}
-        onMouseEnter={e => (e.currentTarget.style.background = "#991b1b")}
-        onMouseLeave={e => (e.currentTarget.style.background = "#dc2626")}
-      >
-        <span style={{ fontSize: 20, lineHeight: 1 }}>×</span>
-        Close
-      </button>
+      <CloseButton onClose={handleClose} visible={open} />
 
       {/* Panel backdrop — dismisses contacts panel on outside tap */}
       {sheetOpen && (
