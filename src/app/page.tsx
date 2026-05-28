@@ -1400,7 +1400,7 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
       <button onClick={handleClose} style={{
         position: "absolute", bottom: 28, left: "50%", transform: "translateX(-50%)", zIndex: 20,
         height: 44, borderRadius: 99, padding: "0 18px 0 14px",
-        background: "#ef4444", border: "none",
+        background: "#dc2626", border: "none",
         color: "#fff", fontSize: 14, fontWeight: 600, fontFamily: "var(--font-sans)",
         cursor: "pointer", display: "flex", alignItems: "center", gap: 7,
         boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
@@ -1408,8 +1408,8 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
         transition: "background 0.15s, opacity 0.35s ease 0.1s",
         whiteSpace: "nowrap",
       }}
-        onMouseEnter={e => (e.currentTarget.style.background = "#dc2626")}
-        onMouseLeave={e => (e.currentTarget.style.background = "#ef4444")}
+        onMouseEnter={e => (e.currentTarget.style.background = "#991b1b")}
+        onMouseLeave={e => (e.currentTarget.style.background = "#dc2626")}
       >
         <span style={{ fontSize: 20, lineHeight: 1 }}>×</span>
         Close
