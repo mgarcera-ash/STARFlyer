@@ -414,24 +414,37 @@ export default function Home() {
 
                 {/* Fallback flyers — normal cards */}
                 {fallbacks.length > 0 && (
-                  <div key={gridKey} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, alignItems: "start" }}>
-                    {fallbacks.map(({ flyer }, i) => (
-                      <FlyerCard
-                        key={flyer.id}
-                        flyer={flyer}
-                        search={search}
-                        showEntity={activeEntities.length > 0}
-                        onQuickLook={(initialSearch = "") => { setPreviewInitialSearch(initialSearch); setQuickLook(flyer); }}
-                        onPreview={(initialSearch = "") => { setPreviewInitialSearch(initialSearch); setPreview(flyer); }}
-                        animationDelay={i * 0.06}
-                      />
-                    ))}
+                  <div>
+                    <p style={{ margin: "0 0 14px", fontSize: 22, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>
+                      {fallbacks.length} {fallbacks.length === 1 ? "flyer" : "flyers"} found.
+                    </p>
+                    <div key={gridKey} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, alignItems: "start" }}>
+                      {fallbacks.map(({ flyer }, i) => (
+                        <FlyerCard
+                          key={flyer.id}
+                          flyer={flyer}
+                          search={search}
+                          showEntity={activeEntities.length > 0}
+                          onQuickLook={(initialSearch = "") => { setPreviewInitialSearch(initialSearch); setQuickLook(flyer); }}
+                          onPreview={(initialSearch = "") => { setPreviewInitialSearch(initialSearch); setPreview(flyer); }}
+                          animationDelay={i * 0.06}
+                        />
+                      ))}
+                    </div>
                   </div>
                 )}
 
                 {/* Matched flyers — dark grouped contact cards */}
                 {matched.length > 0 && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                    <div style={{ marginBottom: 2 }}>
+                      <p style={{ margin: "0 0 4px", fontSize: 22, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>
+                        Here&apos;s more inside these flyers.
+                      </p>
+                      <p style={{ margin: 0, fontSize: 14, fontWeight: 400, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>
+                        Tap directly on information to view.
+                      </p>
+                    </div>
                     {matched.map(({ flyer, hotspotsByType }, i) => (
                       <div key={flyer.id} className="stagger-item" style={{ animationDelay: `${i * 0.06}s`, background: "#1c1c1e", borderRadius: 32, overflow: "hidden", border: "2px solid #d4d4d4" }}>
                         <button
