@@ -55,6 +55,7 @@ export default function Home() {
     setTimeout(() => { setShortcutsOpen(false); setShortcutsClosing(false); }, 180);
   };
   const [helpOpen, setHelpOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
 
   // Skip splash if already shown this session
   useEffect(() => {
@@ -155,6 +156,17 @@ export default function Home() {
     }
     fetchFlyers();
   }, []);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("theme");
+    if (stored) { setDarkMode(stored === "dark"); }
+    else if (window.matchMedia("(prefers-color-scheme: dark)").matches) { setDarkMode(true); }
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", darkMode ? "dark" : "light");
+    localStorage.setItem("theme", darkMode ? "dark" : "light");
+  }, [darkMode]);
 
   const toggleTag = (tag: string) => {
     setActiveTags(prev =>
@@ -560,6 +572,7 @@ export default function Home() {
                 <p style={{ fontSize: 22, fontWeight: 600, color: "var(--text)", margin: "0 0 12px", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>Quick Links</p>
                 <a href="#" onClick={e => { e.preventDefault(); setHelpOpen(true); }} style={{ display: "block", fontSize: 17, fontWeight: 500, color: "#3b82f6", textDecoration: "none", fontFamily: "var(--font-sans)", padding: "6px 0" }}>Help</a>
                 <a href="#" onClick={e => { e.preventDefault(); setShortcutsOpen(true); }} style={{ display: "block", fontSize: 17, fontWeight: 500, color: "#3b82f6", textDecoration: "none", fontFamily: "var(--font-sans)", padding: "6px 0" }}>Keyboard Shortcuts</a>
+                <a href="#" onClick={e => { e.preventDefault(); setDarkMode(d => !d); }} style={{ display: "block", fontSize: 17, fontWeight: 500, color: "#3b82f6", textDecoration: "none", fontFamily: "var(--font-sans)", padding: "6px 0" }}>{darkMode ? "Light Mode" : "Dark Mode"}</a>
               </div>
 
               {/* Staff */}
@@ -604,10 +617,10 @@ export default function Home() {
 
               {/* Panel — fixed header + scrollable body */}
               <div style={{
-                background: "rgba(255,255,255,0.82)",
+                background: "var(--bar-bg)",
                 backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
                 borderRadius: 28,
-                border: "1px solid rgba(0,0,0,0.08)",
+                border: "1px solid var(--bar-border)",
                 boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
                 display: "flex", flexDirection: "column",
                 maxHeight: 360, overflow: "hidden",
@@ -619,7 +632,7 @@ export default function Home() {
                   padding: "12px 14px 10px",
                   flexShrink: 0,
                 }}>
-                  <div style={{ display: "flex", gap: 4, flex: 1, padding: 3, borderRadius: 99, border: "1.5px solid rgba(0,0,0,0.08)" }}>
+                  <div style={{ display: "flex", gap: 4, flex: 1, padding: 3, borderRadius: 99, border: "1.5px solid var(--bar-border)" }}>
                     {(["agency", "topics"] as const).map(tab => (
                       <button
                         key={tab}
@@ -691,7 +704,7 @@ export default function Home() {
                               animation: `ios-fadeInUp 0.35s cubic-bezier(0.28, 0.11, 0.32, 1) ${0.04 + (globalOffset + tagIdx) * 0.02}s forwards`,
                               transition: "background 0.15s, border-color 0.15s",
                             }}
-                            onMouseEnter={e => { if (!active) e.currentTarget.style.background = "#f7f7f8"; }}
+                            onMouseEnter={e => { if (!active) e.currentTarget.style.background = "var(--hover-bg)"; }}
                             onMouseLeave={e => { e.currentTarget.style.background = active ? "rgba(34,197,94,0.1)" : "transparent"; }}
                             onMouseDown={e => { (e.currentTarget as HTMLElement).style.transform = "scale(0.97)"; }}
                             onMouseUp={e => { (e.currentTarget as HTMLElement).style.transform = "scale(1)"; }}
@@ -725,7 +738,7 @@ export default function Home() {
                         animation: `ios-fadeInUp 0.35s cubic-bezier(0.28, 0.11, 0.32, 1) ${0.04 + idx * 0.04}s forwards`,
                         transition: "background 0.15s, border-color 0.15s",
                       }}
-                      onMouseEnter={e => { if (!active) e.currentTarget.style.background = "#f7f7f8"; }}
+                      onMouseEnter={e => { if (!active) e.currentTarget.style.background = "var(--hover-bg)"; }}
                       onMouseLeave={e => { e.currentTarget.style.background = active ? "rgba(34,197,94,0.1)" : "transparent"; }}
                       onMouseDown={e => { (e.currentTarget as HTMLElement).style.transform = "scale(0.97)"; }}
                       onMouseUp={e => { (e.currentTarget as HTMLElement).style.transform = "scale(1)"; }}
@@ -773,8 +786,8 @@ export default function Home() {
         <div>
           <div style={{
             display: "flex", alignItems: "center",
-            background: "rgba(255,255,255,0.75)", borderRadius: 52,
-            border: "1px solid rgba(0,0,0,0.08)",
+            background: "var(--bar-bg)", borderRadius: 52,
+            border: "1px solid var(--bar-border)",
             backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
             boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
             overflow: "hidden",
@@ -786,13 +799,13 @@ export default function Home() {
               style={{
                 flexShrink: 0, padding: "14px 16px 14px 20px",
                 background: "transparent",
-                border: "none", borderRight: "1px solid rgba(0,0,0,0.08)",
+                border: "none", borderRight: "1px solid var(--bar-border)",
                 cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
                 transition: "background 0.15s", position: "relative",
               }}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M1 3h14M4 8h8M7 13h2" stroke={activeTags.length > 0 || activeEntities.length > 0 || filterOpen ? "#22c55e" : "#404040"} strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M1 3h14M4 8h8M7 13h2" stroke={activeTags.length > 0 || activeEntities.length > 0 || filterOpen ? "#22c55e" : "var(--muted)"} strokeWidth="1.5" strokeLinecap="round" />
               </svg>
               {(activeTags.length + activeEntities.length) > 0 && (
                 <span style={{
@@ -871,7 +884,7 @@ export default function Home() {
             style={{
               position: "fixed", top: 20, right: 24,
               background: "none", border: "none", cursor: "pointer",
-              fontSize: 13, fontWeight: 500, color: "#404040",
+              fontSize: 13, fontWeight: 500, color: "var(--muted)",
               fontFamily: "var(--font-sans)", padding: 0,
             }}
           >Close</button>
@@ -1152,8 +1165,8 @@ function FlyerCard({ flyer, search, showEntity, onQuickLook, onPreview, animatio
           display: "flex",
           alignItems: "center",
           gap: 12,
-          background: "#ffffff",
-          border: "2px solid #d4d4d4",
+          background: "var(--card-bg)",
+          border: "2px solid var(--card-border)",
           borderRadius: 52,
           padding: "10px 20px 10px 10px",
           cursor: "pointer",
@@ -1163,7 +1176,7 @@ function FlyerCard({ flyer, search, showEntity, onQuickLook, onPreview, animatio
       >
         {/* Circular image */}
         <div
-          style={{ position: "relative", flexShrink: 0, width: 64, height: 64, borderRadius: "50%", overflow: "hidden", border: "2px solid #d4d4d4" }}
+          style={{ position: "relative", flexShrink: 0, width: 64, height: 64, borderRadius: "50%", overflow: "hidden", border: "2px solid var(--card-border)" }}
         >
           {/* Skeleton */}
           <div style={{
