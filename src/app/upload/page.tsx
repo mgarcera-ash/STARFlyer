@@ -1,51 +1,24 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-
-type OcrStatus = "idle" | "processing" | "done" | "error";
 
 export default function UploadPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [ocrStatus, setOcrStatus] = useState<OcrStatus>("idle");
-  const [ocrProgress, setOcrProgress] = useState(0);
-  const [title, setTitle] = useState("");
-  const [tags, setTags] = useState<string[]>([]);
-  const [hotspots, setHotspots] = useState<{ type: string; label?: string; value: string }[]>([]);
   const [compressedBlob, setCompressedBlob] = useState<Blob | null>(null);
+  const [compressing, setCompressing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [progressMsg, setProgressMsg] = useState("Reading…");
-  const [progressVisible, setProgressVisible] = useState(true);
-
-  const PROGRESS_MESSAGES = ["Reading…", "Gathering…", "Reviewing…", "Thinking…", "Analyzing…"];
-
-  useEffect(() => {
-    if (ocrStatus !== "processing") return;
-    let i = 0;
-    const interval = setInterval(() => {
-      setProgressVisible(false);
-      setTimeout(() => {
-        i = (i + 1) % PROGRESS_MESSAGES.length;
-        setProgressMsg(PROGRESS_MESSAGES[i]);
-        setProgressVisible(true);
-      }, 300);
-    }, 1800);
-    return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ocrStatus]);
 
   const reset = () => {
     setImagePreview(null); setCompressedBlob(null);
-    setOcrStatus("idle"); setOcrProgress(0);
-    setTitle(""); setTags([]); setHotspots([]);
-    setSubmitted(false);
+    setCompressing(false); setSubmitted(false);
   };
 
-  const compressImage = (file: File, maxPx = 1600, quality = 0.82): Promise<{ base64: string; blob: Blob }> =>
+  const compressImage = (file: File, maxPx = 1600, quality = 0.82): Promise<Blob> =>
     new Promise((resolve, reject) => {
       const img = new Image();
       const url = URL.createObjectURL(file);
@@ -55,55 +28,29 @@ export default function UploadPage() {
         const canvas = document.createElement("canvas");
         canvas.width = Math.round(img.width * scale);
         canvas.height = Math.round(img.height * scale);
-        const ctx = canvas.getContext("2d")!;
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
         const dataUrl = canvas.toDataURL("image/jpeg", quality);
         const base64 = dataUrl.split(",")[1];
         const bytes = atob(base64);
         const ab = new ArrayBuffer(bytes.length);
         const ia = new Uint8Array(ab);
         for (let i = 0; i < bytes.length; i++) ia[i] = bytes.charCodeAt(i);
-        const blob = new Blob([ab], { type: "image/jpeg" });
-        resolve({ base64, blob });
+        resolve(new Blob([ab], { type: "image/jpeg" }));
       };
       img.onerror = reject;
       img.src = url;
     });
 
   const handleImageSelect = async (file: File) => {
-    setOcrStatus("processing");
-    setOcrProgress(0);
-
+    setCompressing(true);
     try {
-      const { base64, blob } = await compressImage(file);
+      const blob = await compressImage(file);
       setCompressedBlob(blob);
       setImagePreview(URL.createObjectURL(blob));
-      setOcrProgress(50);
-
-      const res = await fetch("/api/ocr", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ base64, mimeType: "image/jpeg" }),
-      });
-
-      setOcrProgress(100);
-      const { ok, data } = await res.json();
-      if (!ok) throw new Error("OCR failed");
-
-      setTitle(data.title ?? "");
-      setTags(Array.isArray(data.tags) ? data.tags.map((t: string) => t.toLowerCase().trim()) : []);
-      setHotspots(
-        Array.isArray(data.hotspots)
-          ? data.hotspots.map((h: { type: string; label?: string; value: string }) => ({
-              type: h.type,
-              label: h.label ?? "",
-              value: h.value,
-            }))
-          : []
-      );
-      setOcrStatus("done");
     } catch {
-      setOcrStatus("error");
+      alert("Couldn't process that image. Please try another.");
+    } finally {
+      setCompressing(false);
     }
   };
 
@@ -123,18 +70,19 @@ export default function UploadPage() {
     setSubmitting(true);
     try {
       const fileName = `${Date.now()}.jpg`;
-      const { error: uploadError } = await supabase.storage.from("flyers").upload(fileName, compressedBlob, { contentType: "image/jpeg" });
+      const { error: uploadError } = await supabase.storage
+        .from("flyers").upload(fileName, compressedBlob, { contentType: "image/jpeg" });
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage.from("flyers").getPublicUrl(fileName);
 
       const { error: insertError } = await supabase.from("flyers").insert({
-        title: title.trim() || "Untitled",
+        title: "Untitled",
         entity: null,
-        tags: tags.length > 0 ? tags : null,
+        tags: null,
         image_url: publicUrl,
         status: "pending",
-        hotspots: hotspots.length > 0 ? hotspots : null,
+        hotspots: null,
       });
       if (insertError) throw insertError;
 
@@ -193,12 +141,14 @@ export default function UploadPage() {
 
         {/* Header */}
         <div className="fade-up" style={{ animationDelay: "0.05s", marginBottom: 28 }}>
-          <button onClick={() => router.push("/")} style={{
-            fontSize: 13, color: "var(--text)", fontFamily: "var(--font-sans)",
-            fontWeight: 500, padding: "8px 18px", borderRadius: 99,
-            border: "1.5px solid var(--border)", background: "var(--surface)",
-            cursor: "pointer", transition: "background 0.15s",
-          }}
+          <button
+            onClick={() => router.push("/")}
+            style={{
+              fontSize: 13, color: "var(--text)", fontFamily: "var(--font-sans)",
+              fontWeight: 500, padding: "8px 18px", borderRadius: 99,
+              border: "1.5px solid var(--border)", background: "var(--surface)",
+              cursor: "pointer", transition: "background 0.15s",
+            }}
             onMouseEnter={e => (e.currentTarget.style.background = "var(--bg)")}
             onMouseLeave={e => (e.currentTarget.style.background = "var(--surface)")}
           >← Back</button>
@@ -226,7 +176,7 @@ export default function UploadPage() {
               <p style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--muted)" }}>JPG, PNG, HEIC supported</p>
             </div>
           ) : (
-            <div style={{ position: "relative", marginBottom: 24, borderRadius: 18, overflow: "hidden", border: "1px solid var(--border)" }}>
+            <div style={{ marginBottom: 24, borderRadius: 18, overflow: "hidden", border: "1px solid var(--border)" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <div style={{ maxHeight: 320, overflowY: "auto" }}>
                 <img src={imagePreview} alt="Flyer preview" style={{ width: "100%", display: "block" }} />
@@ -236,25 +186,22 @@ export default function UploadPage() {
           <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} style={{ display: "none" }} />
         </div>
 
-        {/* OCR progress */}
-        {ocrStatus === "processing" && (
+        {/* Compression progress */}
+        {compressing && (
           <div className="fade-up" style={{ marginBottom: 24 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-              <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--muted)", opacity: progressVisible ? 1 : 0, transition: "opacity 0.3s ease" }}>{progressMsg}</span>
-              <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--muted)" }}>{ocrProgress}%</span>
-            </div>
+            <p style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--muted)", marginBottom: 6 }}>Processing…</p>
             <div style={{ height: 4, background: "var(--border)", borderRadius: 99, overflow: "hidden" }}>
-              <div style={{ height: "100%", width: `${ocrProgress}%`, background: "var(--accent)", borderRadius: 99, transition: "width 0.3s ease" }} />
+              <div style={{ height: "100%", width: "60%", background: "var(--accent)", borderRadius: 99 }} />
             </div>
           </div>
         )}
 
         {/* Submit */}
-        {(ocrStatus === "done" || ocrStatus === "error") && (
-          <div className="stagger-item" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, marginTop: 8 }}>
+        {compressedBlob && !compressing && (
+          <div className="stagger-item" style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
             <button
               onClick={handleSubmit}
-              disabled={submitting || !compressedBlob}
+              disabled={submitting}
               className="submit-btn"
               style={{
                 position: "relative", overflow: "hidden", isolation: "isolate",
@@ -262,8 +209,8 @@ export default function UploadPage() {
                 padding: "10px 16px", borderRadius: 9999, border: "2px solid var(--border)",
                 background: "var(--surface)", fontSize: 14,
                 fontFamily: "var(--font-sans)", fontWeight: 600, color: "var(--text)",
-                cursor: submitting || !compressedBlob ? "not-allowed" : "pointer",
-                opacity: submitting || !compressedBlob ? 0.5 : 1,
+                cursor: submitting ? "not-allowed" : "pointer",
+                opacity: submitting ? 0.5 : 1,
                 boxShadow: "0 4px 20px rgba(0,0,0,0.07)",
                 transition: "color 0.5s ease",
               }}
@@ -287,11 +234,6 @@ export default function UploadPage() {
                 />
               </svg>
             </button>
-            {ocrStatus === "error" && (
-              <p style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--muted)", textAlign: "center" }}>
-                Couldn&apos;t read the flyer automatically — it will be reviewed manually.
-              </p>
-            )}
           </div>
         )}
       </div>
