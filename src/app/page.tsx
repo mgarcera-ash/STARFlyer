@@ -578,7 +578,7 @@ export default function Home() {
               {/* Staff */}
               <div className="stagger-item" style={{ marginBottom: 40, animationDelay: "0.24s" }}>
                 <p style={{ fontSize: 22, fontWeight: 600, color: "var(--text)", margin: "0 0 12px", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>Staff</p>
-                <a href="/login?from=/upload" style={{ display: "block", fontSize: 17, fontWeight: 500, color: "#3b82f6", textDecoration: "none", fontFamily: "var(--font-sans)", padding: "6px 0" }}>Upload a Flyer</a>
+                <a href="/upload" style={{ display: "block", fontSize: 17, fontWeight: 500, color: "#3b82f6", textDecoration: "none", fontFamily: "var(--font-sans)", padding: "6px 0" }}>Upload a Flyer</a>
                 <a href="/login?from=/admin" style={{ display: "block", fontSize: 17, fontWeight: 500, color: "#3b82f6", textDecoration: "none", fontFamily: "var(--font-sans)", padding: "6px 0" }}>Review Flyer Submissions</a>
               </div>
             </div>

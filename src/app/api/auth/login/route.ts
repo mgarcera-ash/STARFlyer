@@ -15,12 +15,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Incorrect passphrase." }, { status: 401 });
   }
 
-  if (role === "staff" && password === process.env.STAFF_PASSWORD) {
-    const res = NextResponse.json({ ok: true });
-    res.cookies.set("staff-token", process.env.STAFF_TOKEN!, COOKIE_OPTS);
-    return res;
-  }
-
   if (role === "admin" && password === process.env.ADMIN_PASSWORD) {
     const res = NextResponse.json({ ok: true });
     res.cookies.set("admin-token", process.env.ADMIN_TOKEN!, COOKIE_OPTS);
