@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { FaSafari, FaSms } from "react-icons/fa";
 import { MdEmail } from "react-icons/md";
 import { supabase } from "@/lib/supabase";
@@ -991,23 +991,47 @@ const loadedImageUrls = new Set<string>();
 function FeaturedCard({ flyers, animationDelay = 0, onQuickLook }: { flyers: Flyer[]; animationDelay?: number; onQuickLook: (f: Flyer) => void }) {
   const [idx, setIdx] = useState(0);
   const [fading, setFading] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
+  const startInterval = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
     if (flyers.length <= 1) return;
-    const t = setInterval(() => {
+    intervalRef.current = setInterval(() => {
       setFading(true);
       setTimeout(() => { setIdx(i => (i + 1) % flyers.length); setFading(false); }, 300);
     }, 4500);
-    return () => clearInterval(t);
   }, [flyers.length]);
+
+  useEffect(() => {
+    startInterval();
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [startInterval]);
+
+  const navigate = useCallback((newIdx: number) => {
+    setFading(true);
+    setTimeout(() => { setIdx(newIdx); setFading(false); }, 300);
+    startInterval();
+  }, [startInterval]);
 
   const flyer = flyers[idx];
   if (!flyer) return null;
+
+  const arrowStyle = (side: "left" | "right"): React.CSSProperties => ({
+    position: "absolute", [side]: 12, top: "50%", transform: "translateY(-50%)",
+    width: 36, height: 36, borderRadius: "50%", border: "none",
+    background: "rgba(0,0,0,0.45)", color: "#fff", fontSize: 22,
+    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+    opacity: hovered ? 1 : 0, transition: "opacity 0.2s ease",
+    zIndex: 10, fontFamily: "var(--font-sans)", lineHeight: 1,
+  });
 
   return (
     <div className="stagger-item" style={{ marginBottom: 40, animationDelay: `${animationDelay}s` }}>
       <div
         onClick={() => onQuickLook(flyer)}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
         style={{
           position: "relative", width: "100%", paddingBottom: "52%",
           borderRadius: 24, overflow: "hidden", cursor: "pointer",
@@ -1032,16 +1056,33 @@ function FeaturedCard({ flyers, animationDelay = 0, onQuickLook }: { flyers: Fly
           <p style={{ margin: 0, fontSize: 20, fontWeight: 600, color: "#fff", fontFamily: "var(--font-sans)", letterSpacing: "-0.02em", lineHeight: 1.3 }}>{flyer.title}</p>
         </div>
         {flyers.length > 1 && (
-          <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 5, alignItems: "center" }}>
-            {flyers.map((_, i) => (
-              <div key={i} style={{
-                height: 5, borderRadius: 99,
-                width: i === idx ? 16 : 5,
-                background: i === idx ? "#fff" : "rgba(255,255,255,0.4)",
-                transition: "width 0.3s ease",
-              }} />
-            ))}
-          </div>
+          <>
+            <button
+              onClick={e => { e.stopPropagation(); navigate((idx - 1 + flyers.length) % flyers.length); }}
+              aria-label="Previous slide"
+              style={arrowStyle("left")}
+            >‹</button>
+            <button
+              onClick={e => { e.stopPropagation(); navigate((idx + 1) % flyers.length); }}
+              aria-label="Next slide"
+              style={arrowStyle("right")}
+            >›</button>
+            <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 5, alignItems: "center", zIndex: 10 }}>
+              {flyers.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={e => { e.stopPropagation(); navigate(i); }}
+                  aria-label={`Go to slide ${i + 1}`}
+                  style={{
+                    height: 5, borderRadius: 99, border: "none", padding: 0, cursor: "pointer",
+                    width: i === idx ? 16 : 5,
+                    background: i === idx ? "#fff" : "rgba(255,255,255,0.4)",
+                    transition: "width 0.3s ease",
+                  }}
+                />
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>
@@ -1114,6 +1155,22 @@ function SectionRow({ title, dot, flyers, onSeeAll, onQuickLook, animationDelay 
   title: string; dot?: string; flyers: Flyer[];
   onSeeAll?: () => void; onQuickLook: (f: Flyer) => void; animationDelay?: number;
 }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [rowHovered, setRowHovered] = useState(false);
+
+  const scroll = (dir: -1 | 1) => {
+    scrollRef.current?.scrollBy({ left: dir * 320, behavior: "smooth" });
+  };
+
+  const scrollArrowStyle = (side: "left" | "right"): React.CSSProperties => ({
+    position: "absolute", [side]: 8, top: "50%", transform: "translateY(-50%)",
+    width: 32, height: 32, borderRadius: "50%", border: "1px solid var(--card-border)",
+    background: "var(--surface)", color: "var(--text)", fontSize: 20,
+    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+    opacity: rowHovered ? 1 : 0, transition: "opacity 0.2s ease",
+    zIndex: 10, boxShadow: "0 2px 8px rgba(0,0,0,0.12)", lineHeight: 1,
+  });
+
   return (
     <div className="stagger-item" style={{ marginBottom: 40, animationDelay: `${animationDelay}s` }}>
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 14 }}>
@@ -1127,8 +1184,19 @@ function SectionRow({ title, dot, flyers, onSeeAll, onQuickLook, animationDelay 
           </button>
         )}
       </div>
-      <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 6, scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}>
-        {flyers.map((f, i) => <PosterCard key={f.id} flyer={f} onQuickLook={() => onQuickLook(f)} animationDelay={animationDelay + i * 0.04} />)}
+      <div
+        style={{ position: "relative" }}
+        onMouseEnter={() => setRowHovered(true)}
+        onMouseLeave={() => setRowHovered(false)}
+      >
+        <button onClick={() => scroll(-1)} aria-label="Scroll left" style={scrollArrowStyle("left")}>‹</button>
+        <div
+          ref={scrollRef}
+          style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 6, scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
+        >
+          {flyers.map((f, i) => <PosterCard key={f.id} flyer={f} onQuickLook={() => onQuickLook(f)} animationDelay={animationDelay + i * 0.04} />)}
+        </div>
+        <button onClick={() => scroll(1)} aria-label="Scroll right" style={scrollArrowStyle("right")}>›</button>
       </div>
     </div>
   );
