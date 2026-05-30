@@ -390,20 +390,20 @@ export default function Home() {
                   onClick={() => setSearchOpen(true)}
                   style={{
                     flexShrink: 0,
-                    width: 52, height: 52, borderRadius: "50%",
+                    height: 44, borderRadius: 99, padding: "0 16px 0 12px",
                     background: "var(--text)", border: "1.5px solid var(--text)",
                     cursor: "pointer", color: "var(--bg)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    position: "relative",
+                    display: "flex", alignItems: "center", gap: 6,
                     transition: "background 0.15s, color 0.15s",
                   }}
                   onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = "var(--bg)"; b.style.color = "var(--text)"; }}
                   onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = "var(--text)"; b.style.color = "var(--bg)"; }}
                 >
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
                     <circle cx="9" cy="9" r="5.5" stroke="currentColor" strokeWidth="1.75" />
                     <path d="M14 14l3.5 3.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
                   </svg>
+                  <span style={{ fontSize: 14, fontWeight: 600, fontFamily: "var(--font-sans)" }}>Search</span>
                 </button>
               </div>
             </div>
