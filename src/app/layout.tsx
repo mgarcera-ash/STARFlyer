@@ -16,7 +16,7 @@ const dmMono = DM_Mono({
 
 export const metadata: Metadata = {
   title: "STARFlyer",
-  description: "Resource flyer platform for ASH staff.",
+  description: "Every flyer we find, in your hands.",
 };
 
 export default function RootLayout({
