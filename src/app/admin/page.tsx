@@ -96,7 +96,11 @@ export default function AdminPage() {
   );
 }
 
-// ── Per-flyer editable card ───────────────────────────────────────────────────
+// ── Per-flyer card — three states: pending → analyzing → editing ──────────────
+type CardState = "pending" | "analyzing" | "editing";
+
+const PROGRESS_MESSAGES = ["Reading…", "Gathering…", "Reviewing…", "Thinking…", "Analyzing…"];
+
 function FlyerEditCard({ flyer, animationDelay, entityOptions, onDone }: {
   flyer: Flyer;
   animationDelay: number;
@@ -105,14 +109,94 @@ function FlyerEditCard({ flyer, animationDelay, entityOptions, onDone }: {
 }) {
   const tagInputRef = useRef<HTMLInputElement>(null);
 
-  const [entity, setEntity] = useState(flyer.entity ?? "");
-  const [title, setTitle] = useState(flyer.title);
-  const [tags, setTags] = useState<string[]>(flyer.tags ?? []);
+  const [cardState, setCardState] = useState<CardState>("pending");
+  const [entity, setEntity] = useState("");
+  const [title, setTitle] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
-  const [hotspots, setHotspots] = useState<Hotspot[]>(
-    (flyer.hotspots ?? []).map(h => ({ type: h.type, label: h.label ?? "", value: h.value }))
-  );
+  const [hotspots, setHotspots] = useState<Hotspot[]>([]);
   const [acting, setActing] = useState<"approve" | "reject" | null>(null);
+
+  const [ocrProgress, setOcrProgress] = useState(0);
+  const [progressMsg, setProgressMsg] = useState("Reading…");
+  const [progressVisible, setProgressVisible] = useState(true);
+
+  useEffect(() => {
+    if (cardState !== "analyzing") return;
+    let i = 0;
+    const interval = setInterval(() => {
+      setProgressVisible(false);
+      setTimeout(() => {
+        i = (i + 1) % PROGRESS_MESSAGES.length;
+        setProgressMsg(PROGRESS_MESSAGES[i]);
+        setProgressVisible(true);
+      }, 300);
+    }, 1800);
+    return () => clearInterval(interval);
+  }, [cardState]);
+
+  const startReview = async () => {
+    if (!flyer.image_url) { setCardState("editing"); return; }
+    setCardState("analyzing");
+    setOcrProgress(0);
+
+    try {
+      const imgRes = await fetch(flyer.image_url);
+      const blob = await imgRes.blob();
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve((reader.result as string).split(",")[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+
+      setOcrProgress(50);
+
+      const ocrRes = await fetch("/api/ocr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ base64, mimeType: blob.type || "image/jpeg" }),
+      });
+
+      setOcrProgress(100);
+      const { ok, data } = await ocrRes.json();
+
+      if (ok && data) {
+        setTitle(data.title ?? "");
+        setTags(Array.isArray(data.tags) ? data.tags.map((t: string) => t.toLowerCase().trim()) : []);
+        setHotspots(
+          Array.isArray(data.hotspots)
+            ? data.hotspots.map((h: { type: string; label?: string; value: string }) => ({
+                type: h.type, label: h.label ?? "", value: h.value,
+              }))
+            : []
+        );
+      }
+    } catch {
+      // OCR failed — proceed to editing with empty fields
+    }
+
+    setCardState("editing");
+  };
+
+  const reject = async () => {
+    setActing("reject");
+    await supabase.from("flyers").update({ status: "rejected" }).eq("id", flyer.id);
+    onDone(flyer.id);
+  };
+
+  const approve = async () => {
+    setActing("approve");
+    await supabase.from("flyers").update({
+      entity: entity.trim() || null,
+      title: title.trim() || "Untitled",
+      tags: tags.length > 0 ? tags : null,
+      hotspots: hotspots.length > 0 ? hotspots : null,
+      status: "approved",
+      approved_at: new Date().toISOString(),
+    }).eq("id", flyer.id);
+    onDone(flyer.id);
+  };
 
   const addTag = (value: string) => {
     const cleaned = value.toLowerCase().trim();
@@ -127,19 +211,6 @@ function FlyerEditCard({ flyer, animationDelay, entityOptions, onDone }: {
     else if (e.key === "Backspace" && tagInput === "" && tags.length > 0) setTags(prev => prev.slice(0, -1));
   };
 
-  const save = async (status: "approved" | "rejected") => {
-    setActing(status === "approved" ? "approve" : "reject");
-    await supabase.from("flyers").update({
-      entity: entity.trim() || null,
-      title: title.trim(),
-      tags,
-      hotspots: hotspots.length > 0 ? hotspots : null,
-      status,
-      approved_at: status === "approved" ? new Date().toISOString() : null,
-    }).eq("id", flyer.id);
-    onDone(flyer.id);
-  };
-
   return (
     <div
       className="stagger-item"
@@ -151,115 +222,167 @@ function FlyerEditCard({ flyer, animationDelay, entityOptions, onDone }: {
         boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
       }}
     >
-      {/* Image — display only */}
+      {/* Image */}
       {flyer.image_url && (
         <div style={{ width: "100%", maxHeight: 280, overflowY: "auto", background: "var(--bg)" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={flyer.image_url} alt={flyer.title} style={{ width: "100%", display: "block" }} />
+          <img src={flyer.image_url} alt="Submitted flyer" style={{ width: "100%", display: "block" }} />
         </div>
       )}
 
-      {/* Editable fields */}
-      <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 40 }}>
+      <div style={{ padding: 20 }}>
 
-        <Field label="Organization / Agency" hint="Who made this flyer?">
-          <input
-            type="text"
-            list={`entity-options-${flyer.id}`}
-            value={entity}
-            onChange={e => setEntity(e.target.value)}
-            placeholder="e.g. DFSS, Thresholds, NAMI Chicago"
-            style={inputStyle}
-          />
-          <datalist id={`entity-options-${flyer.id}`}>
-            {entityOptions.map(opt => <option key={opt} value={opt} />)}
-          </datalist>
-        </Field>
-
-        <Field label="Title" required>
-          <input
-            type="text"
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-            placeholder="e.g. Crisis Behavioral Health Clinicians"
-            style={inputStyle}
-          />
-        </Field>
-
-        <Field label="Tags" hint="Press Enter after each tag to add it">
-          <div
-            onClick={() => tagInputRef.current?.focus()}
-            style={{
-              ...inputStyle, cursor: "text",
-              display: "flex", flexWrap: "wrap", gap: 6,
-              minHeight: 44, padding: "8px 12px", alignItems: "center",
-            }}
-          >
-            {tags.map(tag => (
-              <span key={tag} style={{
-                display: "inline-flex", alignItems: "center", gap: 4,
-                background: "var(--accent)", color: "#fff",
-                fontSize: 11, fontWeight: 500, padding: "3px 10px",
-                borderRadius: 99, fontFamily: "var(--font-sans)", whiteSpace: "nowrap",
-              }}>
-                {tag}
-                <button onClick={e => { e.stopPropagation(); removeTag(tag); }} style={{
-                  background: "none", border: "none", color: "rgba(255,255,255,0.7)",
-                  cursor: "pointer", padding: 0, fontSize: 13, lineHeight: 1,
-                  display: "flex", alignItems: "center",
-                }}>×</button>
-              </span>
-            ))}
-            <input
-              ref={tagInputRef}
-              value={tagInput}
-              onChange={e => setTagInput(e.target.value)}
-              onKeyDown={handleTagKeyDown}
-              onBlur={() => { if (tagInput.trim()) addTag(tagInput); }}
-              placeholder={tags.length === 0 ? "mental health, crisis, shelter…" : ""}
+        {/* ── Pending ── */}
+        {cardState === "pending" && (
+          <div style={{ display: "flex", gap: 10 }}>
+            <button
+              onClick={startReview}
               style={{
-                border: "none", outline: "none", background: "transparent",
-                fontSize: 13, fontFamily: "var(--font-sans)", color: "var(--text)",
-                flexGrow: 1, minWidth: 80,
+                flex: 1, padding: "10px 0", borderRadius: 99,
+                border: "none", background: "var(--text)", color: "var(--bg)",
+                fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 600,
+                cursor: "pointer", transition: "opacity 0.15s",
               }}
-            />
+            >Review Flyer</button>
+            <button
+              onClick={reject}
+              disabled={!!acting}
+              style={{
+                padding: "10px 20px", borderRadius: 99,
+                border: "1.5px solid var(--danger)", background: "transparent",
+                color: "var(--danger)", fontFamily: "var(--font-sans)",
+                fontSize: 13, fontWeight: 600,
+                cursor: acting ? "not-allowed" : "pointer",
+                opacity: acting ? 0.5 : 1,
+              }}
+            >{acting === "reject" ? "Rejecting…" : "Reject"}</button>
           </div>
-        </Field>
+        )}
 
-        <Field label="Contacts" hint="Phones and addresses found on the flyer. Tap the icon to switch between types.">
-          <HotspotEditor hotspots={hotspots} onChange={setHotspots} />
-        </Field>
+        {/* ── Analyzing ── */}
+        {cardState === "analyzing" && (
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+              <span style={{
+                fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--muted)",
+                opacity: progressVisible ? 1 : 0, transition: "opacity 0.3s ease",
+              }}>{progressMsg}</span>
+              <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--muted)" }}>{ocrProgress}%</span>
+            </div>
+            <div style={{ height: 4, background: "var(--border)", borderRadius: 99, overflow: "hidden" }}>
+              <div style={{
+                height: "100%", width: `${ocrProgress}%`,
+                background: "var(--accent)", borderRadius: 99,
+                transition: "width 0.3s ease",
+              }} />
+            </div>
+          </div>
+        )}
 
-        {/* Actions */}
-        <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-          <button
-            onClick={() => save("approved")}
-            disabled={!!acting || !title.trim()}
-            style={{
-              flex: 1, padding: "10px 0", borderRadius: 99,
-              border: "none", background: "var(--text)", color: "#fff",
-              fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 600,
-              cursor: acting || !title.trim() ? "not-allowed" : "pointer",
-              opacity: acting || !title.trim() ? 0.6 : 1,
-              transition: "opacity 0.15s",
-            }}
-          >
-            {acting === "approve" ? "Saving…" : "✓ Save & Approve"}
-          </button>
-          <button
-            onClick={() => save("rejected")}
-            disabled={!!acting}
-            style={{
-              padding: "10px 20px", borderRadius: 99,
-              border: "1.5px solid #ef4444", background: "transparent",
-              color: "#ef4444", fontFamily: "var(--font-sans)",
-              fontSize: 13, fontWeight: 600, cursor: acting ? "not-allowed" : "pointer",
-              opacity: acting ? 0.5 : 1,
-            }}
-          >
-            {acting === "reject" ? "Rejecting…" : "Reject"}
-          </button>
-        </div>
+        {/* ── Editing ── */}
+        {cardState === "editing" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
+
+            <Field label="Organization / Agency" hint="Who made this flyer?">
+              <input
+                type="text"
+                list={`entity-options-${flyer.id}`}
+                value={entity}
+                onChange={e => setEntity(e.target.value)}
+                placeholder="e.g. DFSS, Thresholds, NAMI Chicago"
+                style={inputStyle}
+              />
+              <datalist id={`entity-options-${flyer.id}`}>
+                {entityOptions.map(opt => <option key={opt} value={opt} />)}
+              </datalist>
+            </Field>
+
+            <Field label="Title" required>
+              <input
+                type="text"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                placeholder="e.g. Crisis Behavioral Health Clinicians"
+                style={inputStyle}
+              />
+            </Field>
+
+            <Field label="Tags" hint="Press Enter after each tag to add it">
+              <div
+                onClick={() => tagInputRef.current?.focus()}
+                style={{
+                  ...inputStyle, cursor: "text",
+                  display: "flex", flexWrap: "wrap", gap: 6,
+                  minHeight: 44, padding: "8px 12px", alignItems: "center",
+                }}
+              >
+                {tags.map(tag => (
+                  <span key={tag} style={{
+                    display: "inline-flex", alignItems: "center", gap: 4,
+                    background: "var(--accent)", color: "#fff",
+                    fontSize: 11, fontWeight: 500, padding: "3px 10px",
+                    borderRadius: 99, fontFamily: "var(--font-sans)", whiteSpace: "nowrap",
+                  }}>
+                    {tag}
+                    <button
+                      onClick={e => { e.stopPropagation(); removeTag(tag); }}
+                      style={{
+                        background: "none", border: "none", color: "rgba(255,255,255,0.7)",
+                        cursor: "pointer", padding: 0, fontSize: 13, lineHeight: 1,
+                        display: "flex", alignItems: "center",
+                      }}
+                    >×</button>
+                  </span>
+                ))}
+                <input
+                  ref={tagInputRef}
+                  value={tagInput}
+                  onChange={e => setTagInput(e.target.value)}
+                  onKeyDown={handleTagKeyDown}
+                  onBlur={() => { if (tagInput.trim()) addTag(tagInput); }}
+                  placeholder={tags.length === 0 ? "mental health, crisis, shelter…" : ""}
+                  style={{
+                    border: "none", outline: "none", background: "transparent",
+                    fontSize: 13, fontFamily: "var(--font-sans)", color: "var(--text)",
+                    flexGrow: 1, minWidth: 80,
+                  }}
+                />
+              </div>
+            </Field>
+
+            <Field label="Contacts" hint="Phones and addresses found on the flyer. Tap the icon to switch between types.">
+              <HotspotEditor hotspots={hotspots} onChange={setHotspots} />
+            </Field>
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={approve}
+                disabled={!!acting || !title.trim()}
+                style={{
+                  flex: 1, padding: "10px 0", borderRadius: 99,
+                  border: "none", background: "var(--text)", color: "var(--bg)",
+                  fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 600,
+                  cursor: acting || !title.trim() ? "not-allowed" : "pointer",
+                  opacity: acting || !title.trim() ? 0.6 : 1,
+                  transition: "opacity 0.15s",
+                }}
+              >{acting === "approve" ? "Saving…" : "✓ Save & Approve"}</button>
+              <button
+                onClick={reject}
+                disabled={!!acting}
+                style={{
+                  padding: "10px 20px", borderRadius: 99,
+                  border: "1.5px solid var(--danger)", background: "transparent",
+                  color: "var(--danger)", fontFamily: "var(--font-sans)",
+                  fontSize: 13, fontWeight: 600,
+                  cursor: acting ? "not-allowed" : "pointer",
+                  opacity: acting ? 0.5 : 1,
+                }}
+              >{acting === "reject" ? "Rejecting…" : "Reject"}</button>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

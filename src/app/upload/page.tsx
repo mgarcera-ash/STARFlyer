@@ -1,70 +1,24 @@
 "use client";
-import { useState, useRef, useEffect, KeyboardEvent } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import HotspotEditor, { Hotspot as HotspotType } from "@/components/HotspotEditor";
-import SignOutButton from "@/components/SignOutButton";
-
-type OcrStatus = "idle" | "processing" | "done" | "error";
-
-const emptyForm = () => ({ title: "" });
 
 export default function UploadPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const tagInputRef = useRef<HTMLInputElement>(null);
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [ocrStatus, setOcrStatus] = useState<OcrStatus>("idle");
-  const [ocrProgress, setOcrProgress] = useState(0);
-  const [form, setForm] = useState(emptyForm());
-  const [entity, setEntity] = useState("");
-  const [entityOptions, setEntityOptions] = useState<string[]>([]);
-  const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState("");
-  const [hotspots, setHotspots] = useState<HotspotType[]>([]);
   const [compressedBlob, setCompressedBlob] = useState<Blob | null>(null);
+  const [compressing, setCompressing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [progressMsg, setProgressMsg] = useState("Reading…");
-  const [progressVisible, setProgressVisible] = useState(true);
-
-  const PROGRESS_MESSAGES = ["Reading…", "Gathering…", "Reviewing…", "Thinking…", "Analyzing…"];
-
-  useEffect(() => {
-    if (ocrStatus !== "processing") return;
-    let i = 0;
-    const interval = setInterval(() => {
-      setProgressVisible(false);
-      setTimeout(() => {
-        i = (i + 1) % PROGRESS_MESSAGES.length;
-        setProgressMsg(PROGRESS_MESSAGES[i]);
-        setProgressVisible(true);
-      }, 300);
-    }, 1800);
-    return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ocrStatus]);
-
-  // Load existing entity values for autocomplete
-  useEffect(() => {
-    supabase.from("flyers").select("entity").then(({ data }) => {
-      const unique = Array.from(
-        new Set((data ?? []).map((r: { entity: string | null }) => r.entity).filter(Boolean) as string[])
-      ).sort();
-      setEntityOptions(unique);
-    });
-  }, []);
 
   const reset = () => {
-    setImageFile(null); setImagePreview(null); setCompressedBlob(null);
-    setOcrStatus("idle"); setOcrProgress(0);
-    setForm(emptyForm()); setEntity(""); setTags([]); setTagInput(""); setHotspots([]);
-    setSubmitted(false);
+    setImagePreview(null); setCompressedBlob(null);
+    setCompressing(false); setSubmitted(false);
   };
 
-  const compressImage = (file: File, maxPx = 1600, quality = 0.82): Promise<{ base64: string; blob: Blob }> =>
+  const compressImage = (file: File, maxPx = 1600, quality = 0.82): Promise<Blob> =>
     new Promise((resolve, reject) => {
       const img = new Image();
       const url = URL.createObjectURL(file);
@@ -74,57 +28,29 @@ export default function UploadPage() {
         const canvas = document.createElement("canvas");
         canvas.width = Math.round(img.width * scale);
         canvas.height = Math.round(img.height * scale);
-        const ctx = canvas.getContext("2d")!;
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
         const dataUrl = canvas.toDataURL("image/jpeg", quality);
         const base64 = dataUrl.split(",")[1];
         const bytes = atob(base64);
         const ab = new ArrayBuffer(bytes.length);
         const ia = new Uint8Array(ab);
         for (let i = 0; i < bytes.length; i++) ia[i] = bytes.charCodeAt(i);
-        const blob = new Blob([ab], { type: "image/jpeg" });
-        resolve({ base64, blob });
+        resolve(new Blob([ab], { type: "image/jpeg" }));
       };
       img.onerror = reject;
       img.src = url;
     });
 
   const handleImageSelect = async (file: File) => {
-    setImageFile(file);
-    setOcrStatus("processing");
-    setOcrProgress(0);
-
+    setCompressing(true);
     try {
-      const { base64, blob } = await compressImage(file);
+      const blob = await compressImage(file);
       setCompressedBlob(blob);
       setImagePreview(URL.createObjectURL(blob));
-
-      setOcrProgress(50);
-
-      const res = await fetch("/api/ocr", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ base64, mimeType: "image/jpeg" }),
-      });
-
-      setOcrProgress(100);
-      const { ok, data } = await res.json();
-      if (!ok) throw new Error("OCR failed");
-
-      setForm({ title: data.title ?? "" });
-      setTags(Array.isArray(data.tags) ? data.tags.map((t: string) => t.toLowerCase().trim()) : []);
-      setHotspots(
-        Array.isArray(data.hotspots)
-          ? data.hotspots.map((h: { type: "phone" | "address"; label?: string; value: string }) => ({
-              type: h.type,
-              label: h.label ?? "",
-              value: h.value,
-            }))
-          : []
-      );
-      setOcrStatus("done");
     } catch {
-      setOcrStatus("error");
+      alert("Couldn't process that image. Please try another.");
+    } finally {
+      setCompressing(false);
     }
   };
 
@@ -139,42 +65,24 @@ export default function UploadPage() {
     if (file?.type.startsWith("image/")) handleImageSelect(file);
   };
 
-  const addTag = (value: string) => {
-    const cleaned = value.toLowerCase().trim();
-    if (cleaned && !tags.includes(cleaned)) {
-      setTags(prev => [...prev, cleaned]);
-    }
-    setTagInput("");
-  };
-
-  const removeTag = (tag: string) => setTags(prev => prev.filter(t => t !== tag));
-
-  const handleTagKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" || e.key === ",") {
-      e.preventDefault();
-      addTag(tagInput);
-    } else if (e.key === "Backspace" && tagInput === "" && tags.length > 0) {
-      setTags(prev => prev.slice(0, -1));
-    }
-  };
-
   const handleSubmit = async () => {
-    if (!compressedBlob || !form.title.trim()) return;
+    if (!compressedBlob) return;
     setSubmitting(true);
     try {
       const fileName = `${Date.now()}.jpg`;
-      const { error: uploadError } = await supabase.storage.from("flyers").upload(fileName, compressedBlob, { contentType: "image/jpeg" });
+      const { error: uploadError } = await supabase.storage
+        .from("flyers").upload(fileName, compressedBlob, { contentType: "image/jpeg" });
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage.from("flyers").getPublicUrl(fileName);
 
       const { error: insertError } = await supabase.from("flyers").insert({
-        title: form.title.trim(),
-        entity: entity.trim() || null,
-        tags,
+        title: "Untitled",
+        entity: null,
+        tags: null,
         image_url: publicUrl,
         status: "pending",
-        hotspots: hotspots.length > 0 ? hotspots : null,
+        hotspots: null,
       });
       if (insertError) throw insertError;
 
@@ -193,10 +101,10 @@ export default function UploadPage() {
         <div className="stagger-item" style={{ textAlign: "center", maxWidth: 360 }}>
           <div style={{ fontSize: 40, marginBottom: 16 }}>✅</div>
           <h2 style={{ fontFamily: "var(--font-sans)", fontSize: 20, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>
-            Submitted for review
+            Flyer submitted!
           </h2>
-          <p style={{ fontFamily: "var(--font-sans)", fontSize: 14, color: "var(--text)", lineHeight: 1.6, marginBottom: 32 }}>
-            Your flyer has been submitted and will appear in the library once approved.
+          <p style={{ fontFamily: "var(--font-sans)", fontSize: 14, color: "var(--muted)", lineHeight: 1.6, marginBottom: 32 }}>
+            Thanks for contributing. It will appear in the library once approved.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
             <button
@@ -205,8 +113,7 @@ export default function UploadPage() {
                 fontSize: 13, color: "var(--text)", fontFamily: "var(--font-sans)",
                 fontWeight: 500, padding: "8px 18px", borderRadius: 99,
                 border: "1.5px solid var(--border)", background: "var(--surface)",
-                cursor: "pointer", boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-                transition: "background 0.15s",
+                cursor: "pointer", transition: "background 0.15s",
               }}
               onMouseEnter={e => (e.currentTarget.style.background = "var(--bg)")}
               onMouseLeave={e => (e.currentTarget.style.background = "var(--surface)")}
@@ -217,8 +124,7 @@ export default function UploadPage() {
                 fontSize: 13, color: "#fff", fontFamily: "var(--font-sans)",
                 fontWeight: 500, padding: "8px 18px", borderRadius: 99,
                 border: "1.5px solid var(--text)", background: "var(--text)",
-                cursor: "pointer", boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-                transition: "opacity 0.15s",
+                cursor: "pointer", transition: "opacity 0.15s",
               }}
               onMouseEnter={e => (e.currentTarget.style.opacity = "0.85")}
               onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
@@ -233,19 +139,19 @@ export default function UploadPage() {
     <main style={{ minHeight: "100vh", padding: "48px 0 80px" }}>
       <div style={{ maxWidth: 560, margin: "0 auto", paddingLeft: 24, paddingRight: 24 }}>
 
-        {/* Header row */}
-        <div className="fade-up" style={{ animationDelay: "0.05s", marginBottom: 28, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <button onClick={() => router.push("/")} style={{
-            fontSize: 13, color: "var(--text)", fontFamily: "var(--font-sans)",
-            fontWeight: 500, padding: "8px 18px", borderRadius: 99,
-            border: "1.5px solid var(--border)", background: "var(--surface)",
-            cursor: "pointer", boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-            transition: "background 0.15s",
-          }}
+        {/* Header */}
+        <div className="fade-up" style={{ animationDelay: "0.05s", marginBottom: 28 }}>
+          <button
+            onClick={() => router.push("/")}
+            style={{
+              fontSize: 13, color: "var(--text)", fontFamily: "var(--font-sans)",
+              fontWeight: 500, padding: "8px 18px", borderRadius: 99,
+              border: "1.5px solid var(--border)", background: "var(--surface)",
+              cursor: "pointer", transition: "background 0.15s",
+            }}
             onMouseEnter={e => (e.currentTarget.style.background = "var(--bg)")}
             onMouseLeave={e => (e.currentTarget.style.background = "var(--surface)")}
           >← Back</button>
-          <SignOutButton />
         </div>
 
         {/* Upload zone */}
@@ -265,129 +171,51 @@ export default function UploadPage() {
             >
               <div style={{ fontSize: 32, marginBottom: 12 }}>📷</div>
               <p style={{ fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 500, color: "var(--text)", marginBottom: 6 }}>
-                Tap to take a photo or upload
+                Tap to take a photo or choose from your library
               </p>
-              <p style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--text)" }}>JPG, PNG, HEIC supported</p>
+              <p style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--muted)" }}>JPG, PNG, HEIC supported</p>
             </div>
           ) : (
-            <div style={{ position: "relative", marginBottom: 24, borderRadius: 18, overflow: "hidden", border: "1px solid var(--border)" }}>
+            <div style={{ marginBottom: 24, borderRadius: 18, overflow: "hidden", border: "1px solid var(--border)" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <div style={{ maxHeight: 320, overflowY: "auto" }}>
                 <img src={imagePreview} alt="Flyer preview" style={{ width: "100%", display: "block" }} />
               </div>
             </div>
           )}
-          <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileChange} style={{ display: "none" }} />
+          <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} style={{ display: "none" }} />
         </div>
 
-        {/* OCR progress */}
-        {ocrStatus === "processing" && (
+        {/* Compression progress */}
+        {compressing && (
           <div className="fade-up" style={{ marginBottom: 24 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-              <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--muted)", opacity: progressVisible ? 1 : 0, transition: "opacity 0.3s ease" }}>{progressMsg}</span>
-              <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--muted)" }}>{ocrProgress}%</span>
-            </div>
+            <p style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--muted)", marginBottom: 6 }}>Processing…</p>
             <div style={{ height: 4, background: "var(--border)", borderRadius: 99, overflow: "hidden" }}>
-              <div style={{ height: "100%", width: `${ocrProgress}%`, background: "var(--accent)", borderRadius: 99, transition: "width 0.3s ease" }} />
+              <div style={{ height: "100%", width: "60%", background: "var(--accent)", borderRadius: 99 }} />
             </div>
           </div>
         )}
 
-        {ocrStatus === "done" && (
-          <p className="fade-up" style={{ fontFamily: "var(--font-sans)", fontSize: 12, fontWeight: 600, color: "var(--accent)", marginBottom: 24 }}>
-            Review carefully before submission. Add more tags, contacts, or addresses if needed.
-          </p>
-        )}
-
-        {/* Form */}
-        {(ocrStatus === "done" || ocrStatus === "error") && (
-          <div className="stagger-item" style={{ display: "flex", flexDirection: "column", gap: 40 }}>
-
-            <Field label="Organization / Agency" hint="Who made this flyer?">
-              <input
-                type="text"
-                list="entity-options"
-                value={entity}
-                onChange={e => setEntity(e.target.value)}
-                placeholder="e.g. DFSS, Thresholds, NAMI Chicago"
-                style={inputStyle}
-              />
-              <datalist id="entity-options">
-                {entityOptions.map(opt => <option key={opt} value={opt} />)}
-              </datalist>
-            </Field>
-
-            <Field label="Title" required>
-              <input type="text" value={form.title}
-                onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
-                placeholder="e.g. Crisis Behavioral Health Clinicians"
-                style={inputStyle} />
-            </Field>
-
-            {/* Tag chip input */}
-            <Field label="Tags" hint="Press Enter after each tag to add it">
-              <div
-                onClick={() => tagInputRef.current?.focus()}
-                style={{
-                  ...inputStyle, cursor: "text",
-                  display: "flex", flexWrap: "wrap", gap: 6,
-                  minHeight: 44, padding: "8px 12px", alignItems: "center",
-                }}
-              >
-                {tags.map(tag => (
-                  <span key={tag} style={{
-                    display: "inline-flex", alignItems: "center", gap: 4,
-                    background: "var(--accent)", color: "#fff",
-                    fontSize: 11, fontWeight: 500, padding: "3px 10px",
-                    borderRadius: 99, fontFamily: "var(--font-sans)",
-                    whiteSpace: "nowrap",
-                  }}>
-                    {tag}
-                    <button onClick={e => { e.stopPropagation(); removeTag(tag); }} style={{
-                      background: "none", border: "none", color: "rgba(255,255,255,0.7)",
-                      cursor: "pointer", padding: 0, fontSize: 13, lineHeight: 1,
-                      display: "flex", alignItems: "center",
-                    }}>×</button>
-                  </span>
-                ))}
-                <input
-                  ref={tagInputRef}
-                  value={tagInput}
-                  onChange={e => setTagInput(e.target.value)}
-                  onKeyDown={handleTagKeyDown}
-                  onBlur={() => { if (tagInput.trim()) addTag(tagInput); }}
-                  placeholder={tags.length === 0 ? "mental health, crisis, shelter…" : ""}
-                  style={{
-                    border: "none", outline: "none", background: "transparent",
-                    fontSize: 13, fontFamily: "var(--font-sans)", color: "var(--text)",
-                    flexGrow: 1, minWidth: 80,
-                  }}
-                />
-              </div>
-            </Field>
-
-            <Field label="Contacts" hint="Phones and addresses found on the flyer. Tap the icon to switch between types.">
-              <HotspotEditor hotspots={hotspots} onChange={setHotspots} />
-            </Field>
-
+        {/* Submit */}
+        {compressedBlob && !compressing && (
+          <div className="stagger-item" style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
             <button
               onClick={handleSubmit}
-              disabled={submitting || !form.title.trim() || !compressedBlob}
+              disabled={submitting}
               className="submit-btn"
               style={{
                 position: "relative", overflow: "hidden", isolation: "isolate",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                alignSelf: "center", marginTop: 8, padding: "10px 16px",
-                borderRadius: 9999, border: "2px solid var(--border)",
+                padding: "10px 16px", borderRadius: 9999, border: "2px solid var(--border)",
                 background: "var(--surface)", fontSize: 14,
                 fontFamily: "var(--font-sans)", fontWeight: 600, color: "var(--text)",
-                cursor: submitting || !form.title.trim() || !compressedBlob ? "not-allowed" : "pointer",
-                opacity: submitting || !form.title.trim() || !compressedBlob ? 0.5 : 1,
+                cursor: submitting ? "not-allowed" : "pointer",
+                opacity: submitting ? 0.5 : 1,
                 boxShadow: "0 4px 20px rgba(0,0,0,0.07)",
                 transition: "color 0.5s ease",
               }}
             >
-              {submitting ? "Submitting…" : "Submit for review"}
+              {submitting ? "Submitting…" : "Submit flyer"}
               <svg
                 className="submit-icon"
                 width="32" height="32"
@@ -411,36 +239,4 @@ export default function UploadPage() {
       </div>
     </main>
   );
-}
-
-function Field({ label, hint, required, children }: { label: string; hint?: string; required?: boolean; children: React.ReactNode }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <div>
-        <label style={{ fontFamily: "var(--font-sans)", fontSize: 12, fontWeight: 600, color: "var(--text)" }}>
-          {label}{required && <span style={{ color: "var(--accent)", marginLeft: 2 }}>*</span>}
-        </label>
-        {hint && <p style={{ fontFamily: "var(--font-sans)", fontSize: 12, fontWeight: 400, color: "var(--muted)", margin: "2px 0 0" }}>{hint}</p>}
-      </div>
-      {children}
-    </div>
-  );
-}
-
-const inputStyle: React.CSSProperties = {
-  width: "100%", padding: "10px 14px", borderRadius: 10,
-  border: "1px solid var(--border)", background: "var(--surface)",
-  fontSize: 13, fontFamily: "var(--font-sans)", color: "var(--text)",
-  outline: "none", appearance: "none",
-};
-
-function btnStyle(variant: "primary" | "secondary"): React.CSSProperties {
-  return {
-    padding: "10px 20px", borderRadius: 10, fontSize: 13,
-    fontFamily: "var(--font-sans)", fontWeight: 500,
-    border: variant === "primary" ? "none" : "1px solid var(--border)",
-    background: variant === "primary" ? "var(--text)" : "transparent",
-    color: variant === "primary" ? "#fff" : "var(--muted)",
-    cursor: "pointer", transition: "opacity 0.15s",
-  };
 }
