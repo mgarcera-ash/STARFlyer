@@ -1550,16 +1550,21 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
         )}
       </div>
 
-      {/* Zoom slider */}
+      {/* Zoom slider — bottom */}
       <div style={{
-        position: "absolute", bottom: 88, left: "50%", transform: "translateX(-50%)",
-        width: "calc(100% - 96px)", maxWidth: 260,
-        display: "flex", alignItems: "center", gap: 10,
+        position: "absolute", bottom: 32, left: "50%", transform: "translateX(-50%)",
+        width: "calc(100% - 48px)", maxWidth: 380,
+        background: "rgba(20,20,20,0.85)",
+        backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
+        borderRadius: 52,
+        border: "2px solid rgba(255,255,255,0.12)",
+        padding: "14px 22px",
+        display: "flex", alignItems: "center", gap: 14,
         opacity: open ? 1 : 0,
         transition: "opacity 0.35s ease 0.1s",
         zIndex: 10,
       }}>
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, opacity: 0.5 }}>
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, opacity: 0.5 }}>
           <path d="M3 8h10" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
         <input
@@ -1573,17 +1578,14 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
           className="zoom-slider"
           style={{ flex: 1 }}
         />
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, opacity: 0.5 }}>
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, opacity: 0.5 }}>
           <path d="M8 3v10M3 8h10" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
         <span style={{
-          fontFamily: "var(--font-mono)", fontSize: 11,
-          color: "rgba(255,255,255,0.45)", minWidth: 30, textAlign: "right", flexShrink: 0,
+          fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 500,
+          color: "#fff", minWidth: 34, textAlign: "right", flexShrink: 0,
         }}>{zoom.toFixed(1)}×</span>
       </div>
-
-      {/* Close button — bottom center */}
-      <CloseButton onClose={handleClose} visible={open} />
 
       {/* Panel backdrop — dismisses contacts panel on outside tap */}
       {sheetOpen && (
@@ -1593,16 +1595,34 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
         />
       )}
 
-      {/* Top bar: pill area */}
+      {/* Top bar: close + pill */}
       <div style={{
         position: "absolute", top: 20, left: "50%",
         transform: "translateX(-50%)",
-        width: "calc(100% - 48px)", maxWidth: 400,
+        width: "calc(100% - 48px)", maxWidth: 440,
         display: "flex", alignItems: "center", gap: 8,
         opacity: open ? 1 : 0,
         transition: "opacity 0.35s ease 0.1s",
         zIndex: 10,
       }}>
+        {/* Close × */}
+        <button
+          onClick={handleClose}
+          aria-label="Close"
+          style={{
+            flexShrink: 0, width: 44, height: 44, borderRadius: "50%",
+            background: "rgba(20,20,20,0.85)",
+            backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
+            border: "2px solid rgba(255,255,255,0.12)",
+            color: "#fff", fontSize: 22, lineHeight: 1,
+            cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "background 0.15s",
+            fontFamily: "var(--font-sans)",
+          }}
+          onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}
+          onMouseLeave={e => (e.currentTarget.style.background = "rgba(20,20,20,0.85)")}
+        >×</button>
+
         {/* Pill + floating contacts panel below */}
         <div style={{ flex: 1, minWidth: 0, position: "relative" }}>
 
