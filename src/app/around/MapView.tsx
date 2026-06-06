@@ -33,8 +33,6 @@ type Props = {
   userLng: number | null;
   shelters: Shelter[];
   flyerPins: FlyerPin[];
-  selectedId: number | null;
-  onSelect: (id: number) => void;
 };
 
 function esc(s: string) {
@@ -60,16 +58,11 @@ function makeShelterIcon() {
 
 function makeFlyerIcon() {
   return L.divIcon({
-    html: `<div style="width:30px;height:30px;border-radius:50%;background:#3b82f6;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.28);display:flex;align-items:center;justify-content:center">
-      <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="6.5" r="1.8" fill="#fff"/>
-        <rect x="8.6" y="9.5" width="2.8" height="6.5" rx="1.2" fill="#fff"/>
-      </svg>
-    </div>`,
+    html: `<div style="width:12px;height:12px;border-radius:50%;background:#3b82f6;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.30)"></div>`,
     className: "",
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
-    popupAnchor: [0, -16],
+    iconSize: [12, 12],
+    iconAnchor: [6, 6],
+    popupAnchor: [0, -8],
   });
 }
 
@@ -105,7 +98,7 @@ function buildFlyerPopup(f: FlyerPin): string {
   return html;
 }
 
-export default function MapView({ userLat, userLng, shelters, flyerPins, selectedId, onSelect }: Props) {
+export default function MapView({ userLat, userLng, shelters, flyerPins }: Props) {
   const containerRef   = useRef<HTMLDivElement>(null);
   const mapRef         = useRef<L.Map | null>(null);
   const shelterMarkers = useRef<Map<number, L.Marker>>(new Map());
@@ -153,11 +146,10 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, selecte
       if (existing) { existing.setPopupContent(popup); return; }
       const marker = L.marker([s.lat, s.lng], { icon: makeShelterIcon() })
         .addTo(map)
-        .bindPopup(popup, { maxWidth: 240, offset: [0, -4] })
-        .on("click", () => onSelect(s.site_id));
+        .bindPopup(popup, { maxWidth: 240, offset: [0, -4] });
       shelterMarkers.current.set(s.site_id, marker);
     });
-  }, [shelters, onSelect]);
+  }, [shelters]);
 
   // Sync flyer markers
   useEffect(() => {
@@ -178,16 +170,5 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, selecte
     });
   }, [flyerPins]);
 
-  // Fly to selected shelter + open popup
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || selectedId === null) return;
-    const marker = shelterMarkers.current.get(selectedId);
-    if (marker) {
-      map.flyTo(marker.getLatLng(), 15, { duration: 0.6 });
-      setTimeout(() => marker.openPopup(), 650);
-    }
-  }, [selectedId]);
-
-  return <div ref={containerRef} style={{ width: "100%", height: "100%" }} />;
+return <div ref={containerRef} style={{ width: "100%", height: "100%" }} />;
 }

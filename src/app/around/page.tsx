@@ -64,7 +64,6 @@ export default function AroundPage() {
   const [showFlyers, setShowFlyers] = useState(true);
   const [userLat, setUserLat] = useState<number | null>(null);
   const [userLng, setUserLng] = useState<number | null>(null);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
   const [addressInput, setAddressInput] = useState("");
   const [suggestions, setSuggestions] = useState<PhotonFeature[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -200,8 +199,6 @@ export default function AroundPage() {
           userLng={userLng}
           shelters={showShelters ? shelters : []}
           flyerPins={showFlyers ? flyerPins : []}
-          selectedId={selectedId}
-          onSelect={setSelectedId}
         />
       </div>
 
