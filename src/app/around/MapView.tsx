@@ -79,17 +79,25 @@ export default function MapView({ userLat, userLng, shelters, selectedId, onSele
     shelters.forEach((s) => {
       if (markersRef.current.has(s.site_id)) return;
 
-      const lines: string[] = [];
-      if (s.site_name) lines.push(`<strong style="font-size:13px;font-family:system-ui,sans-serif">${s.site_name}</strong>`);
-      if (s.agency)    lines.push(`<span style="font-size:11px;color:#737373;font-family:system-ui,sans-serif">${s.agency}</span>`);
-      if (s.population) lines.push(`<span style="font-size:11px;color:#737373;font-family:system-ui,sans-serif">${s.population}</span>`);
-      if (s.phone)     lines.push(`<a href="tel:${s.phone.replace(/\D/g,"")}" style="font-size:12px;color:#3b82f6;font-family:system-ui,sans-serif;text-decoration:none">${s.phone}</a>`);
-      if (s.address)   lines.push(`<span style="font-size:11px;color:#737373;font-family:system-ui,sans-serif">${s.address}</span>`);
-      lines.push(`<span style="font-size:11px;color:#737373;font-family:system-ui,sans-serif">${s.distance < 0.1 ? "<0.1" : s.distance.toFixed(1)} mi away</span>`);
+      const esc = (str: string) =>
+        str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+      const phoneCircle = `<div style="width:18px;height:18px;border-radius:50%;background:#22c55e;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3.5 2A1.5 1.5 0 0 0 2 3.5v.75C2 10.28 5.72 14 11.75 14h.75A1.5 1.5 0 0 0 14 12.5v-1.38a1.5 1.5 0 0 0-1.11-1.45l-1.62-.4a1.5 1.5 0 0 0-1.56.6l-.36.48A6.52 6.52 0 0 1 5.65 6.65l.48-.36a1.5 1.5 0 0 0 .6-1.56l-.4-1.62A1.5 1.5 0 0 0 4.88 2H3.5z" fill="#fff"/></svg></div>`;
+      const pinCircle  = `<div style="width:18px;height:18px;border-radius:50%;background:#ef4444;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.75 4.5 8.5 4.5 8.5s4.5-4.75 4.5-8.5C12.5 3.515 10.485 1.5 8 1.5zm0 6a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" fill="#fff"/></svg></div>`;
+
+      const dist = s.distance < 0.1 ? "&lt;0.1" : s.distance.toFixed(1);
+      let html = `<div style="font-family:system-ui,sans-serif;padding:2px 0;min-width:160px">`;
+      if (s.agency)     html += `<p style="margin:0 0 2px;font-size:14px;font-weight:600;color:#000;line-height:1.3">${esc(s.agency)}</p>`;
+      if (s.site_name)  html += `<p style="margin:0 0 6px;font-size:12px;color:#000;line-height:1.3">${esc(s.site_name)}</p>`;
+      if (s.population) html += `<span style="display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;background:#e5e7eb;color:#737373;margin-bottom:8px">${esc(s.population)}</span>`;
+      if (s.phone)      html += `<div style="display:flex;align-items:center;gap:6px;margin-top:6px">${phoneCircle}<a href="tel:${s.phone.replace(/\D/g,"")}" style="font-size:12px;color:#3b82f6;text-decoration:none;font-weight:500">${esc(s.phone)}</a></div>`;
+      if (s.address)    html += `<div style="display:flex;align-items:center;gap:6px;margin-top:4px">${pinCircle}<span style="font-size:11px;color:#737373">${esc(s.address)}</span></div>`;
+      html += `<p style="margin:8px 0 0;font-size:11px;color:#737373">${dist} mi away</p>`;
+      html += `</div>`;
 
       const marker = L.marker([s.lat, s.lng])
         .addTo(map)
-        .bindPopup(lines.join("<br>"), { maxWidth: 220, offset: [0, -4] })
+        .bindPopup(html, { maxWidth: 240, offset: [0, -4] })
         .on("click", () => onSelect(s.site_id));
       markersRef.current.set(s.site_id, marker);
     });

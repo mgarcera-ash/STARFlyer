@@ -276,14 +276,14 @@ export default function AroundPage() {
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{
-                          fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 600,
+                          fontFamily: "var(--font-sans)", fontSize: 15, fontWeight: 600,
                           color: "var(--text)", margin: "0 0 2px", lineHeight: 1.35,
                         }}>
-                          {s.site_name ?? "Unnamed Site"}
+                          {s.agency ?? "Unknown Agency"}
                         </p>
-                        {s.agency && (
-                          <p style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--muted)", margin: "0 0 6px" }}>
-                            {s.agency}
+                        {s.site_name && (
+                          <p style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--text)", margin: "0 0 6px" }}>
+                            {s.site_name}
                           </p>
                         )}
                         {s.population && (
