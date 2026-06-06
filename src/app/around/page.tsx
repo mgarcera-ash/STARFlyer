@@ -166,15 +166,14 @@ export default function AroundPage() {
           href="/"
           style={{
             ...GLASS, flexShrink: 0, borderRadius: 99,
-            height: 44, display: "flex", alignItems: "center",
             fontSize: 13, fontWeight: 500, fontFamily: "var(--font-sans)",
             color: "#000", textDecoration: "none",
-            padding: "0 16px", whiteSpace: "nowrap",
+            padding: "14px 18px", whiteSpace: "nowrap",
           }}
         >← Back</a>
 
         {/* Search pill */}
-        <div style={{ ...GLASS, flex: 1, borderRadius: 99, height: 44, display: "flex", alignItems: "center", overflow: "hidden" }}>
+        <div style={{ ...GLASS, flex: 1, borderRadius: 52, display: "flex", alignItems: "center", overflow: "hidden" }}>
 
           {/* Near me button */}
           <button
@@ -182,7 +181,7 @@ export default function AroundPage() {
             disabled={locating}
             aria-label="Use my location"
             style={{
-              flexShrink: 0, padding: "0 14px", height: "100%",
+              flexShrink: 0, padding: "0 16px", alignSelf: "stretch",
               background: "transparent", border: "none",
               cursor: locating ? "default" : "pointer",
               display: "flex", alignItems: "center",
@@ -217,10 +216,10 @@ export default function AroundPage() {
             onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
             placeholder="Search in Chicago…"
             style={{
-              flex: 1, padding: "0 12px",
+              flex: 1, padding: "14px 20px",
               border: "none", background: "transparent", outline: "none",
-              fontSize: 14, fontFamily: "var(--font-sans)", color: "#000",
-              height: "100%", minWidth: 0,
+              fontSize: 16, fontFamily: "var(--font-sans)", color: "#000",
+              minWidth: 0,
             }}
           />
 
@@ -229,9 +228,9 @@ export default function AroundPage() {
               onMouseDown={e => e.preventDefault()} // prevent input blur before clear fires
               onClick={() => { setAddressInput(""); setSuggestions([]); setShowSuggestions(false); setSearchError(""); }}
               style={{
-                flexShrink: 0, padding: "0 14px", height: "100%",
+                flexShrink: 0, padding: "0 16px", alignSelf: "stretch",
                 background: "transparent", border: "none",
-                cursor: "pointer", color: "#737373", fontSize: 16, lineHeight: 1,
+                cursor: "pointer", color: "#737373", fontSize: 18, lineHeight: 1,
                 display: "flex", alignItems: "center",
               }}
             >×</button>
