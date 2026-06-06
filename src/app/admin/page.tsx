@@ -26,7 +26,7 @@ export default function AdminPage() {
             <a href="/" style={{
               fontSize: 13, color: "var(--text)", fontFamily: "var(--font-sans)",
               textDecoration: "none", fontWeight: 500, padding: "8px 18px",
-              borderRadius: 99, border: "1.5px solid var(--border)",
+              borderRadius: 99, border: "1.5px solid var(--card-border)",
               background: "var(--surface)", transition: "background 0.15s",
               boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
             }}
@@ -69,7 +69,7 @@ function HubCard({ href, title, description }: { href: string; title: string; de
       style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "20px 24px", borderRadius: 20,
-        border: "1px solid var(--border)",
+        border: "1px solid var(--card-border)",
         background: hovered ? "var(--hover-bg)" : "var(--surface)",
         textDecoration: "none",
         boxShadow: "0 1px 4px rgba(0,0,0,0.04)",

@@ -121,7 +121,7 @@ export default function UploadPage() {
               style={{
                 fontSize: 13, color: "var(--text)", fontFamily: "var(--font-sans)",
                 fontWeight: 500, padding: "8px 18px", borderRadius: 99,
-                border: "1.5px solid var(--border)", background: "var(--surface)",
+                border: "1.5px solid var(--card-border)", background: "var(--surface)",
                 cursor: "pointer", transition: "background 0.15s",
               }}
               onMouseEnter={e => (e.currentTarget.style.background = "var(--bg)")}
@@ -155,7 +155,7 @@ export default function UploadPage() {
             style={{
               fontSize: 13, color: "var(--text)", fontFamily: "var(--font-sans)",
               fontWeight: 500, padding: "8px 18px", borderRadius: 99,
-              border: "1.5px solid var(--border)", background: "var(--surface)",
+              border: "1.5px solid var(--card-border)", background: "var(--surface)",
               cursor: "pointer", transition: "background 0.15s",
             }}
             onMouseEnter={e => (e.currentTarget.style.background = "var(--bg)")}
@@ -170,13 +170,13 @@ export default function UploadPage() {
               onDrop={handleDrop} onDragOver={e => e.preventDefault()}
               onClick={() => fileInputRef.current?.click()}
               style={{
-                border: "2px dashed var(--border)", borderRadius: 24,
+                border: "2px dashed var(--card-border)", borderRadius: 24,
                 padding: "72px 24px", textAlign: "center", cursor: "pointer",
                 marginBottom: 24, background: "rgba(0,0,0,0.02)",
                 transition: "border-color 0.2s, background 0.2s",
               }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.background = "rgba(44,95,138,0.03)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "rgba(0,0,0,0.02)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--card-border)"; e.currentTarget.style.background = "rgba(0,0,0,0.02)"; }}
             >
               <div style={{ fontSize: 32, marginBottom: 12 }}>📷</div>
               <p style={{ fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 500, color: "var(--text)", marginBottom: 6 }}>
@@ -185,7 +185,7 @@ export default function UploadPage() {
               <p style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--muted)" }}>JPG, PNG, HEIC supported</p>
             </div>
           ) : (
-            <div style={{ marginBottom: 24, borderRadius: 18, overflow: "hidden", border: "1px solid var(--border)" }}>
+            <div style={{ marginBottom: 24, borderRadius: 18, overflow: "hidden", border: "1px solid var(--card-border)" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <div style={{ maxHeight: 320, overflowY: "auto" }}>
                 <img src={imagePreview} alt="Flyer preview" style={{ width: "100%", display: "block" }} />
@@ -199,7 +199,7 @@ export default function UploadPage() {
         {compressing && (
           <div className="fade-up" style={{ marginBottom: 24 }}>
             <p style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--muted)", marginBottom: 6 }}>Processing…</p>
-            <div style={{ height: 4, background: "var(--border)", borderRadius: 99, overflow: "hidden" }}>
+            <div style={{ height: 4, background: "var(--card-border)", borderRadius: 99, overflow: "hidden" }}>
               <div style={{ height: "100%", width: "60%", background: "var(--accent)", borderRadius: 99 }} />
             </div>
           </div>
@@ -215,7 +215,7 @@ export default function UploadPage() {
               style={{
                 position: "relative", overflow: "hidden", isolation: "isolate",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                padding: "10px 16px", borderRadius: 9999, border: "2px solid var(--border)",
+                padding: "10px 16px", borderRadius: 9999, border: "2px solid var(--card-border)",
                 background: "var(--surface)", fontSize: 14,
                 fontFamily: "var(--font-sans)", fontWeight: 600, color: "var(--text)",
                 cursor: submitting ? "not-allowed" : "pointer",
@@ -231,7 +231,7 @@ export default function UploadPage() {
                 viewBox="0 0 16 19"
                 xmlns="http://www.w3.org/2000/svg"
                 style={{
-                  borderRadius: 9999, border: "1.5px solid var(--border)",
+                  borderRadius: 9999, border: "1.5px solid var(--card-border)",
                   padding: 7, transform: "rotate(45deg)", flexShrink: 0,
                   transition: "transform 0.3s ease, background 0.3s ease, border-color 0.3s ease",
                   boxSizing: "border-box",

@@ -50,7 +50,7 @@ export default function FlyerReviewPage() {
             <a href="/admin" style={{
               fontSize: 13, color: "var(--text)", fontFamily: "var(--font-sans)",
               textDecoration: "none", fontWeight: 500, padding: "8px 18px",
-              borderRadius: 99, border: "1.5px solid var(--border)",
+              borderRadius: 99, border: "1.5px solid var(--card-border)",
               background: "var(--surface)", transition: "background 0.15s",
               boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
               display: "inline-block",
@@ -143,7 +143,7 @@ function FlyerEditCard({ flyer, animationDelay, entityOptions, onDone }: {
       style={{
         animationDelay: `${animationDelay}s`,
         background: "var(--surface)",
-        border: "1px solid var(--border)",
+        border: "1px solid var(--card-border)",
         borderRadius: 24, overflow: "hidden",
         boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
       }}

@@ -104,7 +104,7 @@ export default function SheltersAdminPage() {
             style={{
               fontSize: 13, color: "var(--text)", fontFamily: "var(--font-sans)",
               textDecoration: "none", fontWeight: 500, padding: "8px 18px",
-              borderRadius: 99, border: "1.5px solid var(--border)",
+              borderRadius: 99, border: "1.5px solid var(--card-border)",
               background: "var(--surface)", transition: "background 0.15s",
               boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
             }}
@@ -116,7 +116,7 @@ export default function SheltersAdminPage() {
             aria-label="How this works"
             style={{
               width: 32, height: 32, borderRadius: "50%",
-              border: "1.5px solid var(--border)",
+              border: "1.5px solid var(--card-border)",
               background: "var(--surface)",
               color: "var(--muted)", fontSize: 14, fontWeight: 600,
               fontFamily: "var(--font-sans)", cursor: "pointer",
@@ -144,7 +144,7 @@ export default function SheltersAdminPage() {
               style={{
                 fontSize: 13, color: "var(--text)", fontFamily: "var(--font-sans)",
                 fontWeight: 500, padding: "8px 18px", borderRadius: 99,
-                border: "1.5px solid var(--border)", background: "var(--surface)",
+                border: "1.5px solid var(--card-border)", background: "var(--surface)",
                 cursor: "pointer", transition: "background 0.15s",
               }}
               onMouseEnter={e => (e.currentTarget.style.background = "var(--bg)")}
@@ -165,7 +165,7 @@ export default function SheltersAdminPage() {
               style={{
                 fontSize: 13, color: "var(--text)", fontFamily: "var(--font-sans)",
                 fontWeight: 500, padding: "8px 18px", borderRadius: 99,
-                border: "1.5px solid var(--border)", background: "var(--surface)",
+                border: "1.5px solid var(--card-border)", background: "var(--surface)",
                 cursor: "pointer",
               }}
             >Try again</button>
@@ -180,12 +180,12 @@ export default function SheltersAdminPage() {
               onDragOver={e => e.preventDefault()}
               onClick={() => fileInputRef.current?.click()}
               style={{
-                border: "2px dashed var(--border)", borderRadius: 24,
+                border: "2px dashed var(--card-border)", borderRadius: 24,
                 padding: "72px 24px", textAlign: "center", cursor: "pointer",
                 background: "rgba(0,0,0,0.02)", transition: "border-color 0.2s, background 0.2s",
               }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.background = "rgba(44,95,138,0.03)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "rgba(0,0,0,0.02)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--card-border)"; e.currentTarget.style.background = "rgba(0,0,0,0.02)"; }}
             >
               {status === "parsing" ? (
                 <>
@@ -220,7 +220,7 @@ export default function SheltersAdminPage() {
         {status === "ready" && (
           <div className="stagger-item" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{
-              border: "1px solid var(--border)", borderRadius: 16,
+              border: "1px solid var(--card-border)", borderRadius: 16,
               padding: "20px 24px", background: "var(--surface)",
               boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
             }}>
@@ -249,7 +249,7 @@ export default function SheltersAdminPage() {
                 onClick={reset}
                 style={{
                   padding: "10px 20px", borderRadius: 99,
-                  border: "1.5px solid var(--border)", background: "var(--surface)",
+                  border: "1.5px solid var(--card-border)", background: "var(--surface)",
                   fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 500,
                   color: "var(--text)", cursor: "pointer",
                 }}
