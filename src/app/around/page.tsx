@@ -18,13 +18,12 @@ type Suggestion = {
 function formatSuggestion(displayName: string): { title: string; subtitle: string } {
   const parts = displayName.split(", ");
   const chicagoIdx = parts.indexOf("Chicago");
-  if (chicagoIdx > 0) {
-    return {
-      title: parts.slice(0, chicagoIdx).join(", "),
-      subtitle: "Chicago, IL",
-    };
-  }
-  return { title: parts[0] || displayName, subtitle: parts.slice(1, 3).join(", ") };
+  const end = chicagoIdx > 0 ? chicagoIdx : Math.min(4, parts.length);
+  const subtitle = parts.slice(1, end).join(", ");
+  return {
+    title: parts[0] || displayName,
+    subtitle: subtitle ? `${subtitle} · Chicago, IL` : "Chicago, IL",
+  };
 }
 
 function haversine(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -248,7 +247,7 @@ export default function AroundPage() {
       {/* Autocomplete dropdown */}
       {showSuggestions && suggestions.length > 0 && (
         <div style={{
-          position: "fixed", top: 76, left: "50%", transform: "translateX(-50%)",
+          position: "fixed", top: 88, left: "50%", transform: "translateX(-50%)",
           width: "calc(100% - 48px)", maxWidth: 480, zIndex: 9,
           ...GLASS, borderRadius: 16, overflow: "hidden",
         }}>
