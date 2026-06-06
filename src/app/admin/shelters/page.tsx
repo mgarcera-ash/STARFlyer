@@ -1,12 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
 import Papa from "papaparse";
-import InfoFAB from "@/components/InfoFAB";
-
-const SHELTERS_INFO = [
-  { heading: "In the browser", body: "When you select the CSV, the browser's File API reads it from your hard drive into memory without uploading it. papaparse converts raw bytes into structured rows. Then JavaScript loops through every row, tracks each shelter's Site ID, and keeps only the most recent entry. The cleaned records are then sent to the database." },
-  { heading: "Loading", body: "New shelters are added, existing ones are updated. Safe to run at different intervals." },
-];
 
 type Status = "idle" | "parsing" | "ready" | "loading" | "done" | "error";
 
@@ -33,6 +27,13 @@ export default function SheltersAdminPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [deduped, setDeduped] = useState<RawRow[]>([]);
   const [fileName, setFileName] = useState("");
+  const [infoOpen, setInfoOpen] = useState(false);
+  const [infoClosing, setInfoClosing] = useState(false);
+
+  const closeInfo = () => {
+    setInfoClosing(true);
+    setTimeout(() => { setInfoOpen(false); setInfoClosing(false); }, 180);
+  };
 
   const handleFile = (file: File) => {
     if (!file.name.endsWith(".csv")) {
@@ -97,7 +98,7 @@ export default function SheltersAdminPage() {
       <div style={{ maxWidth: 560, margin: "0 auto", paddingLeft: 24, paddingRight: 24 }}>
 
         {/* Header */}
-        <div className="fade-up" style={{ animationDelay: "0.05s", marginBottom: 40 }}>
+        <div className="fade-up" style={{ animationDelay: "0.05s", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 40 }}>
           <a
             href="/admin"
             style={{
@@ -106,11 +107,26 @@ export default function SheltersAdminPage() {
               borderRadius: 99, border: "1.5px solid var(--border)",
               background: "var(--surface)", transition: "background 0.15s",
               boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-              display: "inline-block",
             }}
             onMouseEnter={e => (e.currentTarget.style.background = "var(--bg)")}
             onMouseLeave={e => (e.currentTarget.style.background = "var(--surface)")}
           >← Admin</a>
+          <button
+            onClick={() => setInfoOpen(true)}
+            aria-label="How this works"
+            style={{
+              width: 32, height: 32, borderRadius: "50%",
+              border: "1.5px solid var(--border)",
+              background: "var(--surface)",
+              color: "var(--muted)", fontSize: 14, fontWeight: 600,
+              fontFamily: "var(--font-sans)", cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+              transition: "background 0.15s, color 0.15s",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = "var(--bg)"; e.currentTarget.style.color = "var(--text)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "var(--surface)"; e.currentTarget.style.color = "var(--muted)"; }}
+          >ℹ</button>
         </div>
 
         {/* Done state */}
@@ -255,7 +271,55 @@ export default function SheltersAdminPage() {
         )}
 
       </div>
-      <InfoFAB sections={SHELTERS_INFO} />
+      {infoOpen && (
+        <div
+          role="presentation"
+          onClick={closeInfo}
+          style={{
+            position: "fixed", inset: 0, zIndex: 200,
+            background: "rgba(0,0,0,0.65)",
+            backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: 24,
+            animation: infoClosing ? "fadeOut 0.18s ease forwards" : "fadeIn 0.2s ease forwards",
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="How this works"
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: "#1c1c1e",
+              borderRadius: 28,
+              border: "1.5px solid rgba(255,255,255,0.1)",
+              boxShadow: "0 24px 80px rgba(0,0,0,0.5)",
+              width: "100%", maxWidth: 380,
+              padding: "28px 28px 24px",
+              animation: infoClosing ? "fadeScaleOut 0.18s ease forwards" : "fadeScale 0.22s cubic-bezier(0.34,1.4,0.64,1) forwards",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+              <p style={{ margin: 0, fontSize: 17, fontWeight: 600, color: "#fff", fontFamily: "var(--font-sans)", letterSpacing: "-0.02em" }}>
+                How this works
+              </p>
+              <button
+                onClick={closeInfo}
+                style={{
+                  width: 28, height: 28, borderRadius: "50%",
+                  background: "rgba(255,255,255,0.1)", border: "none",
+                  color: "rgba(255,255,255,0.6)", fontSize: 14, fontWeight: 600,
+                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                  fontFamily: "var(--font-sans)",
+                }}
+              >✕</button>
+            </div>
+            <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.6)", fontFamily: "var(--font-sans)", lineHeight: 1.65 }}>
+              When you select the CSV, the browser&apos;s File API reads it from your hard drive into memory without uploading it. papaparse converts raw bytes into structured rows. Then JavaScript loops through every row, tracks each shelter&apos;s Site ID, and keeps only the most recent entry. The cleaned records are then sent to the database. New shelters are added, existing ones are updated. Safe to run at different intervals.
+            </p>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
