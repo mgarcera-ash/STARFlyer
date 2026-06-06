@@ -25,6 +25,11 @@ function toInt(val: string | undefined): number | null {
 }
 
 export async function POST(req: NextRequest) {
+  const token = req.cookies.get("admin-token")?.value;
+  if (!token || token !== process.env.ADMIN_TOKEN) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { rows }: { rows: RawRow[] } = await req.json();
 
   if (!Array.isArray(rows) || rows.length === 0) {
