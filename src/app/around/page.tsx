@@ -157,8 +157,9 @@ export default function AroundPage() {
 
       {/* Floating top bar */}
       <div style={{
-        position: "fixed", top: 20, left: 20, right: 20, zIndex: 10,
-        display: "flex", alignItems: "center", gap: 10,
+        position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)",
+        width: "calc(100% - 48px)", maxWidth: 480,
+        zIndex: 10, display: "flex", alignItems: "center", gap: 10,
       }}>
 
         {/* Back */}
@@ -247,7 +248,8 @@ export default function AroundPage() {
       {/* Autocomplete dropdown */}
       {showSuggestions && suggestions.length > 0 && (
         <div style={{
-          position: "fixed", top: 76, left: 20, right: 20, zIndex: 9,
+          position: "fixed", top: 76, left: "50%", transform: "translateX(-50%)",
+          width: "calc(100% - 48px)", maxWidth: 480, zIndex: 9,
           ...GLASS, borderRadius: 16, overflow: "hidden",
         }}>
           {suggestions.map((s, i) => {
