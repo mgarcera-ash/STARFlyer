@@ -5,31 +5,40 @@ import type { Shelter } from "./MapView";
 
 const MapView = dynamic(() => import("./MapView"), { ssr: false });
 
-// Chicago bounding box for scoped search results
-const CHICAGO_VIEWBOX = "-87.94,41.64,-87.52,42.02";
+// Chicago bounding box — Photon format: west,south,east,north
+const CHICAGO_BBOX = "-87.94,41.64,-87.52,42.02";
 
-type Suggestion = {
-  place_id: number;
-  lat: string;
-  lon: string;
-  display_name: string;
+type PhotonFeature = {
+  type: "Feature";
+  geometry: { type: "Point"; coordinates: [number, number] }; // [lng, lat]
+  properties: {
+    osm_id: number;
+    osm_type: string;
+    name?: string;
+    housenumber?: string;
+    street?: string;
+    district?: string;
+    locality?: string;
+    city?: string;
+    state?: string;
+    postcode?: string;
+    country?: string;
+  };
 };
 
-function formatSuggestion(displayName: string): { title: string; subtitle: string } {
-  const parts = displayName.split(", ");
-  const chicagoIdx = parts.indexOf("Chicago");
+function formatSuggestion(f: PhotonFeature): { title: string; subtitle: string } {
+  const p = f.properties;
+  let title = "";
+  if (p.housenumber && p.street) title = `${p.housenumber} ${p.street}`;
+  else if (p.street) title = p.street;
+  else if (p.name) title = p.name;
+  else title = "Unknown location";
 
-  // If first part is a house number, merge it with the street name
-  const isHouseNum = /^\d+[A-Z]?$/.test(parts[0]);
-  const title = isHouseNum && parts[1] ? `${parts[0]} ${parts[1]}` : (parts[0] || displayName);
-  const subtitleStart = isHouseNum ? 2 : 1;
-
-  const end = chicagoIdx > 0 ? chicagoIdx : Math.min(subtitleStart + 3, parts.length);
-  const subtitle = parts.slice(subtitleStart, end).join(", ");
-  return {
-    title,
-    subtitle: subtitle ? `${subtitle} · Chicago, IL` : "Chicago, IL",
-  };
+  const sub: string[] = [];
+  if (p.district) sub.push(p.district);
+  if (p.locality && p.locality !== p.district) sub.push(p.locality);
+  const subtitle = sub.length > 0 ? `${sub.join(", ")} · Chicago, IL` : "Chicago, IL";
+  return { title, subtitle };
 }
 
 function haversine(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -54,7 +63,7 @@ export default function AroundPage() {
   const [userLng, setUserLng] = useState<number | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [addressInput, setAddressInput] = useState("");
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [suggestions, setSuggestions] = useState<PhotonFeature[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [locating, setLocating] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
@@ -68,25 +77,24 @@ export default function AroundPage() {
       .catch(() => {});
   }, []);
 
-  // Debounced autocomplete — scoped to Chicago bounding box
+  // Debounced autocomplete via Photon — scoped to Chicago bounding box
   useEffect(() => {
     const q = addressInput.trim();
     if (q.length < 3) { setSuggestions([]); return; }
 
     const timer = setTimeout(async () => {
       try {
-        // Use structured search when input starts with a house number for precise results
-        const isAddress = /^\d/.test(q);
-        const url = isAddress
-          ? `https://nominatim.openstreetmap.org/search?format=json&street=${encodeURIComponent(q)}&city=Chicago&state=IL&country=US&limit=5`
-          : `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q + ", Chicago, IL")}&viewbox=${CHICAGO_VIEWBOX}&bounded=1&limit=5`;
-        const res = await fetch(url, { headers: { "Accept-Language": "en" } });
-        const data: Suggestion[] = await res.json();
-        // Deduplicate by display_name to eliminate repeated street segments
+        const res = await fetch(
+          `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=5&bbox=${CHICAGO_BBOX}&lang=en`
+        );
+        const data: { features: PhotonFeature[] } = await res.json();
+        const features = data.features ?? [];
+        // Deduplicate by osm_id+osm_type
         const seen = new Set<string>();
-        const unique = data.filter(s => {
-          if (seen.has(s.display_name)) return false;
-          seen.add(s.display_name);
+        const unique = features.filter(f => {
+          const key = `${f.properties.osm_type}${f.properties.osm_id}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
           return true;
         });
         setSuggestions(unique);
@@ -107,8 +115,9 @@ export default function AroundPage() {
     );
   };
 
-  const selectSuggestion = (s: Suggestion) => {
-    applyLocation(parseFloat(s.lat), parseFloat(s.lon));
+  const selectSuggestion = (f: PhotonFeature) => {
+    const [lng, lat] = f.geometry.coordinates;
+    applyLocation(lat, lng);
     setAddressInput("");
     setSuggestions([]);
     setShowSuggestions(false);
@@ -138,17 +147,16 @@ export default function AroundPage() {
     setSearchError("");
     setShowSuggestions(false);
     try {
-      const isAddress = /^\d/.test(q);
-      const geocodeUrl = isAddress
-        ? `https://nominatim.openstreetmap.org/search?format=json&street=${encodeURIComponent(q)}&city=Chicago&state=IL&country=US&limit=1`
-        : `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q + ", Chicago, IL")}&viewbox=${CHICAGO_VIEWBOX}&bounded=1&limit=1`;
-      const res = await fetch(geocodeUrl, { headers: { "Accept-Language": "en" } });
-      const data = await res.json();
-      if (!data.length) {
+      const res = await fetch(
+        `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=1&bbox=${CHICAGO_BBOX}&lang=en`
+      );
+      const data: { features: PhotonFeature[] } = await res.json();
+      if (!data.features?.length) {
         setSearchError("Address not found in Chicago.");
         return;
       }
-      applyLocation(parseFloat(data[0].lat), parseFloat(data[0].lon));
+      const [lng, lat] = data.features[0].geometry.coordinates;
+      applyLocation(lat, lng);
       setAddressInput("");
     } catch {
       setSearchError("Search failed. Please try again.");
@@ -267,13 +275,13 @@ export default function AroundPage() {
           width: "calc(100% - 48px)", maxWidth: 480, zIndex: 9,
           ...GLASS, borderRadius: 16, overflow: "hidden",
         }}>
-          {suggestions.map((s, i) => {
-            const { title, subtitle } = formatSuggestion(s.display_name);
+          {suggestions.map((f, i) => {
+            const { title, subtitle } = formatSuggestion(f);
             return (
               <button
-                key={s.place_id}
+                key={`${f.properties.osm_type}${f.properties.osm_id}`}
                 onMouseDown={e => e.preventDefault()} // keep input focused so blur delay works
-                onClick={() => selectSuggestion(s)}
+                onClick={() => selectSuggestion(f)}
                 style={{
                   display: "flex", flexDirection: "column", alignItems: "flex-start",
                   width: "100%", padding: "11px 16px",
