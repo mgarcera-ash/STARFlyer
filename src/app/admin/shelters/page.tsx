@@ -91,15 +91,7 @@ export default function SheltersAdminPage() {
       <div style={{ maxWidth: 560, margin: "0 auto", paddingLeft: 24, paddingRight: 24 }}>
 
         {/* Header */}
-        <div className="fade-up" style={{ animationDelay: "0.05s", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 40 }}>
-          <div>
-            <h1 style={{ fontFamily: "var(--font-sans)", fontSize: 20, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em" }}>
-              Load Shelters
-            </h1>
-            <p style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-sans)", marginTop: 2 }}>
-              Upload a DFSS Shelter Bed Availability CSV
-            </p>
-          </div>
+        <div className="fade-up" style={{ animationDelay: "0.05s", marginBottom: 40 }}>
           <a
             href="/admin"
             style={{
@@ -108,6 +100,7 @@ export default function SheltersAdminPage() {
               borderRadius: 99, border: "1.5px solid var(--border)",
               background: "var(--surface)", transition: "background 0.15s",
               boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+              display: "inline-block",
             }}
             onMouseEnter={e => (e.currentTarget.style.background = "var(--bg)")}
             onMouseLeave={e => (e.currentTarget.style.background = "var(--surface)")}

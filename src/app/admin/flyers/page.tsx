@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState, KeyboardEvent } from "react";
 import { supabase } from "@/lib/supabase";
 import HotspotEditor, { Hotspot } from "@/components/HotspotEditor";
-import SignOutButton from "@/components/SignOutButton";
 
 type Flyer = {
   id: string;
@@ -46,28 +45,26 @@ export default function FlyerReviewPage() {
       <div style={{ maxWidth: 560, margin: "0 auto", paddingLeft: 24, paddingRight: 24 }}>
 
         {/* Header */}
-        <div className="fade-up" style={{ animationDelay: "0.05s", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 40 }}>
-          <div>
-            <h1 style={{ fontFamily: "var(--font-sans)", fontSize: 20, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em" }}>
-              Review Flyer Submissions
-            </h1>
-            <p style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-sans)", marginTop: 2 }}>
-              {loading ? "Loading…" : `${flyers.length} pending ${flyers.length === 1 ? "flyer" : "flyers"}`}
-            </p>
-          </div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div className="fade-up" style={{ animationDelay: "0.05s", marginBottom: 40 }}>
+          <div style={{ marginBottom: 20 }}>
             <a href="/admin" style={{
               fontSize: 13, color: "var(--text)", fontFamily: "var(--font-sans)",
               textDecoration: "none", fontWeight: 500, padding: "8px 18px",
               borderRadius: 99, border: "1.5px solid var(--border)",
               background: "var(--surface)", transition: "background 0.15s",
               boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+              display: "inline-block",
             }}
               onMouseEnter={e => (e.currentTarget.style.background = "var(--bg)")}
               onMouseLeave={e => (e.currentTarget.style.background = "var(--surface)")}
             >← Admin</a>
-            <SignOutButton />
           </div>
+          <h1 style={{ fontFamily: "var(--font-sans)", fontSize: 20, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", textAlign: "center" }}>
+            Review Flyer Submissions
+          </h1>
+          <p style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-sans)", marginTop: 4, textAlign: "center" }}>
+            {loading ? "Loading…" : `${flyers.length} pending ${flyers.length === 1 ? "flyer" : "flyers"}`}
+          </p>
         </div>
 
         {/* Empty state */}

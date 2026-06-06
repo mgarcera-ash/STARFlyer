@@ -21,8 +21,8 @@ export default function AdminPage() {
       <div style={{ maxWidth: 560, margin: "0 auto", paddingLeft: 24, paddingRight: 24 }}>
 
         {/* Header */}
-        <div className="fade-up" style={{ animationDelay: "0.05s", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 40 }}>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div className="fade-up" style={{ animationDelay: "0.05s", marginBottom: 40 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
             <a href="/" style={{
               fontSize: 13, color: "var(--text)", fontFamily: "var(--font-sans)",
               textDecoration: "none", fontWeight: 500, padding: "8px 18px",
@@ -33,13 +33,11 @@ export default function AdminPage() {
               onMouseEnter={e => (e.currentTarget.style.background = "var(--bg)")}
               onMouseLeave={e => (e.currentTarget.style.background = "var(--surface)")}
             >← Library</a>
-          </div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <h1 style={{ fontFamily: "var(--font-sans)", fontSize: 20, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em" }}>
-              Admin
-            </h1>
             <SignOutButton />
           </div>
+          <h1 style={{ fontFamily: "var(--font-sans)", fontSize: 20, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", textAlign: "center" }}>
+            Admin
+          </h1>
         </div>
 
         {/* Hub cards */}
