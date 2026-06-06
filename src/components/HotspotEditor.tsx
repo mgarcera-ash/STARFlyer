@@ -1,6 +1,6 @@
 "use client";
 
-export type Hotspot = { type: "phone" | "sms" | "email" | "address" | "website"; label: string; value: string };
+export type Hotspot = { type: "phone" | "sms" | "email" | "address" | "website"; label: string; value: string; lat?: number; lng?: number };
 
 const TYPE_ORDER: Hotspot["type"][] = ["phone", "sms", "email", "address", "website"];
 

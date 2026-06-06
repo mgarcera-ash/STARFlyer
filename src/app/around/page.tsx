@@ -1,7 +1,7 @@
 "use client";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import type { Shelter } from "./MapView";
+import type { Shelter, FlyerPin } from "./MapView";
 
 const MapView = dynamic(() => import("./MapView"), { ssr: false });
 
@@ -59,6 +59,7 @@ const GLASS: React.CSSProperties = {
 
 export default function AroundPage() {
   const [shelters, setShelters] = useState<Shelter[]>([]);
+  const [flyerPins, setFlyerPins] = useState<FlyerPin[]>([]);
   const [userLat, setUserLat] = useState<number | null>(null);
   const [userLng, setUserLng] = useState<number | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -69,11 +70,34 @@ export default function AroundPage() {
   const [geocoding, setGeocoding] = useState(false);
   const [searchError, setSearchError] = useState("");
 
-  // Load all shelters on mount
+  // Load shelters and flyers on mount
   useEffect(() => {
     fetch("/api/shelters/all")
       .then(r => r.json())
       .then(d => setShelters(d.shelters ?? []))
+      .catch(() => {});
+
+    fetch("/api/flyers/mapped")
+      .then(r => r.json())
+      .then(d => {
+        type RawHotspot = { type: string; label?: string; value: string; lat?: number; lng?: number };
+        type RawFlyer = { id: string; title: string | null; entity: string | null; image_url: string | null; hotspots: RawHotspot[] };
+        const pins: FlyerPin[] = (d.flyers ?? []).flatMap((f: RawFlyer) =>
+          f.hotspots
+            .filter((h: RawHotspot) => h.type === "address" && h.lat !== undefined && h.lng !== undefined)
+            .map((h: RawHotspot, i: number) => ({
+              pinId: `${f.id}-${i}`,
+              flyerId: f.id,
+              lat: h.lat!,
+              lng: h.lng!,
+              title: f.title,
+              entity: f.entity,
+              image_url: f.image_url,
+              allHotspots: f.hotspots,
+            }))
+        );
+        setFlyerPins(pins);
+      })
       .catch(() => {});
   }, []);
 
@@ -173,6 +197,7 @@ export default function AroundPage() {
           userLat={userLat}
           userLng={userLng}
           shelters={shelters}
+          flyerPins={flyerPins}
           selectedId={selectedId}
           onSelect={setSelectedId}
         />

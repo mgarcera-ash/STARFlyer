@@ -126,11 +126,28 @@ function FlyerEditCard({ flyer, animationDelay, entityOptions, onDone }: {
 
   const save = async (status: "approved" | "rejected") => {
     setActing(status === "approved" ? "approve" : "reject");
+
+    let enriched = hotspots;
+    if (status === "approved") {
+      enriched = await Promise.all(hotspots.map(async h => {
+        if (h.type !== "address" || !h.value.trim()) return h;
+        try {
+          const res = await fetch(
+            `https://photon.komoot.io/api/?q=${encodeURIComponent(h.value)}&limit=1&bbox=-87.94,41.64,-87.52,42.02&lang=en`
+          );
+          const data = await res.json();
+          const [lng, lat] = data.features?.[0]?.geometry?.coordinates ?? [null, null];
+          if (lat !== null && lng !== null) return { ...h, lat, lng };
+        } catch { /* best-effort */ }
+        return h;
+      }));
+    }
+
     await supabase.from("flyers").update({
       entity: entity.trim() || null,
       title: title.trim(),
       tags,
-      hotspots: hotspots.length > 0 ? hotspots : null,
+      hotspots: enriched.length > 0 ? enriched : null,
       status,
       approved_at: status === "approved" ? new Date().toISOString() : null,
     }).eq("id", flyer.id);
