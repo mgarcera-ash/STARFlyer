@@ -1611,16 +1611,15 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
           aria-label="Close"
           style={{
             flexShrink: 0, width: 44, height: 44, borderRadius: "50%",
-            background: "rgba(20,20,20,0.85)",
-            backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
-            border: "2px solid rgba(255,255,255,0.12)",
+            background: "#dc2626",
+            border: "none",
             color: "#fff", fontSize: 22, lineHeight: 1,
             cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
             transition: "background 0.15s",
             fontFamily: "var(--font-sans)",
           }}
-          onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}
-          onMouseLeave={e => (e.currentTarget.style.background = "rgba(20,20,20,0.85)")}
+          onMouseEnter={e => (e.currentTarget.style.background = "#991b1b")}
+          onMouseLeave={e => (e.currentTarget.style.background = "#dc2626")}
         >×</button>
 
         {/* Pill + floating contacts panel below */}
