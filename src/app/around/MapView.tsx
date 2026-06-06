@@ -78,8 +78,18 @@ export default function MapView({ userLat, userLng, shelters, selectedId, onSele
 
     shelters.forEach((s) => {
       if (markersRef.current.has(s.site_id)) return;
+
+      const lines: string[] = [];
+      if (s.site_name) lines.push(`<strong style="font-size:13px;font-family:system-ui,sans-serif">${s.site_name}</strong>`);
+      if (s.agency)    lines.push(`<span style="font-size:11px;color:#737373;font-family:system-ui,sans-serif">${s.agency}</span>`);
+      if (s.population) lines.push(`<span style="font-size:11px;color:#737373;font-family:system-ui,sans-serif">${s.population}</span>`);
+      if (s.phone)     lines.push(`<a href="tel:${s.phone.replace(/\D/g,"")}" style="font-size:12px;color:#3b82f6;font-family:system-ui,sans-serif;text-decoration:none">${s.phone}</a>`);
+      if (s.address)   lines.push(`<span style="font-size:11px;color:#737373;font-family:system-ui,sans-serif">${s.address}</span>`);
+      lines.push(`<span style="font-size:11px;color:#737373;font-family:system-ui,sans-serif">${s.distance < 0.1 ? "<0.1" : s.distance.toFixed(1)} mi away</span>`);
+
       const marker = L.marker([s.lat, s.lng])
         .addTo(map)
+        .bindPopup(lines.join("<br>"), { maxWidth: 220, offset: [0, -4] })
         .on("click", () => onSelect(s.site_id));
       markersRef.current.set(s.site_id, marker);
     });
@@ -90,7 +100,10 @@ export default function MapView({ userLat, userLng, shelters, selectedId, onSele
     const map = mapRef.current;
     if (!map || selectedId === null) return;
     const marker = markersRef.current.get(selectedId);
-    if (marker) map.flyTo(marker.getLatLng(), 15, { duration: 0.6 });
+    if (marker) {
+      map.flyTo(marker.getLatLng(), 15, { duration: 0.6 });
+      setTimeout(() => marker.openPopup(), 650);
+    }
   }, [selectedId]);
 
   return <div ref={containerRef} style={{ width: "100%", height: "100%" }} />;
