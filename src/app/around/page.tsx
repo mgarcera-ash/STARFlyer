@@ -18,10 +18,16 @@ type Suggestion = {
 function formatSuggestion(displayName: string): { title: string; subtitle: string } {
   const parts = displayName.split(", ");
   const chicagoIdx = parts.indexOf("Chicago");
-  const end = chicagoIdx > 0 ? chicagoIdx : Math.min(4, parts.length);
-  const subtitle = parts.slice(1, end).join(", ");
+
+  // If first part is a house number, merge it with the street name
+  const isHouseNum = /^\d+[A-Z]?$/.test(parts[0]);
+  const title = isHouseNum && parts[1] ? `${parts[0]} ${parts[1]}` : (parts[0] || displayName);
+  const subtitleStart = isHouseNum ? 2 : 1;
+
+  const end = chicagoIdx > 0 ? chicagoIdx : Math.min(subtitleStart + 3, parts.length);
+  const subtitle = parts.slice(subtitleStart, end).join(", ");
   return {
-    title: parts[0] || displayName,
+    title,
     subtitle: subtitle ? `${subtitle} · Chicago, IL` : "Chicago, IL",
   };
 }
@@ -69,13 +75,22 @@ export default function AroundPage() {
 
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&viewbox=${CHICAGO_VIEWBOX}&bounded=1&limit=5`,
-          { headers: { "Accept-Language": "en" } }
-        );
+        // Use structured search when input starts with a house number for precise results
+        const isAddress = /^\d/.test(q);
+        const url = isAddress
+          ? `https://nominatim.openstreetmap.org/search?format=json&street=${encodeURIComponent(q)}&city=Chicago&state=IL&country=US&limit=5`
+          : `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q + ", Chicago, IL")}&viewbox=${CHICAGO_VIEWBOX}&bounded=1&limit=5`;
+        const res = await fetch(url, { headers: { "Accept-Language": "en" } });
         const data: Suggestion[] = await res.json();
-        setSuggestions(data);
-        setShowSuggestions(data.length > 0);
+        // Deduplicate by display_name to eliminate repeated street segments
+        const seen = new Set<string>();
+        const unique = data.filter(s => {
+          if (seen.has(s.display_name)) return false;
+          seen.add(s.display_name);
+          return true;
+        });
+        setSuggestions(unique);
+        setShowSuggestions(unique.length > 0);
       } catch {
         // silent — user can still submit manually
       }
@@ -123,10 +138,11 @@ export default function AroundPage() {
     setSearchError("");
     setShowSuggestions(false);
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&viewbox=${CHICAGO_VIEWBOX}&bounded=1&limit=1`,
-        { headers: { "Accept-Language": "en" } }
-      );
+      const isAddress = /^\d/.test(q);
+      const geocodeUrl = isAddress
+        ? `https://nominatim.openstreetmap.org/search?format=json&street=${encodeURIComponent(q)}&city=Chicago&state=IL&country=US&limit=1`
+        : `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q + ", Chicago, IL")}&viewbox=${CHICAGO_VIEWBOX}&bounded=1&limit=1`;
+      const res = await fetch(geocodeUrl, { headers: { "Accept-Language": "en" } });
       const data = await res.json();
       if (!data.length) {
         setSearchError("Address not found in Chicago.");
