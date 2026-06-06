@@ -46,7 +46,7 @@ const PIN_CIRCLE  = `<div style="width:18px;height:18px;border-radius:50%;backgr
 
 function makeShelterIcon() {
   return L.divIcon({
-    html: `<div style="width:30px;height:30px;border-radius:50%;background:#3b82f6;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.28);display:flex;align-items:center;justify-content:center">
+    html: `<div style="width:30px;height:30px;border-radius:8px;background:#ef4444;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.28);display:flex;align-items:center;justify-content:center">
       <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
         <path d="M10 3L3 9h2v8h4v-5h2v5h4V9h2L10 3z" fill="#fff"/>
       </svg>
@@ -60,10 +60,10 @@ function makeShelterIcon() {
 
 function makeFlyerIcon() {
   return L.divIcon({
-    html: `<div style="width:30px;height:30px;border-radius:8px;background:#f59e0b;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.28);display:flex;align-items:center;justify-content:center">
+    html: `<div style="width:30px;height:30px;border-radius:50%;background:#3b82f6;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.28);display:flex;align-items:center;justify-content:center">
       <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-        <rect x="4" y="2" width="12" height="16" rx="2" fill="#fff" opacity="0.9"/>
-        <path d="M7 7h6M7 10h4" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round"/>
+        <circle cx="10" cy="6.5" r="1.8" fill="#fff"/>
+        <rect x="8.6" y="9.5" width="2.8" height="6.5" rx="1.2" fill="#fff"/>
       </svg>
     </div>`,
     className: "",

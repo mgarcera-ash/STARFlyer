@@ -361,14 +361,14 @@ export default function AroundPage() {
           {
             key: "shelters", label: "Shelters", active: showShelters,
             toggle: () => setShowShelters(v => !v),
-            color: "#3b82f6",
+            color: "#ef4444",
             icon: <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M10 3L3 9h2v8h4v-5h2v5h4V9h2L10 3z" fill="currentColor"/></svg>,
           },
           {
             key: "flyers", label: "Info from Flyers", active: showFlyers,
             toggle: () => setShowFlyers(v => !v),
-            color: "#f59e0b",
-            icon: <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><rect x="4" y="2" width="12" height="16" rx="2" fill="currentColor" opacity="0.9"/><path d="M7 7h6M7 10h4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+            color: "#3b82f6",
+            icon: <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6.5" r="1.8" fill="currentColor"/><rect x="8.6" y="9.5" width="2.8" height="6.5" rx="1.2" fill="currentColor"/></svg>,
           },
         ].map(({ key, label, active, toggle, color, icon }) => (
           <button
