@@ -352,10 +352,10 @@ export default function AroundPage() {
         </div>
       )}
 
-      {/* Layer toggles — above Leaflet zoom control (bottom-right) */}
+      {/* Layer toggles — below search pill */}
       <div style={{
-        position: "fixed", bottom: 96, right: 10, zIndex: 10,
-        display: "flex", flexDirection: "column", gap: 6,
+        position: "fixed", top: 80, left: "50%", transform: "translateX(-50%)",
+        zIndex: 8, display: "flex", flexDirection: "row", gap: 8,
       }}>
         {[
           {
@@ -376,18 +376,18 @@ export default function AroundPage() {
             onClick={toggle}
             style={{
               display: "flex", alignItems: "center", gap: 6,
-              padding: "7px 11px", borderRadius: 99, cursor: "pointer",
+              padding: "7px 14px", borderRadius: 99, cursor: "pointer",
               fontFamily: "var(--font-sans)", fontSize: 12, fontWeight: 500,
-              border: `1.5px solid ${active ? color : "rgba(0,0,0,0.10)"}`,
-              background: active ? `${color}18` : "rgba(255,255,255,0.88)",
-              color: active ? color : "#737373",
+              border: "2px solid #fff",
+              background: active ? color : "rgba(255,255,255,0.45)",
+              color: active ? "#fff" : "rgba(0,0,0,0.35)",
               backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
-              boxShadow: "0 2px 10px rgba(0,0,0,0.10)",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.12)",
               transition: "all 0.15s",
               whiteSpace: "nowrap",
             }}
           >
-            <span style={{ color: active ? color : "#a3a3a3", display: "flex" }}>{icon}</span>
+            <span style={{ display: "flex", opacity: active ? 1 : 0.5 }}>{icon}</span>
             {label}
           </button>
         ))}
