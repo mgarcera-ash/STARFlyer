@@ -9,16 +9,17 @@ export default function UploadPage() {
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [compressedBlob, setCompressedBlob] = useState<Blob | null>(null);
+  const [compressedExt, setCompressedExt] = useState("webp");
   const [compressing, setCompressing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const reset = () => {
-    setImagePreview(null); setCompressedBlob(null);
+    setImagePreview(null); setCompressedBlob(null); setCompressedExt("webp");
     setCompressing(false); setSubmitted(false);
   };
 
-  const compressImage = (file: File, maxPx = 1600, quality = 0.80): Promise<Blob> =>
+  const compressImage = (file: File, maxPx = 1600): Promise<{ blob: Blob; ext: string }> =>
     new Promise((resolve, reject) => {
       const img = new Image();
       const url = URL.createObjectURL(file);
@@ -29,13 +30,19 @@ export default function UploadPage() {
         canvas.width = Math.round(img.width * scale);
         canvas.height = Math.round(img.height * scale);
         canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL("image/webp", quality);
+
+        // Attempt WebP; browsers that don't support encoding silently return PNG
+        const webpUrl = canvas.toDataURL("image/webp", 0.80);
+        const { dataUrl, mime, ext } = webpUrl.startsWith("data:image/webp")
+          ? { dataUrl: webpUrl, mime: "image/webp", ext: "webp" }
+          : { dataUrl: canvas.toDataURL("image/jpeg", 0.82), mime: "image/jpeg", ext: "jpg" };
+
         const base64 = dataUrl.split(",")[1];
         const bytes = atob(base64);
         const ab = new ArrayBuffer(bytes.length);
         const ia = new Uint8Array(ab);
         for (let i = 0; i < bytes.length; i++) ia[i] = bytes.charCodeAt(i);
-        resolve(new Blob([ab], { type: "image/webp" }));
+        resolve({ blob: new Blob([ab], { type: mime }), ext });
       };
       img.onerror = reject;
       img.src = url;
@@ -44,8 +51,9 @@ export default function UploadPage() {
   const handleImageSelect = async (file: File) => {
     setCompressing(true);
     try {
-      const blob = await compressImage(file);
+      const { blob, ext } = await compressImage(file);
       setCompressedBlob(blob);
+      setCompressedExt(ext);
       setImagePreview(URL.createObjectURL(blob));
     } catch {
       alert("Couldn't process that image. Please try another.");
@@ -69,9 +77,10 @@ export default function UploadPage() {
     if (!compressedBlob) return;
     setSubmitting(true);
     try {
-      const fileName = `${Date.now()}.webp`;
+      const fileName = `${Date.now()}.${compressedExt}`;
+      const contentType = compressedBlob.type;
       const { error: uploadError } = await supabase.storage
-        .from("flyers").upload(fileName, compressedBlob, { contentType: "image/webp" });
+        .from("flyers").upload(fileName, compressedBlob, { contentType });
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage.from("flyers").getPublicUrl(fileName);
