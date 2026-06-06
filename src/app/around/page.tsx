@@ -94,6 +94,7 @@ export default function AroundPage() {
               title: f.title,
               entity: f.entity,
               image_url: f.image_url,
+              addressLabel: h.label,
               allHotspots: f.hotspots,
             }))
         );

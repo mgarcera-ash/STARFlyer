@@ -25,6 +25,7 @@ export type FlyerPin = {
   title: string | null;
   entity: string | null;
   image_url: string | null;
+  addressLabel: string | undefined;
   allHotspots: { type: string; label?: string; value: string; lat?: number; lng?: number }[];
 };
 
@@ -88,12 +89,14 @@ function buildFlyerPopup(f: FlyerPin): string {
   }
   if (f.entity)  html += `<p style="margin:0 0 2px;font-size:14px;font-weight:600;color:#000;line-height:1.3">${esc(f.entity)}</p>`;
   if (f.title)   html += `<p style="margin:0 0 8px;font-size:12px;color:#374151;line-height:1.4">${esc(f.title)}</p>`;
-  const phones = f.allHotspots.filter(h => h.type === "phone");
+  // Match contacts to this specific address by shared label; fall back to all if no match
+  const related = f.addressLabel
+    ? f.allHotspots.filter(h => h.type !== "address" && h.label === f.addressLabel)
+    : f.allHotspots.filter(h => h.type !== "address");
+  const phones = related.filter(h => h.type === "phone");
   if (phones[0]) html += `<div style="display:flex;align-items:center;gap:6px;margin-top:6px">${PHONE_CIRCLE}<a href="tel:${phones[0].value.replace(/\D/g, "")}" style="font-size:12px;color:#3b82f6;text-decoration:none;font-weight:500">${esc(phones[0].value)}</a></div>`;
-  const addresses = f.allHotspots.filter(h => h.type === "address");
-  for (const a of addresses) {
-    html += `<div style="display:flex;align-items:center;gap:6px;margin-top:4px">${PIN_CIRCLE}<span style="font-size:11px;color:#737373">${esc(a.value)}</span></div>`;
-  }
+  // Show only this pin's address
+  html += `<div style="display:flex;align-items:center;gap:6px;margin-top:4px">${PIN_CIRCLE}<span style="font-size:11px;color:#737373">${esc(f.allHotspots.find(h => h.type === "address" && h.label === f.addressLabel)?.value ?? "")}</span></div>`;
   html += `</div>`;
   return html;
 }
