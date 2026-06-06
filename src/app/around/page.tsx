@@ -51,10 +51,10 @@ function haversine(lat1: number, lng1: number, lat2: number, lng2: number): numb
 }
 
 const GLASS: React.CSSProperties = {
-  background: "rgba(255,255,255,0.88)",
+  background: "rgba(255,255,255,0.45)",
   backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
-  border: "1.5px solid rgba(0,0,0,0.10)",
-  boxShadow: "0 2px 10px rgba(0,0,0,0.10)",
+  border: "2px solid #fff",
+  boxShadow: "0 2px 10px rgba(0,0,0,0.12)",
 };
 
 export default function AroundPage() {
@@ -354,7 +354,7 @@ export default function AroundPage() {
 
       {/* Layer toggles — below search pill */}
       <div style={{
-        position: "fixed", top: 80, left: "50%", transform: "translateX(-50%)",
+        position: "fixed", top: 96, left: "50%", transform: "translateX(-50%)",
         zIndex: 8, display: "flex", flexDirection: "row", gap: 8,
       }}>
         {[
@@ -365,7 +365,7 @@ export default function AroundPage() {
             icon: <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M10 3L3 9h2v8h4v-5h2v5h4V9h2L10 3z" fill="currentColor"/></svg>,
           },
           {
-            key: "flyers", label: "Flyers", active: showFlyers,
+            key: "flyers", label: "Info from Flyers", active: showFlyers,
             toggle: () => setShowFlyers(v => !v),
             color: "#f59e0b",
             icon: <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><rect x="4" y="2" width="12" height="16" rx="2" fill="currentColor" opacity="0.9"/><path d="M7 7h6M7 10h4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>,
