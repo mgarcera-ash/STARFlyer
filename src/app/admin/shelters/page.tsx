@@ -1,6 +1,12 @@
 "use client";
 import { useRef, useState } from "react";
 import Papa from "papaparse";
+import InfoFAB from "@/components/InfoFAB";
+
+const SHELTERS_INFO = [
+  { heading: "In the browser", body: "When you select the CSV, the browser's File API reads it from your hard drive into memory without uploading it. papaparse converts raw bytes into structured rows. Then JavaScript loops through every row, tracks each shelter's Site ID, and keeps only the most recent entry. The cleaned records are then sent to the database." },
+  { heading: "Loading", body: "New shelters are added, existing ones are updated. Safe to run at different intervals." },
+];
 
 type Status = "idle" | "parsing" | "ready" | "loading" | "done" | "error";
 
@@ -249,6 +255,7 @@ export default function SheltersAdminPage() {
         )}
 
       </div>
+      <InfoFAB sections={SHELTERS_INFO} />
     </main>
   );
 }

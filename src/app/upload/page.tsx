@@ -2,6 +2,13 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import InfoFAB from "@/components/InfoFAB";
+
+const UPLOAD_INFO = [
+  { heading: "Compression", body: "Your photo is optimized before upload. Smaller size, same quality." },
+  { heading: "Review", body: "Your submission goes to an admin for review." },
+  { heading: "Admin", body: "Google Cloud Vision reads the text on the flyer. GPT-4o then uses that to suggest a title, tags, and contact info. Then the admin edits and approves." },
+];
 
 export default function UploadPage() {
   const router = useRouter();
@@ -246,6 +253,7 @@ export default function UploadPage() {
           </div>
         )}
       </div>
+      <InfoFAB sections={UPLOAD_INFO} />
     </main>
   );
 }
