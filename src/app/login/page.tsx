@@ -44,7 +44,7 @@ function LoginForm() {
             fontSize: 13, color: "var(--text)", textDecoration: "none",
             fontFamily: "var(--font-sans)", fontWeight: 500,
             padding: "8px 18px", borderRadius: 99,
-            border: "1.5px solid var(--border)", background: "var(--surface)",
+            border: "1.5px solid var(--card-border)", background: "var(--surface)",
             boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
             transition: "background 0.15s",
           }}
