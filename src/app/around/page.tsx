@@ -60,6 +60,8 @@ const GLASS: React.CSSProperties = {
 export default function AroundPage() {
   const [shelters, setShelters] = useState<Shelter[]>([]);
   const [flyerPins, setFlyerPins] = useState<FlyerPin[]>([]);
+  const [showShelters, setShowShelters] = useState(true);
+  const [showFlyers, setShowFlyers] = useState(true);
   const [userLat, setUserLat] = useState<number | null>(null);
   const [userLng, setUserLng] = useState<number | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -196,8 +198,8 @@ export default function AroundPage() {
         <MapView
           userLat={userLat}
           userLng={userLng}
-          shelters={shelters}
-          flyerPins={flyerPins}
+          shelters={showShelters ? shelters : []}
+          flyerPins={showFlyers ? flyerPins : []}
           selectedId={selectedId}
           onSelect={setSelectedId}
         />
@@ -349,6 +351,47 @@ export default function AroundPage() {
           </div>
         </div>
       )}
+
+      {/* Layer toggles — above Leaflet zoom control (bottom-right) */}
+      <div style={{
+        position: "fixed", bottom: 96, right: 10, zIndex: 10,
+        display: "flex", flexDirection: "column", gap: 6,
+      }}>
+        {[
+          {
+            key: "shelters", label: "Shelters", active: showShelters,
+            toggle: () => setShowShelters(v => !v),
+            color: "#3b82f6",
+            icon: <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M10 3L3 9h2v8h4v-5h2v5h4V9h2L10 3z" fill="currentColor"/></svg>,
+          },
+          {
+            key: "flyers", label: "Flyers", active: showFlyers,
+            toggle: () => setShowFlyers(v => !v),
+            color: "#f59e0b",
+            icon: <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><rect x="4" y="2" width="12" height="16" rx="2" fill="currentColor" opacity="0.9"/><path d="M7 7h6M7 10h4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+          },
+        ].map(({ key, label, active, toggle, color, icon }) => (
+          <button
+            key={key}
+            onClick={toggle}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "7px 11px", borderRadius: 99, cursor: "pointer",
+              fontFamily: "var(--font-sans)", fontSize: 12, fontWeight: 500,
+              border: `1.5px solid ${active ? color : "rgba(0,0,0,0.10)"}`,
+              background: active ? `${color}18` : "rgba(255,255,255,0.88)",
+              color: active ? color : "#737373",
+              backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.10)",
+              transition: "all 0.15s",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span style={{ color: active ? color : "#a3a3a3", display: "flex" }}>{icon}</span>
+            {label}
+          </button>
+        ))}
+      </div>
 
       {/* Bottom hint badge */}
       <div style={{ position: "fixed", bottom: 28, left: "50%", transform: "translateX(-50%)", zIndex: 10, pointerEvents: "none" }}>
