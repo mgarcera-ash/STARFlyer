@@ -1447,6 +1447,34 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
   const [contactFilter, setContactFilter] = useState<"all" | "phone" | "sms" | "email" | "address" | "website">("all");
   const hasHotspots = (flyer.hotspots?.length ?? 0) > 0;
 
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragRef = useRef<{ startX: number; startY: number; panX: number; panY: number } | null>(null);
+
+  const clampPan = (x: number, y: number, z: number) => {
+    const maxX = (window.innerWidth * (z - 1)) / 2;
+    const maxY = (window.innerHeight * (z - 1)) / 2;
+    return { x: Math.max(-maxX, Math.min(maxX, x)), y: Math.max(-maxY, Math.min(maxY, y)) };
+  };
+
+  const startDrag = (clientX: number, clientY: number) => {
+    if (zoom <= 1) return;
+    setIsDragging(true);
+    dragRef.current = { startX: clientX, startY: clientY, panX: pan.x, panY: pan.y };
+  };
+
+  const moveDrag = (clientX: number, clientY: number) => {
+    if (!dragRef.current) return;
+    setPan(clampPan(
+      dragRef.current.panX + (clientX - dragRef.current.startX),
+      dragRef.current.panY + (clientY - dragRef.current.startY),
+      zoom,
+    ));
+  };
+
+  const endDrag = () => { setIsDragging(false); dragRef.current = null; };
+
   useEffect(() => {
     requestAnimationFrame(() => setOpen(true));
     const handleKey = (e: globalThis.KeyboardEvent) => { if (e.key === "Escape") handleClose(); };
@@ -1458,6 +1486,8 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
   const handleClose = () => {
     setSheetOpen(false);
     setContactSearch("");
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
     setOpen(false);
     setTimeout(onClose, 300);
   };
@@ -1483,15 +1513,73 @@ function FlyerPreview({ flyer, initialSearch = "", onClose }: {
       transition: "opacity 0.3s ease",
     }}>
       {/* Full-screen image */}
-      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+      <div
+        style={{
+          position: "absolute", inset: 0,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          overflow: "hidden",
+          cursor: zoom > 1 ? (isDragging ? "grabbing" : "grab") : "default",
+          touchAction: zoom > 1 ? "none" : "auto",
+          userSelect: "none",
+        }}
+        onMouseDown={e => startDrag(e.clientX, e.clientY)}
+        onMouseMove={e => moveDrag(e.clientX, e.clientY)}
+        onMouseUp={endDrag}
+        onMouseLeave={endDrag}
+        onTouchStart={e => { if (e.touches.length === 1) startDrag(e.touches[0].clientX, e.touches[0].clientY); }}
+        onTouchMove={e => { if (e.touches.length === 1) moveDrag(e.touches[0].clientX, e.touches[0].clientY); }}
+        onTouchEnd={endDrag}
+      >
         {flyer.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={flyer.image_url} alt={flyer.title} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+          <img
+            src={flyer.image_url} alt={flyer.title}
+            draggable={false}
+            style={{
+              width: "100%", height: "100%", objectFit: "contain",
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+              transformOrigin: "center center",
+              transition: isDragging ? "none" : "transform 0.15s ease",
+              pointerEvents: "none",
+            }}
+          />
         ) : (
           <span style={{ fontSize: 120, fontWeight: 700, color: "var(--accent)", opacity: 0.2, fontFamily: "var(--font-sans)" }}>
             {flyer.title.charAt(0)}
           </span>
         )}
+      </div>
+
+      {/* Zoom slider */}
+      <div style={{
+        position: "absolute", bottom: 88, left: "50%", transform: "translateX(-50%)",
+        width: "calc(100% - 96px)", maxWidth: 260,
+        display: "flex", alignItems: "center", gap: 10,
+        opacity: open ? 1 : 0,
+        transition: "opacity 0.35s ease 0.1s",
+        zIndex: 10,
+      }}>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, opacity: 0.5 }}>
+          <path d="M3 8h10" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
+        </svg>
+        <input
+          type="range" min={1} max={3} step={0.05}
+          value={zoom}
+          onChange={e => {
+            const v = parseFloat(e.target.value);
+            setZoom(v);
+            if (v === 1) setPan({ x: 0, y: 0 });
+          }}
+          className="zoom-slider"
+          style={{ flex: 1 }}
+        />
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, opacity: 0.5 }}>
+          <path d="M8 3v10M3 8h10" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
+        </svg>
+        <span style={{
+          fontFamily: "var(--font-mono)", fontSize: 11,
+          color: "rgba(255,255,255,0.45)", minWidth: 30, textAlign: "right", flexShrink: 0,
+        }}>{zoom.toFixed(1)}×</span>
       </div>
 
       {/* Close button — bottom center */}

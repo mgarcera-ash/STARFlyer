@@ -159,3 +159,34 @@ body {
   color: rgba(255,255,255,0.45);
 }
 
+/* ─── ZOOM SLIDER ───────────────────────────────────────────── */
+.zoom-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 3px;
+  border-radius: 99px;
+  background: rgba(255,255,255,0.25);
+  outline: none;
+  cursor: pointer;
+}
+.zoom-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: grab;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.zoom-slider::-webkit-slider-thumb:active { cursor: grabbing; }
+.zoom-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: grab;
+  border: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
