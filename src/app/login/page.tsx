@@ -36,7 +36,7 @@ function LoginForm() {
 
   const tabs: { value: Role; label: string }[] = [
     { value: "staff", label: "Upload a Flyer" },
-    { value: "admin", label: "Admin Review" },
+    { value: "admin", label: "Admin" },
   ];
 
   return (
