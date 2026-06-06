@@ -6,10 +6,10 @@ Usage:
     python scripts/load_shelters.py path/to/DFSS_Shelter_Bed_Availability_YYYYMMDD.csv
 
 Requirements:
-    pip install pandas supabase python-dotenv
+    pip install pandas supabase
 
-Reads credentials from .env.local (NEXT_PUBLIC_SUPABASE_URL and
-SUPABASE_SERVICE_ROLE_KEY). The service role key is required to bypass RLS.
+Reads NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY from the
+environment. The service role key is required to bypass RLS.
 """
 
 import re
@@ -17,13 +17,14 @@ import sys
 import os
 
 import pandas as pd
-from dotenv import load_dotenv
 from supabase import create_client
 
-load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env.local"))
+SUPABASE_URL = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 
-SUPABASE_URL = os.environ["NEXT_PUBLIC_SUPABASE_URL"]
-SUPABASE_KEY = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
+if not SUPABASE_URL or not SUPABASE_KEY:
+    print("Error: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set.")
+    sys.exit(1)
 
 
 def parse_point(wkt: str) -> tuple[float | None, float | None]:
