@@ -567,8 +567,47 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Quick Links */}
+              {/* Around You */}
               <div className="stagger-item" style={{ marginBottom: 40, animationDelay: "0.20s" }}>
+                <p style={{ fontSize: 22, fontWeight: 600, color: "var(--text)", margin: "0 0 16px", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>Around You</p>
+                <a
+                  href="/around"
+                  style={{ display: "block", textDecoration: "none" }}
+                >
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 16,
+                    background: "var(--surface)", border: "1.5px solid var(--card-border)",
+                    borderRadius: 20, padding: "16px 20px",
+                    transition: "border-color 0.15s",
+                  }}
+                  onMouseEnter={e => ((e.currentTarget as HTMLElement).style.borderColor = "var(--text)")}
+                  onMouseLeave={e => ((e.currentTarget as HTMLElement).style.borderColor = "var(--card-border)")}
+                  >
+                    <div style={{
+                      width: 48, height: 48, borderRadius: 14, flexShrink: 0,
+                      background: "#3b82f6", display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" fill="#fff"/>
+                      </svg>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 600, color: "var(--text)", margin: "0 0 2px" }}>
+                        Find nearby shelters
+                      </p>
+                      <p style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--muted)", margin: 0 }}>
+                        Overnight shelters within 2 miles of you
+                      </p>
+                    </div>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, color: "var(--muted)" }}>
+                      <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                </a>
+              </div>
+
+              {/* Quick Links */}
+              <div className="stagger-item" style={{ marginBottom: 40, animationDelay: "0.24s" }}>
                 <p style={{ fontSize: 22, fontWeight: 600, color: "var(--text)", margin: "0 0 12px", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>Quick Links</p>
                 <a href="#" onClick={e => { e.preventDefault(); setHelpOpen(true); }} style={{ display: "block", fontSize: 17, fontWeight: 500, color: "#3b82f6", textDecoration: "none", fontFamily: "var(--font-sans)", padding: "6px 0" }}>About</a>
                 <a href="#" onClick={e => { e.preventDefault(); setShortcutsOpen(true); }} style={{ display: "block", fontSize: 17, fontWeight: 500, color: "#3b82f6", textDecoration: "none", fontFamily: "var(--font-sans)", padding: "6px 0" }}>Keyboard Shortcuts</a>
