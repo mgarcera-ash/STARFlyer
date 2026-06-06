@@ -56,6 +56,16 @@ export default function AdminPage() {
             </p>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <a href="/admin/shelters" style={{
+              fontSize: 13, color: "var(--text)", fontFamily: "var(--font-sans)",
+              textDecoration: "none", fontWeight: 500, padding: "8px 18px",
+              borderRadius: 99, border: "1.5px solid var(--border)",
+              background: "var(--surface)", transition: "background 0.15s",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+            }}
+              onMouseEnter={e => (e.currentTarget.style.background = "var(--bg)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "var(--surface)")}
+            >Shelters</a>
             <a href="/" style={{
               fontSize: 13, color: "var(--text)", fontFamily: "var(--font-sans)",
               textDecoration: "none", fontWeight: 500, padding: "8px 18px",
