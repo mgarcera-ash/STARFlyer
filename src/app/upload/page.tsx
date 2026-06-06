@@ -18,7 +18,7 @@ export default function UploadPage() {
     setCompressing(false); setSubmitted(false);
   };
 
-  const compressImage = (file: File, maxPx = 1600, quality = 0.82): Promise<Blob> =>
+  const compressImage = (file: File, maxPx = 1600, quality = 0.80): Promise<Blob> =>
     new Promise((resolve, reject) => {
       const img = new Image();
       const url = URL.createObjectURL(file);
@@ -29,13 +29,13 @@ export default function UploadPage() {
         canvas.width = Math.round(img.width * scale);
         canvas.height = Math.round(img.height * scale);
         canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL("image/jpeg", quality);
+        const dataUrl = canvas.toDataURL("image/webp", quality);
         const base64 = dataUrl.split(",")[1];
         const bytes = atob(base64);
         const ab = new ArrayBuffer(bytes.length);
         const ia = new Uint8Array(ab);
         for (let i = 0; i < bytes.length; i++) ia[i] = bytes.charCodeAt(i);
-        resolve(new Blob([ab], { type: "image/jpeg" }));
+        resolve(new Blob([ab], { type: "image/webp" }));
       };
       img.onerror = reject;
       img.src = url;
@@ -69,9 +69,9 @@ export default function UploadPage() {
     if (!compressedBlob) return;
     setSubmitting(true);
     try {
-      const fileName = `${Date.now()}.jpg`;
+      const fileName = `${Date.now()}.webp`;
       const { error: uploadError } = await supabase.storage
-        .from("flyers").upload(fileName, compressedBlob, { contentType: "image/jpeg" });
+        .from("flyers").upload(fileName, compressedBlob, { contentType: "image/webp" });
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage.from("flyers").getPublicUrl(fileName);
