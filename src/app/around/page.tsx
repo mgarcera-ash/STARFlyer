@@ -400,7 +400,7 @@ export default function AroundPage() {
           {
             key: "shelters", label: "Shelters", active: showShelters,
             toggle: () => setShowShelters(v => !v),
-            color: "#ef4444",
+            color: "#3b82f6",
             icon: <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M10 3L3 9h2v8h4v-5h2v5h4V9h2L10 3z" fill="currentColor"/></svg>,
           },
           {
