@@ -84,25 +84,47 @@ function buildShelterPopup(s: Shelter): string {
 }
 
 function buildFlyerPopup(f: FlyerPin): string {
-  let html = `<div style="font-family:system-ui,sans-serif;padding:2px 0;min-width:180px;max-width:220px">`;
+  const related = f.addressLabel
+    ? f.allHotspots.filter(h => h.type !== "address" && h.label === f.addressLabel)
+    : f.allHotspots.filter(h => h.type !== "address");
+  const phones = related.filter(h => h.type === "phone");
+  const addressValue = f.allHotspots.find(h => h.type === "address" && h.label === f.addressLabel)?.value ?? "";
+
+  let html = `<div style="font-family:system-ui,sans-serif;min-width:200px;max-width:240px;overflow:hidden;border-radius:12px">`;
+
+  // Image with "Tap to expand" badge at top-right
   if (f.image_url) {
-    html += `<div style="position:relative;margin-bottom:8px">
-      <img data-flyer-pin-id="${esc(f.pinId)}" src="${esc(f.image_url)}" style="width:100%;max-height:100px;object-fit:cover;border-radius:8px;display:block;cursor:pointer" />
-      <div style="position:absolute;bottom:5px;right:6px;background:rgba(0,0,0,0.55);border-radius:99px;padding:3px 7px;display:flex;align-items:center;gap:4px;pointer-events:none">
+    html += `<div style="position:relative">
+      <img data-flyer-pin-id="${esc(f.pinId)}" src="${esc(f.image_url)}"
+           style="width:100%;height:100px;object-fit:cover;display:block;cursor:pointer" />
+      <div style="position:absolute;top:7px;right:7px;background:rgba(0,0,0,0.6);border-radius:99px;padding:3px 8px;display:flex;align-items:center;gap:4px;pointer-events:none">
         <svg width="9" height="9" viewBox="0 0 16 16" fill="none"><path d="M10 2h4v4M6 14H2v-4M14 2l-5.5 5.5M2 14l5.5-5.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <span style="font-size:10px;font-weight:500;color:#fff;white-space:nowrap">Tap to expand</span>
       </div>
     </div>`;
   }
-  if (f.entity)  html += `<p style="margin:0 0 2px;font-size:14px;font-weight:600;color:#000;line-height:1.3">${esc(f.entity)}</p>`;
-  if (f.title)   html += `<p style="margin:0 0 8px;font-size:12px;color:#374151;line-height:1.4">${esc(f.title)}</p>`;
-  const related = f.addressLabel
-    ? f.allHotspots.filter(h => h.type !== "address" && h.label === f.addressLabel)
-    : f.allHotspots.filter(h => h.type !== "address");
-  const phones = related.filter(h => h.type === "phone");
-  if (phones[0]) html += `<div style="display:flex;align-items:center;gap:6px;margin-top:6px">${PHONE_CIRCLE}<a href="tel:${phones[0].value.replace(/\D/g, "")}" style="font-size:12px;color:#3b82f6;text-decoration:none;font-weight:500">${esc(phones[0].value)}</a></div>`;
-  html += `<div style="display:flex;align-items:center;gap:6px;margin-top:4px">${PIN_CIRCLE}<span style="font-size:11px;color:#737373">${esc(f.allHotspots.find(h => h.type === "address" && h.label === f.addressLabel)?.value ?? "")}</span></div>`;
+
+  // Header — entity + title
+  html += `<div style="padding:10px 12px 8px;border-bottom:1px solid rgba(255,255,255,0.08)">`;
+  if (f.entity) html += `<p style="margin:0 0 1px;font-size:10px;font-weight:700;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.06em;line-height:1.3">${esc(f.entity)}</p>`;
+  if (f.title)  html += `<p style="margin:0;font-size:13px;font-weight:500;color:#fff;line-height:1.4">${esc(f.title)}</p>`;
   html += `</div>`;
+
+  // Contacts
+  html += `<div style="padding:6px 0 4px">`;
+  if (phones[0]) {
+    html += `<div style="display:flex;align-items:center;gap:8px;padding:5px 12px">
+      ${PHONE_CIRCLE}
+      <a href="tel:${phones[0].value.replace(/\D/g, "")}" style="font-size:13px;color:#3b82f6;text-decoration:none;font-weight:500">${esc(phones[0].value)}</a>
+    </div>`;
+  }
+  if (addressValue) {
+    html += `<div style="display:flex;align-items:center;gap:8px;padding:5px 12px">
+      ${PIN_CIRCLE}
+      <span style="font-size:11px;color:rgba(255,255,255,0.45);line-height:1.3">${esc(addressValue)}</span>
+    </div>`;
+  }
+  html += `</div></div>`;
   return html;
 }
 
@@ -172,7 +194,7 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, onFlyer
       if (existing) { existing.setPopupContent(popup); return; }
       const marker = L.marker([s.lat, s.lng], { icon: makeShelterIcon() })
         .addTo(map)
-        .bindPopup(popup, { maxWidth: 240, offset: [0, -4] });
+        .bindPopup(popup, { maxWidth: 240, offset: [0, -4], closeButton: false });
       shelterMarkers.current.set(s.site_id, marker);
     });
   }, [shelters]);
@@ -189,7 +211,7 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, onFlyer
       if (flyerMarkers.current.has(f.pinId)) return;
       const marker = L.marker([f.lat, f.lng], { icon: makeFlyerIcon() })
         .addTo(map)
-        .bindPopup(buildFlyerPopup(f), { maxWidth: 240, offset: [0, -4] });
+        .bindPopup(buildFlyerPopup(f), { maxWidth: 256, offset: [0, -4], closeButton: false, className: "flyer-popup" });
       flyerMarkers.current.set(f.pinId, marker);
     });
   }, [flyerPins]);

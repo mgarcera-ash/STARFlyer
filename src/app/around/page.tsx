@@ -432,7 +432,19 @@ export default function AroundPage() {
         </div>
       </div>
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .flyer-popup .leaflet-popup-content-wrapper {
+          background: #1c1c1e;
+          border: 1.5px solid rgba(255,255,255,0.12);
+          border-radius: 16px;
+          padding: 0;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+          overflow: hidden;
+        }
+        .flyer-popup .leaflet-popup-content { margin: 0; }
+        .flyer-popup .leaflet-popup-tip { background: #1c1c1e; }
+      `}</style>
 
       {mapQuickLook && (
         <QuickLook
