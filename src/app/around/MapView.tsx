@@ -47,15 +47,11 @@ const PIN_CIRCLE  = `<div style="width:18px;height:18px;border-radius:50%;backgr
 
 function makeShelterIcon() {
   return L.divIcon({
-    html: `<div style="width:30px;height:30px;border-radius:8px;background:#ef4444;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.28);display:flex;align-items:center;justify-content:center">
-      <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-        <path d="M10 3L3 9h2v8h4v-5h2v5h4V9h2L10 3z" fill="#fff"/>
-      </svg>
-    </div>`,
+    html: `<div style="width:12px;height:12px;border-radius:50%;background:#ef4444;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.30)"></div>`,
     className: "",
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
-    popupAnchor: [0, -16],
+    iconSize: [12, 12],
+    iconAnchor: [6, 6],
+    popupAnchor: [0, -8],
   });
 }
 
