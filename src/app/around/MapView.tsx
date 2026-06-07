@@ -60,7 +60,7 @@ function makeShelterIcon() {
 
 function makeFlyerIcon() {
   return L.divIcon({
-    html: `<div style="width:12px;height:12px;border-radius:50%;background:#3b82f6;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.30)"></div>`,
+    html: `<div style="width:12px;height:12px;border-radius:50%;background:#eab308;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.30)"></div>`,
     className: "",
     iconSize: [12, 12],
     iconAnchor: [6, 6],

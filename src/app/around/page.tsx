@@ -392,7 +392,7 @@ export default function AroundPage() {
           {
             key: "flyers", label: "Info from Flyers", active: showFlyers,
             toggle: () => setShowFlyers(v => !v),
-            color: "#3b82f6",
+            color: "#eab308",
             icon: <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6.5" r="1.8" fill="currentColor"/><rect x="8.6" y="9.5" width="2.8" height="6.5" rx="1.2" fill="currentColor"/></svg>,
           },
         ].map(({ key, label, active, toggle, color, icon }) => (
