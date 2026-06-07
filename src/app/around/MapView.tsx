@@ -86,28 +86,37 @@ function buildShelterPopup(s: Shelter): string {
 function buildFlyerPopup(f: FlyerPin): string {
   let html = `<div style="font-family:system-ui,sans-serif;padding:2px 0;min-width:180px;max-width:220px">`;
   if (f.image_url) {
-    html += `<img src="${esc(f.image_url)}" style="width:100%;max-height:100px;object-fit:cover;border-radius:8px;margin-bottom:8px;display:block" />`;
+    html += `<div style="position:relative;margin-bottom:8px">
+      <img data-flyer-pin-id="${esc(f.pinId)}" src="${esc(f.image_url)}" style="width:100%;max-height:100px;object-fit:cover;border-radius:8px;display:block;cursor:pointer" />
+      <div style="position:absolute;bottom:5px;right:6px;background:rgba(0,0,0,0.55);border-radius:99px;padding:3px 7px;display:flex;align-items:center;gap:4px;pointer-events:none">
+        <svg width="9" height="9" viewBox="0 0 16 16" fill="none"><path d="M10 2h4v4M6 14H2v-4M14 2l-5.5 5.5M2 14l5.5-5.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span style="font-size:10px;font-weight:500;color:#fff;white-space:nowrap">Tap to expand</span>
+      </div>
+    </div>`;
   }
   if (f.entity)  html += `<p style="margin:0 0 2px;font-size:14px;font-weight:600;color:#000;line-height:1.3">${esc(f.entity)}</p>`;
   if (f.title)   html += `<p style="margin:0 0 8px;font-size:12px;color:#374151;line-height:1.4">${esc(f.title)}</p>`;
-  // Match contacts to this specific address by shared label; fall back to all if no match
   const related = f.addressLabel
     ? f.allHotspots.filter(h => h.type !== "address" && h.label === f.addressLabel)
     : f.allHotspots.filter(h => h.type !== "address");
   const phones = related.filter(h => h.type === "phone");
   if (phones[0]) html += `<div style="display:flex;align-items:center;gap:6px;margin-top:6px">${PHONE_CIRCLE}<a href="tel:${phones[0].value.replace(/\D/g, "")}" style="font-size:12px;color:#3b82f6;text-decoration:none;font-weight:500">${esc(phones[0].value)}</a></div>`;
-  // Show only this pin's address
   html += `<div style="display:flex;align-items:center;gap:6px;margin-top:4px">${PIN_CIRCLE}<span style="font-size:11px;color:#737373">${esc(f.allHotspots.find(h => h.type === "address" && h.label === f.addressLabel)?.value ?? "")}</span></div>`;
   html += `</div>`;
   return html;
 }
 
 export default function MapView({ userLat, userLng, shelters, flyerPins, onFlyerPinClick }: Props) {
-  const containerRef   = useRef<HTMLDivElement>(null);
-  const mapRef         = useRef<L.Map | null>(null);
-  const shelterMarkers = useRef<Map<number, L.Marker>>(new Map());
-  const flyerMarkers   = useRef<Map<string, L.Marker>>(new Map());
-  const userMarkerRef  = useRef<L.CircleMarker | null>(null);
+  const containerRef        = useRef<HTMLDivElement>(null);
+  const mapRef              = useRef<L.Map | null>(null);
+  const shelterMarkers      = useRef<Map<number, L.Marker>>(new Map());
+  const flyerMarkers        = useRef<Map<string, L.Marker>>(new Map());
+  const userMarkerRef       = useRef<L.CircleMarker | null>(null);
+  const flyerPinsRef        = useRef<FlyerPin[]>(flyerPins);
+  const onFlyerPinClickRef  = useRef(onFlyerPinClick);
+
+  useEffect(() => { flyerPinsRef.current = flyerPins; }, [flyerPins]);
+  useEffect(() => { onFlyerPinClickRef.current = onFlyerPinClick; }, [onFlyerPinClick]);
 
   // Init map once
   useEffect(() => {
@@ -118,6 +127,19 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, onFlyer
       maxZoom: 19,
     }).addTo(map);
     L.control.zoom({ position: "bottomright" }).addTo(map);
+
+    // Wire popup image → QuickLook
+    map.on("popupopen", (e: L.PopupEvent) => {
+      const img = e.popup.getElement()?.querySelector<HTMLElement>("[data-flyer-pin-id]");
+      if (!img) return;
+      const pinId = img.dataset.flyerPinId;
+      img.onclick = () => {
+        map.closePopup();
+        const pin = flyerPinsRef.current.find(f => f.pinId === pinId);
+        if (pin) onFlyerPinClickRef.current(pin);
+      };
+    });
+
     mapRef.current = map;
     return () => { map.remove(); mapRef.current = null; };
   }, []);
@@ -167,10 +189,10 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, onFlyer
       if (flyerMarkers.current.has(f.pinId)) return;
       const marker = L.marker([f.lat, f.lng], { icon: makeFlyerIcon() })
         .addTo(map)
-        .on("click", () => onFlyerPinClick(f));
+        .bindPopup(buildFlyerPopup(f), { maxWidth: 240, offset: [0, -4] });
       flyerMarkers.current.set(f.pinId, marker);
     });
-  }, [flyerPins, onFlyerPinClick]);
+  }, [flyerPins]);
 
 return <div ref={containerRef} style={{ width: "100%", height: "100%" }} />;
 }
