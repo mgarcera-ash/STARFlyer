@@ -2,6 +2,9 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import type { Shelter, FlyerPin } from "./MapView";
+import type { Flyer } from "@/types/flyer";
+import QuickLook from "@/components/QuickLook";
+import FlyerPreview from "@/components/FlyerPreview";
 
 const MapView = dynamic(() => import("./MapView"), { ssr: false });
 
@@ -70,6 +73,8 @@ export default function AroundPage() {
   const [locating, setLocating] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
   const [searchError, setSearchError] = useState("");
+  const [mapQuickLook, setMapQuickLook] = useState<FlyerPin | null>(null);
+  const [mapPreview, setMapPreview] = useState<FlyerPin | null>(null);
 
   // Load shelters and flyers on mount
   useEffect(() => {
@@ -191,6 +196,27 @@ export default function AroundPage() {
     }
   };
 
+  function pinToFlyer(pin: FlyerPin): Flyer {
+    return {
+      id: pin.flyerId,
+      title: pin.title ?? "",
+      entity: pin.entity,
+      description: null,
+      tags: null,
+      image_url: pin.image_url,
+      status: "approved",
+      created_at: null,
+      approved_at: null,
+      hotspots: pin.allHotspots.map(h => ({
+        type: h.type as "phone" | "sms" | "email" | "address" | "website",
+        label: h.label,
+        value: h.value,
+      })),
+      featured: false,
+      top_pick: false,
+    };
+  }
+
   return (
     <>
       {/* Full-screen map */}
@@ -200,6 +226,7 @@ export default function AroundPage() {
           userLng={userLng}
           shelters={showShelters ? shelters : []}
           flyerPins={showFlyers ? flyerPins : []}
+          onFlyerPinClick={pin => setMapQuickLook(pin)}
         />
       </div>
 
@@ -406,6 +433,20 @@ export default function AroundPage() {
       </div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
+      {mapQuickLook && (
+        <QuickLook
+          flyer={pinToFlyer(mapQuickLook)}
+          onClose={() => setMapQuickLook(null)}
+          onExpand={() => { setMapPreview(mapQuickLook); setMapQuickLook(null); }}
+        />
+      )}
+      {mapPreview && (
+        <FlyerPreview
+          flyer={pinToFlyer(mapPreview)}
+          onClose={() => setMapPreview(null)}
+        />
+      )}
     </>
   );
 }

@@ -34,6 +34,7 @@ type Props = {
   userLng: number | null;
   shelters: Shelter[];
   flyerPins: FlyerPin[];
+  onFlyerPinClick: (pin: FlyerPin) => void;
 };
 
 function esc(s: string) {
@@ -101,7 +102,7 @@ function buildFlyerPopup(f: FlyerPin): string {
   return html;
 }
 
-export default function MapView({ userLat, userLng, shelters, flyerPins }: Props) {
+export default function MapView({ userLat, userLng, shelters, flyerPins, onFlyerPinClick }: Props) {
   const containerRef   = useRef<HTMLDivElement>(null);
   const mapRef         = useRef<L.Map | null>(null);
   const shelterMarkers = useRef<Map<number, L.Marker>>(new Map());
@@ -163,15 +164,13 @@ export default function MapView({ userLat, userLng, shelters, flyerPins }: Props
       if (!currentIds.has(id)) { marker.remove(); flyerMarkers.current.delete(id); }
     });
     flyerPins.forEach(f => {
-      const popup = buildFlyerPopup(f);
-      const existing = flyerMarkers.current.get(f.pinId);
-      if (existing) { existing.setPopupContent(popup); return; }
+      if (flyerMarkers.current.has(f.pinId)) return;
       const marker = L.marker([f.lat, f.lng], { icon: makeFlyerIcon() })
         .addTo(map)
-        .bindPopup(popup, { maxWidth: 240, offset: [0, -4] });
+        .on("click", () => onFlyerPinClick(f));
       flyerMarkers.current.set(f.pinId, marker);
     });
-  }, [flyerPins]);
+  }, [flyerPins, onFlyerPinClick]);
 
 return <div ref={containerRef} style={{ width: "100%", height: "100%" }} />;
 }
