@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -35,6 +35,7 @@ type Props = {
   shelters: Shelter[];
   flyerPins: FlyerPin[];
   onFlyerPinClick: (pin: FlyerPin) => void;
+  isDark: boolean;
 };
 
 function esc(s: string) {
@@ -128,14 +129,16 @@ function buildFlyerPopup(f: FlyerPin): string {
   return html;
 }
 
-export default function MapView({ userLat, userLng, shelters, flyerPins, onFlyerPinClick }: Props) {
+export default function MapView({ userLat, userLng, shelters, flyerPins, onFlyerPinClick, isDark }: Props) {
   const containerRef        = useRef<HTMLDivElement>(null);
   const mapRef              = useRef<L.Map | null>(null);
+  const tileLayerRef        = useRef<L.TileLayer | null>(null);
   const shelterMarkers      = useRef<Map<number, L.Marker>>(new Map());
   const flyerMarkers        = useRef<Map<string, L.Marker>>(new Map());
   const userMarkerRef       = useRef<L.CircleMarker | null>(null);
   const flyerPinsRef        = useRef<FlyerPin[]>(flyerPins);
   const onFlyerPinClickRef  = useRef(onFlyerPinClick);
+  const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => { flyerPinsRef.current = flyerPins; }, [flyerPins]);
   useEffect(() => { onFlyerPinClickRef.current = onFlyerPinClick; }, [onFlyerPinClick]);
@@ -144,10 +147,6 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, onFlyer
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     const map = L.map(containerRef.current, { center: CHICAGO, zoom: 11, zoomControl: false });
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
-      maxZoom: 19,
-    }).addTo(map);
     L.control.zoom({ position: "bottomright" }).addTo(map);
 
     // Wire popup image → QuickLook
@@ -163,8 +162,25 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, onFlyer
     });
 
     mapRef.current = map;
-    return () => { map.remove(); mapRef.current = null; };
+    setMapReady(true);
+    return () => { map.remove(); mapRef.current = null; tileLayerRef.current = null; setMapReady(false); };
   }, []);
+
+  // Swap tile layer when dark mode changes
+  useEffect(() => {
+    if (!mapReady) return;
+    const map = mapRef.current!;
+    if (tileLayerRef.current) tileLayerRef.current.remove();
+    tileLayerRef.current = L.tileLayer(
+      isDark
+        ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+      {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+        maxZoom: 19,
+      }
+    ).addTo(map);
+  }, [mapReady, isDark]);
 
   // Fly to user location
   useEffect(() => {

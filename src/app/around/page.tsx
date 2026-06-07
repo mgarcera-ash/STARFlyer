@@ -75,6 +75,19 @@ export default function AroundPage() {
   const [searchError, setSearchError] = useState("");
   const [mapQuickLook, setMapQuickLook] = useState<FlyerPin | null>(null);
   const [mapPreview, setMapPreview] = useState<FlyerPin | null>(null);
+  const [isDark, setIsDark] = useState(false);
+
+  // Sync dark mode from localStorage (set by home page toggle)
+  useEffect(() => {
+    const stored = localStorage.getItem("theme");
+    if (stored) setIsDark(stored === "dark");
+    else if (window.matchMedia("(prefers-color-scheme: dark)").matches) setIsDark(true);
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "theme") setIsDark(e.newValue === "dark");
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
 
   // Load shelters and flyers on mount
   useEffect(() => {
@@ -227,6 +240,7 @@ export default function AroundPage() {
           shelters={showShelters ? shelters : []}
           flyerPins={showFlyers ? flyerPins : []}
           onFlyerPinClick={pin => setMapQuickLook(pin)}
+          isDark={isDark}
         />
       </div>
 
