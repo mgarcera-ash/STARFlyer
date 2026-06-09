@@ -70,7 +70,7 @@ export default function GroupedResults({ flyerGroups, search, activeEntities, on
             </p>
           </div>
           {matched.map(({ flyer, hotspotsByType }, i) => (
-            <div key={flyer.id} className="stagger-item" style={{ animationDelay: `${i * 0.06}s`, background: "#1c1c1e", borderRadius: 32, overflow: "hidden", border: "2px solid var(--card-border)" }}>
+            <div key={flyer.id} className="stagger-item" style={{ animationDelay: `${i * 0.06}s`, background: "#1c1c1e", borderRadius: 32, overflow: "hidden" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
                 <div style={{ flexShrink: 0, width: 48, height: 48, borderRadius: "50%", overflow: "hidden", background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)" }}>
                   {flyer.image_url

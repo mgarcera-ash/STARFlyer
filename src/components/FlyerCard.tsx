@@ -53,7 +53,6 @@ export default function FlyerCard({ flyer, search, showEntity, onQuickLook, onPr
           alignItems: "center",
           gap: 12,
           background: "var(--card-bg)",
-          border: "2px solid var(--card-border)",
           borderRadius: 52,
           padding: "10px 20px 10px 10px",
           cursor: "pointer",
@@ -63,7 +62,7 @@ export default function FlyerCard({ flyer, search, showEntity, onQuickLook, onPr
       >
         {/* Circular image */}
         <div
-          style={{ position: "relative", flexShrink: 0, width: 64, height: 64, borderRadius: "50%", overflow: "hidden", border: "2px solid var(--card-border)" }}
+          style={{ position: "relative", flexShrink: 0, width: 64, height: 64, borderRadius: "50%", overflow: "hidden" }}
         >
           {/* Skeleton */}
           <div style={{

@@ -49,7 +49,7 @@ export default function FeaturedCard({ flyers, animationDelay = 0, onQuickLook }
         style={{
           position: "relative", width: "100%", paddingBottom: "52%",
           borderRadius: 24, overflow: "hidden", cursor: "pointer",
-          background: "#1c1c1e", border: "2px solid var(--card-border)",
+          background: "#1c1c1e",
         }}
       >
         {flyer.image_url && (

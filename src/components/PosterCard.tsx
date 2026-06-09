@@ -13,7 +13,7 @@ export default function PosterCard({ flyer, onQuickLook, animationDelay = 0 }: {
       onMouseLeave={() => setPressed(false)}
       style={{
         flexShrink: 0, width: 148, height: 224, borderRadius: 30, overflow: "hidden",
-        cursor: "pointer", background: "#1c1c1e", border: "2px solid var(--card-border)",
+        cursor: "pointer", background: "#1c1c1e",
         position: "relative",
         transform: pressed ? "scale(0.97)" : "scale(1)", transition: "transform 0.15s ease",
         animationDelay: `${animationDelay}s`,

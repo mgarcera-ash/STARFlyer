@@ -15,14 +15,14 @@ const MapView = dynamic(() => import("@/app/around/MapView"), { ssr: false });
 type SnapPoint = "collapsed" | "half" | "full";
 
 const SNAP_CSS: Record<SnapPoint, string> = {
-  collapsed: "calc(100dvh - 100px)",
+  collapsed: "100dvh",
   half:      "50dvh",
   full:      "5dvh",
 };
 
 const SNAP_PX = (snap: SnapPoint): number => {
   const h = window.innerHeight;
-  if (snap === "collapsed") return h - 100;
+  if (snap === "collapsed") return h;
   if (snap === "half")      return h * 0.5;
   return h * 0.05;
 };
@@ -218,7 +218,8 @@ export default function MapPage() {
         style={{
           position: "fixed", left: 0, right: 0, bottom: 0,
           height: "100dvh",
-          background: "var(--surface)",
+          background: "var(--bar-bg)",
+          backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
           borderRadius: "20px 20px 0 0",
           boxShadow: "0 -4px 32px rgba(0,0,0,0.15)",
           display: "flex", flexDirection: "column",
@@ -234,15 +235,17 @@ export default function MapPage() {
           style={{ flexShrink: 0, cursor: "pointer", userSelect: "none", padding: "10px 16px 8px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}
         >
           <div style={{ width: 36, height: 4, borderRadius: 99, background: "var(--border)" }} />
-          <div style={{ display: "flex", alignItems: "baseline", gap: 8, width: "100%" }}>
-            <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "var(--text)", fontFamily: "var(--font-sans)", letterSpacing: "-0.02em" }}>
-              {flyers.length === 0 ? "Loading…" : `${filtered.length} flyer${filtered.length !== 1 ? "s" : ""}`}
+          <div style={{ width: "100%" }}>
+            <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 600, color: "var(--text)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
+              Find the right resource.
             </p>
-            {search && filtered.length !== flyers.length && (
-              <p style={{ margin: 0, fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>
-                of {flyers.length}
-              </p>
-            )}
+            <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 400, color: "var(--muted)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
+              {flyers.length === 0
+                ? "Loading…"
+                : showGrouped
+                  ? `${flyerGroups.length} result${flyerGroups.length !== 1 ? "s" : ""} of ${flyers.length}`
+                  : `Browse ${flyers.length} flyer${flyers.length !== 1 ? "s" : ""} below.`}
+            </p>
           </div>
         </div>
 
@@ -303,6 +306,25 @@ export default function MapPage() {
           )}
         </div>
       </div>
+
+      {snap === "collapsed" && (
+        <button
+          onClick={() => animateTo("half")}
+          style={{
+            position: "fixed", bottom: 28, left: "50%", transform: "translateX(-50%)",
+            zIndex: 30, borderRadius: 99, padding: "10px 20px",
+            background: "var(--bar-bg)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+            border: "1.5px solid var(--bar-border)",
+            color: "var(--text)", fontSize: 14, fontWeight: 600,
+            fontFamily: "var(--font-sans)", cursor: "pointer",
+            display: "flex", alignItems: "center", gap: 8,
+            boxShadow: "0 2px 12px rgba(0,0,0,0.15)",
+          }}
+        >
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 3L2 11h12L8 3z" fill="currentColor"/></svg>
+          Flyers
+        </button>
+      )}
 
       {quickLook && (
         <QuickLook
