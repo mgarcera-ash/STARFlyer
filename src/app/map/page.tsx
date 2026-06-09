@@ -19,6 +19,14 @@ const SNAP_CSS: Record<SnapPoint, string> = {
   full:      "5dvh",
 };
 
+const SNAP_PX = (snap: SnapPoint): number => {
+  const h = window.innerHeight;
+  return snap === "collapsed" ? h : h * 0.05;
+};
+
+const nearestSnap = (y: number): SnapPoint =>
+  y > window.innerHeight * 0.5 ? "collapsed" : "full";
+
 type RawHotspot = { type: string; label?: string; value: string; lat?: number; lng?: number };
 
 export default function MapPage() {
@@ -45,6 +53,7 @@ export default function MapPage() {
 
   const sheetRef = useRef<HTMLDivElement>(null);
   const listRef  = useRef<HTMLDivElement>(null);
+  const dragRef  = useRef<{ startY: number; startTranslate: number } | null>(null);
 
   // ── Data ─────────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -122,6 +131,29 @@ export default function MapPage() {
     setSnap(point);
   }, []);
 
+  // ── Drag ──────────────────────────────────────────────────────────────────────
+  const onTouchStart = (e: React.TouchEvent) => {
+    const sheet = sheetRef.current;
+    if (!sheet) return;
+    const matrix = new DOMMatrix(getComputedStyle(sheet).transform);
+    dragRef.current = { startY: e.touches[0].clientY, startTranslate: matrix.m42 };
+    sheet.style.transition = "none";
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!dragRef.current || !sheetRef.current) return;
+    const dy   = e.touches[0].clientY - dragRef.current.startY;
+    const newY = Math.max(SNAP_PX("full"), Math.min(SNAP_PX("collapsed"), dragRef.current.startTranslate + dy));
+    sheetRef.current.style.transform = `translateY(${newY}px)`;
+  };
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (!dragRef.current || !sheetRef.current) return;
+    const finalY = dragRef.current.startTranslate + (e.changedTouches[0].clientY - dragRef.current.startY);
+    dragRef.current = null;
+    animateTo(nearestSnap(finalY));
+  };
+
   // ── Pin click → open QuickLook ────────────────────────────────────────────────
   const handlePinClick = useCallback((pin: FlyerPin) => {
     const flyer = flyers.find(f => f.id === pin.flyerId);
@@ -190,8 +222,13 @@ export default function MapPage() {
           zIndex: 20,
         }}
       >
-        {/* Drag handle — tap to close */}
-        <div style={{ flexShrink: 0, padding: "10px 16px 8px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+        {/* Drag handle — drag or tap to close */}
+        <div
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          style={{ flexShrink: 0, padding: "10px 16px 8px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, touchAction: "none" }}
+        >
           <button
             onClick={() => animateTo("collapsed")}
             aria-label="Close sheet"
@@ -300,6 +337,7 @@ export default function MapPage() {
       )}
 
       <style>{`
+        html { overscroll-behavior: none; }
         .flyer-popup .leaflet-popup-content-wrapper {
           background: #1c1c1e;
           border: 1.5px solid rgba(255,255,255,0.12);
