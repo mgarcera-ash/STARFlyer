@@ -6,6 +6,9 @@ import type { Flyer } from "@/types/flyer";
 import type { FlyerPin, Shelter } from "@/app/around/MapView";
 import QuickLook from "@/components/QuickLook";
 import FlyerPreview from "@/components/FlyerPreview";
+import FeaturedCard from "@/components/FeaturedCard";
+import SectionRow from "@/components/SectionRow";
+import GroupedResults, { type FlyerGroup } from "@/components/GroupedResults";
 
 const MapView = dynamic(() => import("@/app/around/MapView"), { ssr: false });
 
@@ -46,6 +49,14 @@ export default function MapPage() {
   const [preview,   setPreview]   = useState<Flyer | null>(null);
   const [search,    setSearch]    = useState("");
 
+  const [featuredFlyers,  setFeaturedFlyers]  = useState<Flyer[]>([]);
+  const [topPickFlyers,   setTopPickFlyers]   = useState<Flyer[]>([]);
+  const [allTags,         setAllTags]         = useState<string[]>([]);
+  const [allEntities,     setAllEntities]     = useState<string[]>([]);
+  const [activeTags,      setActiveTags]      = useState<string[]>([]);
+  const [activeEntities,  setActiveEntities]  = useState<string[]>([]);
+  const [previewInitialSearch, setPreviewInitialSearch] = useState("");
+
   const sheetRef   = useRef<HTMLDivElement>(null);
   const listRef    = useRef<HTMLDivElement>(null);
   const cardRefs   = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -80,6 +91,12 @@ export default function MapPage() {
             }));
         });
         setFlyerPins(pins);
+        setFeaturedFlyers(list.filter(f => f.featured));
+        setTopPickFlyers(list.filter(f => f.top_pick));
+        const tags = [...new Set(list.flatMap(f => f.tags ?? []))].sort();
+        setAllTags(tags);
+        const entities = [...new Set(list.map(f => f.entity).filter(Boolean) as string[])].sort();
+        setAllEntities(entities);
       });
 
     fetch("/api/shelters/all")
@@ -154,15 +171,33 @@ export default function MapPage() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return flyers;
-    return flyers.filter(f =>
-      f.title.toLowerCase().includes(q) ||
-      f.entity?.toLowerCase().includes(q) ||
-      (f.hotspots ?? []).some(h =>
-        h.value.toLowerCase().includes(q) || h.label?.toLowerCase().includes(q)
-      )
-    );
-  }, [flyers, search]);
+    return flyers.filter(f => {
+      const matchSearch = !q ||
+        f.title.toLowerCase().includes(q) ||
+        f.entity?.toLowerCase().includes(q) ||
+        (f.hotspots ?? []).some(h => h.value.toLowerCase().includes(q) || h.label?.toLowerCase().includes(q));
+      const matchTags = activeTags.length === 0 || activeTags.some(t => f.tags?.includes(t));
+      const matchEntities = activeEntities.length === 0 || (f.entity != null && activeEntities.includes(f.entity));
+      return matchSearch && matchTags && matchEntities;
+    });
+  }, [flyers, search, activeTags, activeEntities]);
+
+  const showGrouped = search !== "" || activeTags.length > 0;
+
+  const flyerGroups: FlyerGroup[] = useMemo(() => showGrouped ? filtered.map(f => {
+    const q = search.toLowerCase();
+    const matchingHotspots = search !== ""
+      ? (f.hotspots?.filter(h => h.label?.toLowerCase().includes(q) || h.value.toLowerCase().includes(q)) ?? [])
+      : (f.hotspots?.filter(h => activeTags.some(tag =>
+          h.label?.toLowerCase().includes(tag.toLowerCase()) || h.value.toLowerCase().includes(tag.toLowerCase())
+        )) ?? []);
+    const hotspotsByType: Partial<Record<import("@/types/flyer").Hotspot["type"], import("@/types/flyer").Hotspot[]>> = {};
+    for (const h of matchingHotspots) {
+      if (!hotspotsByType[h.type]) hotspotsByType[h.type] = [];
+      hotspotsByType[h.type]!.push(h);
+    }
+    return { flyer: f, hotspotsByType, isFallback: matchingHotspots.length === 0 };
+  }) : [], [showGrouped, filtered, search, activeTags]);
 
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
@@ -233,48 +268,39 @@ export default function MapPage() {
 
         {/* Card list */}
         <div ref={listRef} style={{ flex: 1, overflowY: "auto", padding: "0 16px 40px" }}>
-          {filtered.map(flyer => {
-            const isSelected = flyer.id === selectedId;
-            return (
-              <div
-                key={flyer.id}
-                ref={el => { if (el) cardRefs.current.set(flyer.id, el); else cardRefs.current.delete(flyer.id); }}
-                onClick={() => setQuickLook(flyer)}
-                style={{
-                  display: "flex", alignItems: "center", gap: 12,
-                  padding: "10px 12px", marginBottom: 8,
-                  borderRadius: 16,
-                  background: "var(--card-bg)",
-                  border: `2px solid ${isSelected ? "var(--accent)" : "var(--card-border)"}`,
-                  cursor: "pointer",
-                  transition: "border-color 0.2s",
-                }}
-              >
-                {/* Thumbnail */}
-                <div style={{ width: 52, height: 52, borderRadius: 10, overflow: "hidden", flexShrink: 0, background: "var(--bg)", border: "1.5px solid var(--card-border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  {flyer.image_url
-                    ? <img src={flyer.image_url} alt={flyer.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    : <span style={{ fontSize: 20, fontWeight: 700, color: "var(--accent)", opacity: 0.3, fontFamily: "var(--font-sans)" }}>{flyer.title.charAt(0)}</span>
-                  }
-                </div>
-                {/* Text */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  {flyer.entity && (
-                    <p style={{ margin: "0 0 2px", fontSize: 11, fontWeight: 600, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>
-                      {flyer.entity}
-                    </p>
-                  )}
-                  <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {flyer.title}
-                  </p>
-                </div>
-                {/* Pin indicator */}
-                {pinnedIds.has(flyer.id) && (
-                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#eab308", flexShrink: 0 }} />
-                )}
-              </div>
-            );
-          })}
+          {showGrouped ? (
+            <GroupedResults
+              flyerGroups={flyerGroups}
+              search={search}
+              activeEntities={activeEntities}
+              onQuickLook={(flyer, initialSearch = "") => { setPreviewInitialSearch(initialSearch); setQuickLook(flyer); }}
+              onPreview={(flyer, initialSearch = "") => { setPreviewInitialSearch(initialSearch); setPreview(flyer); }}
+            />
+          ) : (
+            <>
+              <FeaturedCard
+                flyers={featuredFlyers.length > 0 ? featuredFlyers : flyers.slice(0, 5)}
+                animationDelay={0}
+                onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
+              />
+              <SectionRow
+                title="Recently Added"
+                dot="#3b82f6"
+                flyers={flyers.slice(0, 8)}
+                animationDelay={0.05}
+                onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
+              />
+              {(topPickFlyers.length > 0 || flyers.length > 0) && (
+                <SectionRow
+                  title="Our Top Picks"
+                  dot="#eab308"
+                  flyers={topPickFlyers.length > 0 ? topPickFlyers : flyers.slice(0, 8)}
+                  animationDelay={0.10}
+                  onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
+                />
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -286,7 +312,7 @@ export default function MapPage() {
         />
       )}
       {preview && (
-        <FlyerPreview flyer={preview} onClose={() => setPreview(null)} />
+        <FlyerPreview flyer={preview} initialSearch={previewInitialSearch} onClose={() => setPreview(null)} />
       )}
 
       <style>{`

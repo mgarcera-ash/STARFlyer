@@ -1,11 +1,13 @@
 "use client";
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
-import { FaSafari, FaSms } from "react-icons/fa";
-import { MdEmail } from "react-icons/md";
 import { supabase } from "@/lib/supabase";
 import type { Flyer, Hotspot } from "@/types/flyer";
 import QuickLook from "@/components/QuickLook";
 import FlyerPreview from "@/components/FlyerPreview";
+import FeaturedCard from "@/components/FeaturedCard";
+import SectionRow from "@/components/SectionRow";
+import FlyerCard from "@/components/FlyerCard";
+import GroupedResults, { type FlyerGroup } from "@/components/GroupedResults";
 
 export default function Home() {
   const [flyers, setFlyers] = useState<Flyer[]>([]);
@@ -256,12 +258,6 @@ export default function Home() {
     return matchSearch && matchTags && matchEntities;
   });
 
-  type FlyerGroup = {
-    flyer: Flyer;
-    hotspotsByType: Partial<Record<Hotspot["type"], Hotspot[]>>;
-    isFallback: boolean;
-  };
-
   const showGrouped = search !== "" || activeTags.length > 0;
 
   const flyerGroups: FlyerGroup[] = showGrouped ? filtered.map(f => {
@@ -399,112 +395,15 @@ export default function Home() {
           )}
 
           {/* Grouped search / filter results */}
-          {!loading && showGrouped && (() => {
-            const hotspotMeta: Record<Hotspot["type"], { bg: string; label: string; icon: React.ReactNode }> = {
-              phone:   { bg: "#22c55e", label: "Phones",    icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3.5 2A1.5 1.5 0 0 0 2 3.5v.75C2 10.28 5.72 14 11.75 14h.75A1.5 1.5 0 0 0 14 12.5v-1.38a1.5 1.5 0 0 0-1.11-1.45l-1.62-.4a1.5 1.5 0 0 0-1.56.6l-.36.48A6.52 6.52 0 0 1 5.65 6.65l.48-.36a1.5 1.5 0 0 0 .6-1.56l-.4-1.62A1.5 1.5 0 0 0 4.88 2H3.5z" fill="#fff"/></svg> },
-              sms:     { bg: "#06b6d4", label: "SMS",       icon: <FaSms size={13} color="#fff" /> },
-              email:   { bg: "#f97316", label: "Email",     icon: <MdEmail size={13} color="#fff" /> },
-              address: { bg: "#ef4444", label: "Addresses", icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.75 4.5 8.5 4.5 8.5s4.5-4.75 4.5-8.5C12.5 3.515 10.485 1.5 8 1.5zm0 6a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" fill="#fff"/></svg> },
-              website: { bg: "#3b82f6", label: "Websites",  icon: <FaSafari size={13} color="#fff" /> },
-            };
-            const typeOrder: Hotspot["type"][] = ["phone", "sms", "email", "address", "website"];
-            const fallbacks = flyerGroups.filter(g => g.isFallback);
-            const matched   = flyerGroups.filter(g => !g.isFallback);
-            return (
-              <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
-                {flyerGroups.length === 0 && (
-                  <p style={{ color: "var(--muted)", fontSize: 14, fontFamily: "var(--font-sans)", paddingTop: 24 }}>
-                    No flyers match your search.
-                  </p>
-                )}
-
-                {/* Fallback flyers — normal cards */}
-                {fallbacks.length > 0 && (
-                  <div>
-                    <p style={{ margin: "0 0 14px", fontSize: 22, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>
-                      {fallbacks.length} {fallbacks.length === 1 ? "flyer" : "flyers"} found.
-                    </p>
-                    <div key={gridKey} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12, alignItems: "start" }}>
-                      {fallbacks.map(({ flyer }, i) => (
-                        <FlyerCard
-                          key={flyer.id}
-                          flyer={flyer}
-                          search={search}
-                          showEntity={activeEntities.length > 0}
-                          onQuickLook={(initialSearch = "") => { setPreviewInitialSearch(initialSearch); setQuickLook(flyer); }}
-                          onPreview={(initialSearch = "") => { setPreviewInitialSearch(initialSearch); setPreview(flyer); }}
-                          animationDelay={i * 0.06}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Matched flyers — dark grouped contact cards */}
-                {matched.length > 0 && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                    <div style={{ marginBottom: 14 }}>
-                      <p style={{ margin: "0 0 4px", fontSize: 22, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>
-                        These flyers have more inside.
-                      </p>
-                      <p style={{ margin: 0, fontSize: 14, fontWeight: 400, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>
-                        Tap directly on information to view.
-                      </p>
-                    </div>
-                    {matched.map(({ flyer, hotspotsByType }, i) => (
-                      <div key={flyer.id} className="stagger-item" style={{ animationDelay: `${i * 0.06}s`, background: "#1c1c1e", borderRadius: 32, overflow: "hidden", border: "2px solid var(--card-border)" }}>
-                        <div style={{
-                            display: "flex", alignItems: "center", gap: 14,
-                            padding: "14px 16px",
-                            borderBottom: "1px solid rgba(255,255,255,0.08)",
-                          }}
-                        >
-                          <div style={{ flexShrink: 0, width: 48, height: 48, borderRadius: "50%", overflow: "hidden", background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)" }}>
-                            {flyer.image_url
-                              ? <img src={flyer.image_url} alt={flyer.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                              : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, color: "rgba(255,255,255,0.4)" }}>{flyer.title.charAt(0)}</div>
-                            }
-                          </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            {flyer.entity && <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{flyer.entity}</p>}
-                            <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "#fff", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>{flyer.title}</p>
-                          </div>
-                        </div>
-                        {typeOrder.filter(t => hotspotsByType[t]).map(type => (
-                          <div key={type}>
-                            <div style={{ padding: "8px 16px 4px", display: "flex", alignItems: "center", gap: 6 }}>
-                              <div style={{ width: 18, height: 18, borderRadius: "50%", background: hotspotMeta[type].bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                {hotspotMeta[type].icon}
-                              </div>
-                              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.45)", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{hotspotMeta[type].label}</p>
-                            </div>
-                            {hotspotsByType[type]!.map((h, hi) => (
-                              <button
-                                key={hi}
-                                onClick={() => { setPreviewInitialSearch(h.label || h.value); setPreview(flyer); }}
-                                style={{
-                                  display: "flex", flexDirection: "column", alignItems: "flex-start",
-                                  padding: "6px 16px 6px 40px", width: "100%",
-                                  background: "transparent", border: "none", cursor: "pointer", textAlign: "left",
-                                  transition: "background 0.15s",
-                                }}
-                                onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
-                                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                              >
-                                {h.label && <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#fff", fontFamily: "var(--font-sans)" }}>{h.label}</p>}
-                                <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.5)", fontFamily: "var(--font-sans)" }}>{h.value}</p>
-                              </button>
-                            ))}
-                            <div style={{ height: 6 }} />
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })()}
+          {!loading && showGrouped && (
+            <GroupedResults
+              flyerGroups={flyerGroups}
+              search={search}
+              activeEntities={activeEntities}
+              onQuickLook={(flyer, initialSearch = "") => { setPreviewInitialSearch(initialSearch); setQuickLook(flyer); }}
+              onPreview={(flyer, initialSearch = "") => { setPreviewInitialSearch(initialSearch); setPreview(flyer); }}
+            />
+          )}
 
           {/* App Store layout — shown when no search or filters active */}
           {!loading && !showGrouped && (
@@ -1008,111 +907,6 @@ export default function Home() {
   );
 }
 
-// Tracks URLs that have already been loaded this session — survives remounts
-const loadedImageUrls = new Set<string>();
-
-// ── Featured card ─────────────────────────────────────────────────────────────
-function FeaturedCard({ flyers, animationDelay = 0, onQuickLook }: { flyers: Flyer[]; animationDelay?: number; onQuickLook: (f: Flyer) => void }) {
-  const [idx, setIdx] = useState(0);
-  const [fading, setFading] = useState(false);
-  const [hovered, setHovered] = useState(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const startInterval = useCallback(() => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    if (flyers.length <= 1) return;
-    intervalRef.current = setInterval(() => {
-      setFading(true);
-      setTimeout(() => { setIdx(i => (i + 1) % flyers.length); setFading(false); }, 300);
-    }, 4500);
-  }, [flyers.length]);
-
-  useEffect(() => {
-    startInterval();
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [startInterval]);
-
-  const navigate = useCallback((newIdx: number) => {
-    setFading(true);
-    setTimeout(() => { setIdx(newIdx); setFading(false); }, 300);
-    startInterval();
-  }, [startInterval]);
-
-  const flyer = flyers[idx];
-  if (!flyer) return null;
-
-  const arrowStyle = (side: "left" | "right"): React.CSSProperties => ({
-    position: "absolute", [side]: 12, top: "50%", transform: "translateY(-50%)",
-    width: 36, height: 36, borderRadius: "50%", border: "none",
-    background: "rgba(0,0,0,0.45)", color: "#fff", fontSize: 22,
-    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-    opacity: hovered ? 1 : 0, transition: "opacity 0.2s ease",
-    zIndex: 10, fontFamily: "var(--font-sans)", lineHeight: 1,
-  });
-
-  return (
-    <div className="stagger-item" style={{ marginBottom: 40, animationDelay: `${animationDelay}s` }}>
-      <div
-        onClick={() => onQuickLook(flyer)}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        style={{
-          position: "relative", width: "100%", paddingBottom: "52%",
-          borderRadius: 24, overflow: "hidden", cursor: "pointer",
-          background: "#1c1c1e", border: "2px solid var(--card-border)",
-        }}
-      >
-        {flyer.image_url && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={flyer.image_url} alt={flyer.title} style={{
-            position: "absolute", inset: 0, width: "100%", height: "100%",
-            objectFit: "cover",
-            opacity: fading ? 0 : 1, transition: "opacity 0.3s ease",
-          }} />
-        )}
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.85) 100%)" }} />
-        <div style={{ position: "absolute", inset: 0, backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", maskImage: "linear-gradient(to bottom, transparent 30%, black 60%)", WebkitMaskImage: "linear-gradient(to bottom, transparent 30%, black 60%)" }} />
-        <div style={{ position: "absolute", top: 14, left: 14, background: "#3b82f6", borderRadius: 99, padding: "4px 10px" }}>
-          <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#fff", fontFamily: "var(--font-sans)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Featured</p>
-        </div>
-        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "16px 18px 20px", opacity: fading ? 0 : 1, transition: "opacity 0.3s ease" }}>
-          {flyer.entity && <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 600, color: "#fff", fontFamily: "var(--font-sans)", letterSpacing: "0.04em" }}>{flyer.entity}</p>}
-          <p style={{ margin: 0, fontSize: 20, fontWeight: 600, color: "#fff", fontFamily: "var(--font-sans)", letterSpacing: "-0.02em", lineHeight: 1.3 }}>{flyer.title}</p>
-        </div>
-        {flyers.length > 1 && (
-          <>
-            <button
-              onClick={e => { e.stopPropagation(); navigate((idx - 1 + flyers.length) % flyers.length); }}
-              aria-label="Previous slide"
-              style={arrowStyle("left")}
-            >‹</button>
-            <button
-              onClick={e => { e.stopPropagation(); navigate((idx + 1) % flyers.length); }}
-              aria-label="Next slide"
-              style={arrowStyle("right")}
-            >›</button>
-            <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 5, alignItems: "center", zIndex: 10 }}>
-              {flyers.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={e => { e.stopPropagation(); navigate(i); }}
-                  aria-label={`Go to slide ${i + 1}`}
-                  style={{
-                    height: 5, borderRadius: 99, border: "none", padding: 0, cursor: "pointer",
-                    width: i === idx ? 16 : 5,
-                    background: i === idx ? "#fff" : "rgba(255,255,255,0.4)",
-                    transition: "width 0.3s ease",
-                  }}
-                />
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
 // ── Close button ──────────────────────────────────────────────────────────────
 function CloseButton({ onClose, visible = true }: { onClose: () => void; visible?: boolean }) {
   return (
@@ -1135,246 +929,6 @@ function CloseButton({ onClose, visible = true }: { onClose: () => void; visible
       <span style={{ fontSize: 20, lineHeight: 1 }}>×</span>
       Close
     </button>
-  );
-}
-
-// ── Poster card ───────────────────────────────────────────────────────────────
-function PosterCard({ flyer, onQuickLook, animationDelay = 0 }: { flyer: Flyer; onQuickLook: () => void; animationDelay?: number }) {
-  const [pressed, setPressed] = useState(false);
-  return (
-    <div
-      className="stagger-item"
-      onClick={onQuickLook}
-      onMouseDown={() => setPressed(true)}
-      onMouseUp={() => setPressed(false)}
-      onMouseLeave={() => setPressed(false)}
-      style={{
-        flexShrink: 0, width: 148, height: 224, borderRadius: 30, overflow: "hidden",
-        cursor: "pointer", background: "#1c1c1e", border: "2px solid var(--card-border)",
-        position: "relative",
-        transform: pressed ? "scale(0.97)" : "scale(1)", transition: "transform 0.15s ease",
-        animationDelay: `${animationDelay}s`,
-      }}
-    >
-      {flyer.image_url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={flyer.image_url} alt={flyer.title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-      ) : (
-        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <span style={{ fontSize: 40, fontWeight: 700, color: "rgba(255,255,255,0.15)", fontFamily: "var(--font-sans)" }}>{flyer.title.charAt(0)}</span>
-        </div>
-      )}
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.85) 100%)" }} />
-      <div style={{ position: "absolute", inset: 0, backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", maskImage: "linear-gradient(to bottom, transparent 35%, black 60%)", WebkitMaskImage: "linear-gradient(to bottom, transparent 35%, black 60%)" }} />
-      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "10px 11px 12px" }}>
-        {flyer.entity && <p style={{ margin: "0 0 5px", fontSize: 10, fontWeight: 600, color: "#fff", fontFamily: "var(--font-sans)" }}>{flyer.entity}</p>}
-        <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#fff", fontFamily: "var(--font-sans)", lineHeight: 1.35 }}>{flyer.title}</p>
-      </div>
-    </div>
-  );
-}
-
-// ── Section row ───────────────────────────────────────────────────────────────
-function SectionRow({ title, dot, flyers, onSeeAll, onQuickLook, animationDelay = 0 }: {
-  title: string; dot?: string; flyers: Flyer[];
-  onSeeAll?: () => void; onQuickLook: (f: Flyer) => void; animationDelay?: number;
-}) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [rowHovered, setRowHovered] = useState(false);
-
-  const scroll = (dir: -1 | 1) => {
-    scrollRef.current?.scrollBy({ left: dir * 320, behavior: "smooth" });
-  };
-
-  const scrollArrowStyle = (side: "left" | "right"): React.CSSProperties => ({
-    position: "absolute", [side]: 8, top: "50%", transform: "translateY(-50%)",
-    width: 32, height: 32, borderRadius: "50%", border: "1px solid var(--card-border)",
-    background: "var(--surface)", color: "var(--text)", fontSize: 20,
-    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-    opacity: rowHovered ? 1 : 0, transition: "opacity 0.2s ease",
-    zIndex: 10, boxShadow: "0 2px 8px rgba(0,0,0,0.12)", lineHeight: 1,
-  });
-
-  return (
-    <div className="stagger-item" style={{ marginBottom: 40, animationDelay: `${animationDelay}s` }}>
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 14 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {dot && <div style={{ width: 8, height: 8, borderRadius: "50%", background: dot, flexShrink: 0, marginBottom: 2 }} />}
-          <p style={{ margin: 0, fontSize: 22, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>{title}</p>
-        </div>
-        {onSeeAll && (
-          <button onClick={onSeeAll} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 500, color: "var(--accent)", fontFamily: "var(--font-sans)", padding: "0 0 3px", flexShrink: 0 }}>
-            See All →
-          </button>
-        )}
-      </div>
-      <div
-        style={{ position: "relative" }}
-        onMouseEnter={() => setRowHovered(true)}
-        onMouseLeave={() => setRowHovered(false)}
-      >
-        <button onClick={() => scroll(-1)} aria-label="Scroll left" style={scrollArrowStyle("left")}>‹</button>
-        <div
-          ref={scrollRef}
-          style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 6, scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
-        >
-          {flyers.map((f, i) => <PosterCard key={f.id} flyer={f} onQuickLook={() => onQuickLook(f)} animationDelay={animationDelay + i * 0.04} />)}
-        </div>
-        <button onClick={() => scroll(1)} aria-label="Scroll right" style={scrollArrowStyle("right")}>›</button>
-      </div>
-    </div>
-  );
-}
-
-// ── Flyer card ────────────────────────────────────────────────────────────────
-function FlyerCard({ flyer, search, showEntity, onQuickLook, onPreview, animationDelay = 0 }: {
-  flyer: Flyer;
-  search: string;
-  showEntity: boolean;
-  onQuickLook: (initialSearch?: string) => void;
-  onPreview: (initialSearch?: string) => void;
-  animationDelay?: number;
-}) {
-  const [pressed, setPressed] = useState(false);
-  const [imgLoaded, setImgLoaded] = useState(() =>
-    flyer.image_url ? loadedImageUrls.has(flyer.image_url) : true
-  );
-  const imgRef = useRef<HTMLImageElement>(null);
-
-  // Catch cached images that won't fire onLoad
-  useEffect(() => {
-    if (imgRef.current?.complete && flyer.image_url) {
-      loadedImageUrls.add(flyer.image_url);
-      setImgLoaded(true);
-    }
-  }, [flyer.image_url]);
-
-  return (
-    <div
-      className="stagger-item"
-      onMouseLeave={() => setPressed(false)}
-      style={{ animationDelay: `${animationDelay}s` }}
-    >
-      <div
-        onClick={() => {
-          const q = search.toLowerCase();
-          const hasMatch = q && flyer.hotspots?.some(s =>
-            s.label?.toLowerCase().includes(q) || s.value.toLowerCase().includes(q)
-          );
-          if (hasMatch) {
-            onPreview(search);
-          } else {
-            onQuickLook();
-          }
-        }}
-        onMouseDown={() => setPressed(true)}
-        onMouseUp={() => setPressed(false)}
-        style={{
-          position: "relative",
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          background: "var(--card-bg)",
-          border: "2px solid var(--card-border)",
-          borderRadius: 52,
-          padding: "10px 20px 10px 10px",
-          cursor: "pointer",
-          transform: pressed ? "scale(0.98) translateZ(0)" : "scale(1) translateZ(0)",
-          transition: "transform 0.15s ease-out",
-        }}
-      >
-        {/* Circular image */}
-        <div
-          style={{ position: "relative", flexShrink: 0, width: 64, height: 64, borderRadius: "50%", overflow: "hidden", border: "2px solid var(--card-border)" }}
-        >
-          {/* Skeleton */}
-          <div style={{
-            position: "absolute", inset: 0, borderRadius: "50%",
-            background: "var(--border)",
-            opacity: imgLoaded ? 0 : 1,
-            transition: "opacity 0.4s ease",
-          }} />
-          {flyer.image_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              ref={imgRef}
-              src={flyer.image_url}
-              alt={flyer.title}
-              onLoad={() => { if (flyer.image_url) loadedImageUrls.add(flyer.image_url); setImgLoaded(true); }}
-              style={{ width: "100%", height: "100%", objectFit: "cover", opacity: imgLoaded ? 1 : 0, transition: "opacity 0.4s ease" }}
-            />
-          ) : (
-            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg)" }}>
-              <span style={{ fontSize: "2em", fontWeight: 700, color: "var(--accent)", opacity: 0.45, fontFamily: "var(--font-sans)" }}>
-                {flyer.title.charAt(0)}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Entity + Title + matched contact snippet */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          {(() => {
-            const q = search.toLowerCase();
-            const match = q ? flyer.hotspots?.find(s =>
-              s.label?.toLowerCase().includes(q) || s.value.toLowerCase().includes(q)
-            ) : null;
-            const matchCircle: Record<Hotspot["type"], { bg: string; icon: React.ReactNode }> = {
-              phone: { bg: "#22c55e", icon: <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M3.5 2A1.5 1.5 0 0 0 2 3.5v.75C2 10.28 5.72 14 11.75 14h.75A1.5 1.5 0 0 0 14 12.5v-1.38a1.5 1.5 0 0 0-1.11-1.45l-1.62-.4a1.5 1.5 0 0 0-1.56.6l-.36.48A6.52 6.52 0 0 1 5.65 6.65l.48-.36a1.5 1.5 0 0 0 .6-1.56l-.4-1.62A1.5 1.5 0 0 0 4.88 2H3.5z" fill="#fff"/></svg> },
-              sms: { bg: "#06b6d4", icon: <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M2 3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H5l-3 2V3z" fill="#fff"/></svg> },
-              email: { bg: "rgba(251,191,36,0.18)", icon: <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M2 4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4z" fill="#f97316"/><path d="M2 4l6 5 6-5" stroke="#fff" strokeWidth="1.4" strokeLinecap="round"/></svg> },
-              address: { bg: "rgba(59,130,246,0.12)", icon: <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.75 4.5 8.5 4.5 8.5s4.5-4.75 4.5-8.5C12.5 3.515 10.485 1.5 8 1.5zm0 6a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" fill="#ef4444"/></svg> },
-              website: { bg: "rgba(99,102,241,0.1)", icon: <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="#6366f1" strokeWidth="1.2"/><path d="M8 2.5c-1.5 1.5-1.5 9.5 0 11M8 2.5c1.5 1.5 1.5 9.5 0 11" stroke="#6366f1" strokeWidth="1.2"/><path d="M2.5 8h11" stroke="#6366f1" strokeWidth="1.2"/></svg> },
-            };
-            return (
-              <>
-                {match ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    <p style={{ fontSize: 11, fontWeight: 500, fontFamily: "var(--font-sans)", color: "var(--text)", lineHeight: 1.3, margin: 0 }}>
-                      {flyer.title}
-                    </p>
-                    <div style={{
-                      display: "flex", flexDirection: "column", gap: 1,
-                      borderLeft: "2px solid rgba(0,0,0,0.15)",
-                      paddingLeft: 8, marginLeft: 2,
-                    }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <div style={{
-                          flexShrink: 0, width: 20, height: 20, borderRadius: "50%",
-                          background: matchCircle[match.type].bg,
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                        }}>
-                          {matchCircle[match.type].icon}
-                        </div>
-                        {match.label && (
-                          <span style={{ fontSize: 11, fontWeight: 500, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>
-                            {match.label}
-                          </span>
-                        )}
-                      </div>
-                      <span style={{ fontSize: 12, fontWeight: 500, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>
-                        {match.value}
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    {flyer.entity && (
-                      <p style={{ fontSize: 11, fontWeight: 600, fontFamily: "var(--font-sans)", color: "var(--muted)", lineHeight: 1.3, margin: 0 }}>
-                        {flyer.entity}
-                      </p>
-                    )}
-                    <p style={{ fontSize: 14, fontWeight: 500, fontFamily: "var(--font-sans)", color: "var(--text)", lineHeight: 1.4, margin: 0 }}>
-                      {flyer.title}
-                    </p>
-                  </>
-                )}
-              </>
-            );
-          })()}
-        </div>
-      </div>
-    </div>
   );
 }
 
