@@ -12,11 +12,10 @@ import GroupedResults, { type FlyerGroup } from "@/components/GroupedResults";
 
 const MapView = dynamic(() => import("@/app/around/MapView"), { ssr: false });
 
-type SnapPoint = "collapsed" | "half" | "full";
+type SnapPoint = "collapsed" | "full";
 
 const SNAP_CSS: Record<SnapPoint, string> = {
   collapsed: "100dvh",
-  half:      "50dvh",
   full:      "5dvh",
 };
 
@@ -29,7 +28,7 @@ export default function MapPage() {
   const [userLat,   setUserLat]   = useState<number | null>(null);
   const [userLng,   setUserLng]   = useState<number | null>(null);
   const [isDark,    setIsDark]    = useState(false);
-  const [snap,      setSnap]      = useState<SnapPoint>("half");
+  const [snap,      setSnap]      = useState<SnapPoint>("full");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [quickLook, setQuickLook] = useState<Flyer | null>(null);
   const [preview,   setPreview]   = useState<Flyer | null>(null);
@@ -111,7 +110,7 @@ export default function MapPage() {
   // ── Sheet position (imperative — never set via JSX style to avoid re-render conflicts) ──
   useLayoutEffect(() => {
     if (!sheetRef.current) return;
-    sheetRef.current.style.transform  = `translateY(${SNAP_CSS["half"]})`;
+    sheetRef.current.style.transform  = `translateY(${SNAP_CSS["full"]})`;
     sheetRef.current.style.transition = "transform 0.38s cubic-bezier(0.32,0.72,0,1)";
   }, []);
 
@@ -126,7 +125,7 @@ export default function MapPage() {
   // ── Pin click → open QuickLook ────────────────────────────────────────────────
   const handlePinClick = useCallback((pin: FlyerPin) => {
     const flyer = flyers.find(f => f.id === pin.flyerId);
-    animateTo("half");
+    animateTo("full");
     if (flyer) { setPreviewInitialSearch(""); setQuickLook(flyer); }
   }, [animateTo, flyers]);
 
@@ -191,9 +190,14 @@ export default function MapPage() {
           zIndex: 20,
         }}
       >
-        {/* Header with up / down controls */}
-        <div style={{ flexShrink: 0, padding: "16px 16px 10px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
+        {/* Drag handle — tap to close */}
+        <div style={{ flexShrink: 0, padding: "10px 16px 8px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+          <button
+            onClick={() => animateTo("collapsed")}
+            aria-label="Close sheet"
+            style={{ width: 36, height: 4, borderRadius: 99, background: "var(--border)", border: "none", cursor: "pointer", padding: 0, display: "block" }}
+          />
+          <div style={{ width: "100%" }}>
             <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 600, color: "var(--text)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
               Find the right resource.
             </p>
@@ -204,42 +208,6 @@ export default function MapPage() {
                   ? `${flyerGroups.length} result${flyerGroups.length !== 1 ? "s" : ""} of ${flyers.length}`
                   : `Browse ${flyers.length} flyer${flyers.length !== 1 ? "s" : ""} below.`}
             </p>
-          </div>
-          <div style={{ display: "flex", gap: 6, flexShrink: 0, paddingTop: 4 }}>
-            {/* Expand */}
-            <button
-              onClick={() => { if (snap === "collapsed") animateTo("half"); else if (snap === "half") animateTo("full"); }}
-              disabled={snap === "full"}
-              aria-label="Expand sheet"
-              style={{
-                width: 32, height: 32, borderRadius: "50%",
-                border: "1.5px solid var(--border)", background: "transparent",
-                color: "var(--text)", cursor: snap === "full" ? "default" : "pointer",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                opacity: snap === "full" ? 0.25 : 1, transition: "opacity 0.15s",
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                <path d="M3 10.5l5-5 5 5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-            {/* Collapse */}
-            <button
-              onClick={() => { if (snap === "full") animateTo("half"); else if (snap === "half") animateTo("collapsed"); }}
-              disabled={snap === "collapsed"}
-              aria-label="Collapse sheet"
-              style={{
-                width: 32, height: 32, borderRadius: "50%",
-                border: "1.5px solid var(--border)", background: "transparent",
-                color: "var(--text)", cursor: snap === "collapsed" ? "default" : "pointer",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                opacity: snap === "collapsed" ? 0.25 : 1, transition: "opacity 0.15s",
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                <path d="M3 5.5l5 5 5-5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
           </div>
         </div>
 
@@ -253,7 +221,7 @@ export default function MapPage() {
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              onFocus={() => animateTo("half")}
+              onFocus={() => animateTo("full")}
               placeholder="Search flyers…"
               style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 15, fontFamily: "var(--font-sans)", color: "var(--text)" }}
             />
@@ -303,7 +271,7 @@ export default function MapPage() {
 
       {snap === "collapsed" && (
         <button
-          onClick={() => animateTo("half")}
+          onClick={() => animateTo("full")}
           style={{
             position: "fixed", bottom: 28, left: isDesktop ? "25%" : "50%", transform: "translateX(-50%)",
             zIndex: 30, borderRadius: 99, padding: "10px 20px",
