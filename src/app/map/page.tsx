@@ -20,20 +20,6 @@ const SNAP_CSS: Record<SnapPoint, string> = {
   full:      "5dvh",
 };
 
-const SNAP_PX = (snap: SnapPoint): number => {
-  const h = window.innerHeight;
-  if (snap === "collapsed") return h;
-  if (snap === "half")      return h * 0.5;
-  return h * 0.05;
-};
-
-const nearestSnap = (y: number): SnapPoint => {
-  const points: SnapPoint[] = ["collapsed", "half", "full"];
-  return points.reduce((best, p) =>
-    Math.abs(y - SNAP_PX(p)) < Math.abs(y - SNAP_PX(best)) ? p : best
-  );
-};
-
 type RawHotspot = { type: string; label?: string; value: string; lat?: number; lng?: number };
 
 export default function MapPage() {
@@ -58,11 +44,8 @@ export default function MapPage() {
   const [previewInitialSearch, setPreviewInitialSearch] = useState("");
   const [isDesktop, setIsDesktop] = useState(false);
 
-  const sheetRef   = useRef<HTMLDivElement>(null);
-  const listRef    = useRef<HTMLDivElement>(null);
-  const cardRefs   = useRef<Map<string, HTMLDivElement>>(new Map());
-  const dragRef    = useRef<{ startY: number; startTranslate: number } | null>(null);
-  const isDragging = useRef(false);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const listRef  = useRef<HTMLDivElement>(null);
 
   // ── Data ─────────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -140,41 +123,12 @@ export default function MapPage() {
     setSnap(point);
   }, []);
 
-  // ── Pin click → snap half + scroll to card ────────────────────────────────────
+  // ── Pin click → open QuickLook ────────────────────────────────────────────────
   const handlePinClick = useCallback((pin: FlyerPin) => {
-    setSelectedId(pin.flyerId);
+    const flyer = flyers.find(f => f.id === pin.flyerId);
     animateTo("half");
-    setTimeout(() => {
-      cardRefs.current.get(pin.flyerId)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }, 420);
-  }, [animateTo]);
-
-  // ── Drag ──────────────────────────────────────────────────────────────────────
-  const onTouchStart = (e: React.TouchEvent) => {
-    isDragging.current = true;
-    const sheet = sheetRef.current;
-    if (!sheet) return;
-    const matrix = new DOMMatrix(getComputedStyle(sheet).transform);
-    dragRef.current = { startY: e.touches[0].clientY, startTranslate: matrix.m42 };
-    sheet.style.transition = "none";
-  };
-
-  const onTouchMove = (e: React.TouchEvent) => {
-    if (!dragRef.current || !sheetRef.current) return;
-    const dy  = e.touches[0].clientY - dragRef.current.startY;
-    const newY = Math.max(SNAP_PX("full"), Math.min(SNAP_PX("collapsed"), dragRef.current.startTranslate + dy));
-    sheetRef.current.style.transform = `translateY(${newY}px)`;
-  };
-
-  const onTouchEnd = (e: React.TouchEvent) => {
-    if (!dragRef.current || !sheetRef.current) return;
-    const dy      = e.changedTouches[0].clientY - dragRef.current.startY;
-    const finalY  = dragRef.current.startTranslate + dy;
-    const nearest = nearestSnap(finalY);
-    isDragging.current = false;
-    dragRef.current    = null;
-    animateTo(nearest);
-  };
+    if (flyer) { setPreviewInitialSearch(""); setQuickLook(flyer); }
+  }, [animateTo, flyers]);
 
   // ── Filtered flyers ───────────────────────────────────────────────────────────
   const pinnedIds = useMemo(() => new Set(flyerPins.map(p => p.flyerId)), [flyerPins]);
@@ -237,16 +191,9 @@ export default function MapPage() {
           zIndex: 20,
         }}
       >
-        {/* Drag handle + header */}
-        <div
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
-          onClick={() => animateTo(snap === "collapsed" ? "half" : snap === "half" ? "full" : "collapsed")}
-          style={{ flexShrink: 0, cursor: "pointer", userSelect: "none", padding: "10px 16px 8px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}
-        >
-          <div style={{ width: 36, height: 4, borderRadius: 99, background: "var(--border)" }} />
-          <div style={{ width: "100%" }}>
+        {/* Header with up / down controls */}
+        <div style={{ flexShrink: 0, padding: "16px 16px 10px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 600, color: "var(--text)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
               Find the right resource.
             </p>
@@ -257,6 +204,42 @@ export default function MapPage() {
                   ? `${flyerGroups.length} result${flyerGroups.length !== 1 ? "s" : ""} of ${flyers.length}`
                   : `Browse ${flyers.length} flyer${flyers.length !== 1 ? "s" : ""} below.`}
             </p>
+          </div>
+          <div style={{ display: "flex", gap: 6, flexShrink: 0, paddingTop: 4 }}>
+            {/* Expand */}
+            <button
+              onClick={() => { if (snap === "collapsed") animateTo("half"); else if (snap === "half") animateTo("full"); }}
+              disabled={snap === "full"}
+              aria-label="Expand sheet"
+              style={{
+                width: 32, height: 32, borderRadius: "50%",
+                border: "1.5px solid var(--border)", background: "transparent",
+                color: "var(--text)", cursor: snap === "full" ? "default" : "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                opacity: snap === "full" ? 0.25 : 1, transition: "opacity 0.15s",
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M3 10.5l5-5 5 5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            {/* Collapse */}
+            <button
+              onClick={() => { if (snap === "full") animateTo("half"); else if (snap === "half") animateTo("collapsed"); }}
+              disabled={snap === "collapsed"}
+              aria-label="Collapse sheet"
+              style={{
+                width: 32, height: 32, borderRadius: "50%",
+                border: "1.5px solid var(--border)", background: "transparent",
+                color: "var(--text)", cursor: snap === "collapsed" ? "default" : "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                opacity: snap === "collapsed" ? 0.25 : 1, transition: "opacity 0.15s",
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M3 5.5l5 5 5-5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -270,7 +253,7 @@ export default function MapPage() {
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              onFocus={() => { if (snap === "collapsed") animateTo("half"); }}
+              onFocus={() => animateTo("half")}
               placeholder="Search flyers…"
               style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 15, fontFamily: "var(--font-sans)", color: "var(--text)" }}
             />
