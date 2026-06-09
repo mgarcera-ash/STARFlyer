@@ -45,8 +45,8 @@ function esc(s: string) {
 const PHONE_CIRCLE = `<div style="width:18px;height:18px;border-radius:50%;background:#22c55e;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3.5 2A1.5 1.5 0 0 0 2 3.5v.75C2 10.28 5.72 14 11.75 14h.75A1.5 1.5 0 0 0 14 12.5v-1.38a1.5 1.5 0 0 0-1.11-1.45l-1.62-.4a1.5 1.5 0 0 0-1.56.6l-.36.48A6.52 6.52 0 0 1 5.65 6.65l.48-.36a1.5 1.5 0 0 0 .6-1.56l-.4-1.62A1.5 1.5 0 0 0 4.88 2H3.5z" fill="#fff"/></svg></div>`;
 const PIN_CIRCLE  = `<div style="width:18px;height:18px;border-radius:50%;background:#3b82f6;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.75 4.5 8.5 4.5 8.5s4.5-4.75 4.5-8.5C12.5 3.515 10.485 1.5 8 1.5zm0 6a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" fill="#fff"/></svg></div>`;
 
-function makeShelterIcon(name: string | null) {
-  const label = name ? `<span style="font-family:var(--font-sans),sans-serif;font-size:10px;font-weight:600;color:#111;white-space:nowrap;text-shadow:0 0 3px #fff,0 0 3px #fff,0 1px 4px rgba(0,0,0,0.25);pointer-events:none;margin-top:3px;display:block;text-align:center">${esc(name)}</span>` : "";
+function makeShelterIcon(name: string | null, isDark = false) {
+  const label = name ? `<span style="font-family:var(--font-sans),sans-serif;font-size:10px;font-weight:600;color:${isDark ? "#fff" : "#111"};white-space:nowrap;text-shadow:${isDark ? "0 1px 3px rgba(0,0,0,0.8)" : "0 0 3px #fff,0 0 3px #fff,0 1px 4px rgba(0,0,0,0.25)"};pointer-events:none;margin-top:3px;display:block;text-align:center">${esc(name)}</span>` : "";
   return L.divIcon({
     html: `<div style="display:flex;flex-direction:column;align-items:center">
       <div style="width:30px;height:30px;border-radius:50%;background:#3b82f6;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.28);display:flex;align-items:center;justify-content:center">
@@ -211,13 +211,13 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, onFlyer
     shelters.forEach(s => {
       const popup = buildShelterPopup(s);
       const existing = shelterMarkers.current.get(s.site_id);
-      if (existing) { existing.setPopupContent(popup); return; }
-      const marker = L.marker([s.lat, s.lng], { icon: makeShelterIcon(s.agency) })
+      if (existing) { existing.setPopupContent(popup); existing.setIcon(makeShelterIcon(s.agency, isDark)); return; }
+      const marker = L.marker([s.lat, s.lng], { icon: makeShelterIcon(s.agency, isDark) })
         .addTo(map)
         .bindPopup(popup, { maxWidth: 240, offset: [0, -4], closeButton: false });
       shelterMarkers.current.set(s.site_id, marker);
     });
-  }, [shelters]);
+  }, [shelters, isDark]);
 
   // Sync flyer markers
   useEffect(() => {
