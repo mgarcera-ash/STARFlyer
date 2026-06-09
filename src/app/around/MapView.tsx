@@ -212,7 +212,7 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, onFlyer
       const popup = buildShelterPopup(s);
       const existing = shelterMarkers.current.get(s.site_id);
       if (existing) { existing.setPopupContent(popup); return; }
-      const marker = L.marker([s.lat, s.lng], { icon: makeShelterIcon(s.site_name ?? s.agency) })
+      const marker = L.marker([s.lat, s.lng], { icon: makeShelterIcon(s.agency) })
         .addTo(map)
         .bindPopup(popup, { maxWidth: 240, offset: [0, -4], closeButton: false });
       shelterMarkers.current.set(s.site_id, marker);
