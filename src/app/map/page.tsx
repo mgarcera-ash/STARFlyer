@@ -162,7 +162,6 @@ export default function MapPage() {
   };
 
   const onMouseDown = (e: React.MouseEvent) => {
-    if (!isDesktop) return;
     const sheet = sheetRef.current;
     if (!sheet) return;
     e.preventDefault();
@@ -263,13 +262,9 @@ export default function MapPage() {
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
           onMouseDown={onMouseDown}
-          style={{ flexShrink: 0, padding: "10px 16px 8px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, touchAction: "none", cursor: isDesktop ? "grab" : "default", userSelect: "none" }}
+          style={{ flexShrink: 0, padding: "10px 16px 8px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, touchAction: "none", cursor: "grab", userSelect: "none" }}
         >
-          <button
-            onClick={isDesktop ? undefined : () => animateTo("collapsed")}
-            aria-label={isDesktop ? undefined : "Close sheet"}
-            style={{ width: 36, height: 4, borderRadius: 99, background: "var(--border)", border: "none", cursor: "inherit", padding: 0, display: "block" }}
-          />
+          <div style={{ width: 36, height: 4, borderRadius: 99, background: "var(--border)" }} />
           <div style={{ width: "100%" }}>
             <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 600, color: "var(--text)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
               Find the right resource.
