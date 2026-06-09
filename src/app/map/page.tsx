@@ -2,7 +2,7 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import type { Flyer } from "@/types/flyer";
+import type { Flyer, Hotspot } from "@/types/flyer";
 import type { FlyerPin, Shelter } from "@/app/around/MapView";
 import QuickLook from "@/components/QuickLook";
 import FlyerPreview from "@/components/FlyerPreview";
@@ -191,7 +191,7 @@ export default function MapPage() {
       : (f.hotspots?.filter(h => activeTags.some(tag =>
           h.label?.toLowerCase().includes(tag.toLowerCase()) || h.value.toLowerCase().includes(tag.toLowerCase())
         )) ?? []);
-    const hotspotsByType: Partial<Record<import("@/types/flyer").Hotspot["type"], import("@/types/flyer").Hotspot[]>> = {};
+    const hotspotsByType: Partial<Record<Hotspot["type"], Hotspot[]>> = {};
     for (const h of matchingHotspots) {
       if (!hotspotsByType[h.type]) hotspotsByType[h.type] = [];
       hotspotsByType[h.type]!.push(h);
