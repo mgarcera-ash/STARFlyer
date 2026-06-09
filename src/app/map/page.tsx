@@ -56,6 +56,7 @@ export default function MapPage() {
   const [activeTags,      setActiveTags]      = useState<string[]>([]);
   const [activeEntities,  setActiveEntities]  = useState<string[]>([]);
   const [previewInitialSearch, setPreviewInitialSearch] = useState("");
+  const [isDesktop, setIsDesktop] = useState(false);
 
   const sheetRef   = useRef<HTMLDivElement>(null);
   const listRef    = useRef<HTMLDivElement>(null);
@@ -113,6 +114,15 @@ export default function MapPage() {
     const handle = (e: StorageEvent) => { if (e.key === "theme") setIsDark(e.newValue === "dark"); };
     window.addEventListener("storage", handle);
     return () => window.removeEventListener("storage", handle);
+  }, []);
+
+  // ── Desktop detection ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    setIsDesktop(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
   }, []);
 
   // ── Sheet position (imperative — never set via JSX style to avoid re-render conflicts) ──
@@ -216,7 +226,8 @@ export default function MapPage() {
       <div
         ref={sheetRef}
         style={{
-          position: "fixed", left: 0, right: 0, bottom: 0,
+          position: "fixed", left: 0, right: isDesktop ? "auto" : 0, bottom: 0,
+          width: isDesktop ? "50%" : undefined,
           height: "100dvh",
           background: "var(--bar-bg)",
           backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
@@ -231,7 +242,7 @@ export default function MapPage() {
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
-          onClick={() => animateTo(snap === "collapsed" ? "half" : snap === "half" ? "full" : "half")}
+          onClick={() => animateTo(snap === "collapsed" ? "half" : snap === "half" ? "full" : "collapsed")}
           style={{ flexShrink: 0, cursor: "pointer", userSelect: "none", padding: "10px 16px 8px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}
         >
           <div style={{ width: 36, height: 4, borderRadius: 99, background: "var(--border)" }} />
@@ -311,7 +322,7 @@ export default function MapPage() {
         <button
           onClick={() => animateTo("half")}
           style={{
-            position: "fixed", bottom: 28, left: "50%", transform: "translateX(-50%)",
+            position: "fixed", bottom: 28, left: isDesktop ? "25%" : "50%", transform: "translateX(-50%)",
             zIndex: 30, borderRadius: 99, padding: "10px 20px",
             background: "var(--bar-bg)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
             border: "1.5px solid var(--bar-border)",
