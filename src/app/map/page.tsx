@@ -12,20 +12,27 @@ import GroupedResults, { type FlyerGroup } from "@/components/GroupedResults";
 
 const MapView = dynamic(() => import("@/app/around/MapView"), { ssr: false });
 
-type SnapPoint = "collapsed" | "full";
+type SnapPoint = "collapsed" | "half" | "full";
 
 const SNAP_CSS: Record<SnapPoint, string> = {
   collapsed: "100dvh",
+  half:      "50dvh",
   full:      "5dvh",
 };
 
 const SNAP_PX = (snap: SnapPoint): number => {
   const h = window.innerHeight;
-  return snap === "collapsed" ? h : h * 0.05;
+  if (snap === "collapsed") return h;
+  if (snap === "half")      return h * 0.5;
+  return h * 0.05;
 };
 
-const nearestSnap = (y: number): SnapPoint =>
-  y > window.innerHeight * 0.5 ? "collapsed" : "full";
+const nearestSnap = (y: number): SnapPoint => {
+  const points: SnapPoint[] = ["collapsed", "half", "full"];
+  return points.reduce((best, p) =>
+    Math.abs(y - SNAP_PX(p)) < Math.abs(y - SNAP_PX(best)) ? p : best
+  );
+};
 
 type RawHotspot = { type: string; label?: string; value: string; lat?: number; lng?: number };
 
