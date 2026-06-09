@@ -161,6 +161,35 @@ export default function MapPage() {
     animateTo(nearestSnap(finalY));
   };
 
+  const onMouseDown = (e: React.MouseEvent) => {
+    if (!isDesktop) return;
+    const sheet = sheetRef.current;
+    if (!sheet) return;
+    e.preventDefault();
+    const matrix = new DOMMatrix(getComputedStyle(sheet).transform);
+    dragRef.current = { startY: e.clientY, startTranslate: matrix.m42 };
+    sheet.style.transition = "none";
+    sheet.style.cursor = "grabbing";
+
+    const onMove = (ev: MouseEvent) => {
+      if (!dragRef.current || !sheetRef.current) return;
+      const dy   = ev.clientY - dragRef.current.startY;
+      const newY = Math.max(SNAP_PX("full"), Math.min(SNAP_PX("collapsed"), dragRef.current.startTranslate + dy));
+      sheetRef.current.style.transform = `translateY(${newY}px)`;
+    };
+    const onUp = (ev: MouseEvent) => {
+      if (!dragRef.current || !sheetRef.current) return;
+      const finalY = dragRef.current.startTranslate + (ev.clientY - dragRef.current.startY);
+      dragRef.current = null;
+      if (sheetRef.current) sheetRef.current.style.cursor = "";
+      animateTo(nearestSnap(finalY));
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  };
+
   // ── Pin click → open QuickLook ────────────────────────────────────────────────
   const handlePinClick = useCallback((pin: FlyerPin) => {
     const flyer = flyers.find(f => f.id === pin.flyerId);
@@ -218,8 +247,7 @@ export default function MapPage() {
       <div
         ref={sheetRef}
         style={{
-          position: "fixed", left: 0, right: isDesktop ? "auto" : 0, bottom: 0,
-          width: isDesktop ? "50%" : undefined,
+          position: "fixed", left: isDesktop ? "25%" : 0, right: isDesktop ? "25%" : 0, bottom: 0,
           height: "100dvh",
           background: "var(--bar-bg)",
           backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
@@ -229,17 +257,18 @@ export default function MapPage() {
           zIndex: 20,
         }}
       >
-        {/* Drag handle — drag or tap to close */}
+        {/* Drag handle */}
         <div
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
-          style={{ flexShrink: 0, padding: "10px 16px 8px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, touchAction: "none" }}
+          onMouseDown={onMouseDown}
+          style={{ flexShrink: 0, padding: "10px 16px 8px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, touchAction: "none", cursor: isDesktop ? "grab" : "default", userSelect: "none" }}
         >
           <button
-            onClick={() => animateTo("collapsed")}
-            aria-label="Close sheet"
-            style={{ width: 36, height: 4, borderRadius: 99, background: "var(--border)", border: "none", cursor: "pointer", padding: 0, display: "block" }}
+            onClick={isDesktop ? undefined : () => animateTo("collapsed")}
+            aria-label={isDesktop ? undefined : "Close sheet"}
+            style={{ width: 36, height: 4, borderRadius: 99, background: "var(--border)", border: "none", cursor: "inherit", padding: 0, display: "block" }}
           />
           <div style={{ width: "100%" }}>
             <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 600, color: "var(--text)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
@@ -317,7 +346,7 @@ export default function MapPage() {
         <button
           onClick={() => animateTo("full")}
           style={{
-            position: "fixed", bottom: 28, left: isDesktop ? "25%" : "50%", transform: "translateX(-50%)",
+            position: "fixed", bottom: 28, left: "50%", transform: "translateX(-50%)",
             zIndex: 30, borderRadius: 99, padding: "10px 20px",
             background: "var(--bar-bg)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
             border: "1.5px solid var(--bar-border)",
