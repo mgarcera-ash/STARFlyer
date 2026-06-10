@@ -16,14 +16,14 @@ type SnapPoint = "collapsed" | "half" | "full";
 
 const SNAP_CSS: Record<SnapPoint, string> = {
   collapsed: "100dvh",
-  half:      "40dvh",
+  half:      "30dvh",
   full:      "10dvh",
 };
 
 const SNAP_PX = (snap: SnapPoint): number => {
   const h = window.innerHeight;
   if (snap === "collapsed") return h;
-  if (snap === "half")      return h * 0.4;
+  if (snap === "half")      return h * 0.3;
   return h * 0.1;
 };
 
@@ -532,7 +532,7 @@ export default function MapPage() {
         </div>
 
         {/* Card list — contextual */}
-        <div ref={listRef} className="sheet-list" style={{ flex: 1, overflowY: "auto", padding: "0 16px 40px", overscrollBehavior: "contain", touchAction: "pan-y", maxHeight: snap === "half" && mode === "shelters" ? "calc(40dvh - 120px)" : undefined } as React.CSSProperties}>
+        <div ref={listRef} className="sheet-list" style={{ flex: 1, overflowY: "auto", padding: "0 16px 40px", overscrollBehavior: "contain", touchAction: "pan-y", maxHeight: snap === "half" && mode === "shelters" ? "calc(30dvh - 120px)" : undefined } as React.CSSProperties}>
           {mode === "flyers" ? (
             isSearchTyping ? (
               <div style={{ display: "flex", justifyContent: "center", gap: 7, paddingTop: 32 }}>
