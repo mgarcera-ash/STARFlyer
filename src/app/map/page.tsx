@@ -417,16 +417,16 @@ export default function MapPage() {
         </button>
         {/* Map layer toggles */}
         {([
-          { key: "shelters", active: showShelters, toggle: () => setShowShelters(v => !v), color: "#3b82f6", icon: <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><path d="M10 3L3 9h2v8h4v-5h2v5h4V9h2L10 3z" fill="currentColor"/></svg> },
-          { key: "flyers",   active: showFlyers,   toggle: () => setShowFlyers(v => !v),   color: "#eab308", icon: <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6.5" r="1.8" fill="currentColor"/><rect x="8.6" y="9.5" width="2.8" height="6.5" rx="1.2" fill="currentColor"/></svg> },
-        ]).map(({ key, active, toggle, color, icon }) => (
+          { key: "shelters", active: showShelters, toggle: () => setShowShelters(v => !v), tint: "rgba(59,130,246,0.35)",  icon: <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><path d="M10 3L3 9h2v8h4v-5h2v5h4V9h2L10 3z" fill="currentColor"/></svg> },
+          { key: "flyers",   active: showFlyers,   toggle: () => setShowFlyers(v => !v),   tint: "rgba(234,179,8,0.35)", icon: <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6.5" r="1.8" fill="currentColor"/><rect x="8.6" y="9.5" width="2.8" height="6.5" rx="1.2" fill="currentColor"/></svg> },
+        ]).map(({ key, active, toggle, tint, icon }) => (
           <button
             key={key}
             onClick={toggle}
             aria-label={key === "flyers" ? "Toggle flyer pins" : "Toggle shelter pins"}
             style={{
               width: 40, height: 40, borderRadius: "50%",
-              background: active ? color : "var(--bar-bg)",
+              background: active ? tint : "var(--bar-bg)",
               backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
               border: "1.5px solid var(--bar-border)",
               boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
