@@ -36,6 +36,35 @@ const nearestSnap = (y: number): SnapPoint => {
 
 type RawHotspot = { type: string; label?: string; value: string; lat?: number; lng?: number };
 
+const CHICAGO_BBOX = "-87.94,41.64,-87.52,42.02";
+
+type PhotonFeature = {
+  type: "Feature";
+  geometry: { type: "Point"; coordinates: [number, number] };
+  properties: {
+    osm_id: number; osm_type: string;
+    name?: string; housenumber?: string; street?: string;
+    district?: string; locality?: string; city?: string;
+    state?: string; postcode?: string; country?: string;
+  };
+};
+
+function formatSuggestion(f: PhotonFeature): { title: string; subtitle: string } {
+  const p = f.properties;
+  let title = p.housenumber && p.street ? `${p.housenumber} ${p.street}` : p.street ?? p.name ?? "Unknown location";
+  const sub: string[] = [];
+  if (p.district) sub.push(p.district);
+  if (p.locality && p.locality !== p.district) sub.push(p.locality);
+  return { title, subtitle: sub.length > 0 ? `${sub.join(", ")} · Chicago, IL` : "Chicago, IL" };
+}
+
+function haversine(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 3958.8, toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 export default function MapPage() {
   const [flyers,    setFlyers]    = useState<Flyer[]>([]);
   const [shelters,  setShelters]  = useState<Shelter[]>([]);
@@ -57,11 +86,19 @@ export default function MapPage() {
   const [activeEntities,  setActiveEntities]  = useState<string[]>([]);
   const [previewInitialSearch, setPreviewInitialSearch] = useState("");
   const [isDesktop, setIsDesktop] = useState(false);
+  const [mode,            setMode]            = useState<"flyers" | "shelters">("flyers");
+  const [addressInput,    setAddressInput]    = useState("");
+  const [suggestions,     setSuggestions]     = useState<PhotonFeature[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [geocoding,       setGeocoding]       = useState(false);
+  const [addressError,    setAddressError]    = useState("");
 
-  const sheetRef     = useRef<HTMLDivElement>(null);
-  const listRef      = useRef<HTMLDivElement>(null);
-  const dragRef      = useRef<{ startY: number; startTranslate: number } | null>(null);
+  const sheetRef       = useRef<HTMLDivElement>(null);
+  const listRef        = useRef<HTMLDivElement>(null);
+  const dragRef        = useRef<{ startY: number; startTranslate: number } | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const modeRef        = useRef<"flyers" | "shelters">("flyers");
+  useEffect(() => { modeRef.current = mode; }, [mode]);
 
   // ── Data ─────────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -209,12 +246,74 @@ export default function MapPage() {
       if (e.key.length !== 1) return;
       const tag = (e.target as HTMLElement).tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (modeRef.current !== "flyers") return;
       animateTo("full");
       searchInputRef.current?.focus();
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, [animateTo]);
+
+  // ── Photon autocomplete for shelter location ──────────────────────────────────
+  useEffect(() => {
+    const q = addressInput.trim();
+    if (q.length < 3) { setSuggestions([]); setShowSuggestions(false); return; }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=5&bbox=${CHICAGO_BBOX}&lang=en`
+        );
+        const data: { features: PhotonFeature[] } = await res.json();
+        const seen = new Set<string>();
+        const unique = (data.features ?? []).filter(f => {
+          const key = `${f.properties.osm_type}${f.properties.osm_id}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        setSuggestions(unique);
+        setShowSuggestions(unique.length > 0);
+      } catch { /* silent */ }
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [addressInput]);
+
+  const applyLocation = (lat: number, lng: number) => {
+    setUserLat(lat);
+    setUserLng(lng);
+    setShelters(prev => prev.map(s => ({ ...s, distance: haversine(lat, lng, s.lat, s.lng) })));
+  };
+
+  const selectSuggestion = (f: PhotonFeature) => {
+    const [lng, lat] = f.geometry.coordinates;
+    applyLocation(lat, lng);
+    setAddressInput("");
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setAddressError("");
+  };
+
+  const geocodeAddress = async () => {
+    const q = addressInput.trim();
+    if (!q) return;
+    setGeocoding(true);
+    setAddressError("");
+    setShowSuggestions(false);
+    try {
+      const res = await fetch(
+        `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=1&bbox=${CHICAGO_BBOX}&lang=en`
+      );
+      const data: { features: PhotonFeature[] } = await res.json();
+      if (!data.features?.length) { setAddressError("Address not found in Chicago."); return; }
+      const [lng, lat] = data.features[0].geometry.coordinates;
+      applyLocation(lat, lng);
+      setAddressInput("");
+    } catch {
+      setAddressError("Search failed. Please try again.");
+    } finally {
+      setGeocoding(false);
+    }
+  };
 
   // ── Pin click → open QuickLook ────────────────────────────────────────────────
   const handlePinClick = useCallback((pin: FlyerPin) => {
@@ -255,6 +354,10 @@ export default function MapPage() {
     }
     return { flyer: f, hotspotsByType, isFallback: matchingHotspots.length === 0 };
   }) : [], [showGrouped, filtered, search, activeTags]);
+
+  const sortedShelters = useMemo(() =>
+    userLat !== null ? [...shelters].sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity)) : shelters,
+  [shelters, userLat]);
 
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
@@ -326,76 +429,201 @@ export default function MapPage() {
                 Find the right resource.
               </p>
               <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 400, color: "var(--muted)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
-                {flyers.length === 0
-                  ? "Loading…"
-                  : showGrouped
-                    ? `${flyerGroups.length} result${flyerGroups.length !== 1 ? "s" : ""} of ${flyers.length}`
-                    : `Browse ${flyers.length} flyer${flyers.length !== 1 ? "s" : ""} below.`}
+                {mode === "shelters"
+                  ? shelters.length === 0 ? "Loading…" : userLat !== null ? `${shelters.length} shelters, sorted by distance.` : `${shelters.length} shelters in Chicago.`
+                  : flyers.length === 0 ? "Loading…" : showGrouped ? `${flyerGroups.length} result${flyerGroups.length !== 1 ? "s" : ""} of ${flyers.length}` : `Browse ${flyers.length} flyer${flyers.length !== 1 ? "s" : ""} below.`}
               </p>
             </div>
           )}
         </div>
 
-        {/* Search */}
-        <div style={{ padding: "0 16px 12px", flexShrink: 0 }}>
-          <div style={{ background: "var(--bg)", borderRadius: 99, border: "1.5px solid var(--border)", display: "flex", alignItems: "center", gap: 8, padding: "10px 14px" }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--muted)" }}>
-              <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2"/>
-              <path d="M16.5 16.5L21 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-            <input
-              ref={searchInputRef}
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              onFocus={() => animateTo("full")}
-              onKeyDown={e => { if (e.key === "Escape") { animateTo("collapsed"); e.currentTarget.blur(); } }}
-              placeholder="Search flyers…"
-              style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 15, fontFamily: "var(--font-sans)", color: "var(--text)" }}
-            />
-            {search && (
-              <button onClick={() => setSearch("")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontSize: 18, padding: 0, lineHeight: 1, display: "flex" }}>×</button>
-            )}
+        {/* Mode toggle */}
+        {snap !== "collapsed" && (
+          <div style={{ padding: "0 16px 10px", flexShrink: 0 }}>
+            <div style={{ display: "flex", background: "var(--border)", borderRadius: 99, padding: 3 }}>
+              {(["flyers", "shelters"] as const).map(m => (
+                <button
+                  key={m}
+                  onClick={() => setMode(m)}
+                  style={{
+                    flex: 1, padding: "7px 0", borderRadius: 99, border: "none",
+                    background: mode === m ? "var(--surface)" : "transparent",
+                    color: mode === m ? "var(--text)" : "var(--muted)",
+                    fontSize: 13, fontWeight: 600, fontFamily: "var(--font-sans)",
+                    cursor: "pointer",
+                    boxShadow: mode === m ? "0 1px 4px rgba(0,0,0,0.12)" : "none",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  {m === "flyers" ? "Flyers" : "Shelters"}
+                </button>
+              ))}
+            </div>
           </div>
+        )}
+
+        {/* Search bar — contextual */}
+        <div style={{ padding: "0 16px 12px", flexShrink: 0 }}>
+          {mode === "flyers" ? (
+            <div style={{ background: "var(--bg)", borderRadius: 99, border: "1.5px solid var(--border)", display: "flex", alignItems: "center", gap: 8, padding: "10px 14px" }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--muted)" }}>
+                <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2"/>
+                <path d="M16.5 16.5L21 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+              <input
+                ref={searchInputRef}
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                onFocus={() => animateTo("full")}
+                onKeyDown={e => { if (e.key === "Escape") { animateTo("collapsed"); e.currentTarget.blur(); } }}
+                placeholder="Search flyers…"
+                style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 15, fontFamily: "var(--font-sans)", color: "var(--text)" }}
+              />
+              {search && (
+                <button onClick={() => setSearch("")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontSize: 18, padding: 0, lineHeight: 1, display: "flex" }}>×</button>
+              )}
+            </div>
+          ) : (
+            <div style={{ background: "var(--bg)", borderRadius: 99, border: "1.5px solid var(--border)", display: "flex", alignItems: "center", gap: 8, padding: "10px 14px" }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--muted)" }}>
+                <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.8"/>
+                <path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+              </svg>
+              <input
+                value={addressInput}
+                onChange={e => { setAddressInput(e.target.value); setAddressError(""); }}
+                onFocus={() => { animateTo("full"); if (suggestions.length > 0) setShowSuggestions(true); }}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                onKeyDown={e => {
+                  if (e.key === "Enter") geocodeAddress();
+                  if (e.key === "Escape") { setShowSuggestions(false); setAddressInput(""); }
+                }}
+                placeholder="Enter an address in Chicago…"
+                style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 15, fontFamily: "var(--font-sans)", color: "var(--text)" }}
+              />
+              {geocoding && <span style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-sans)", flexShrink: 0 }}>Searching…</span>}
+              {addressInput && !geocoding && (
+                <button
+                  onMouseDown={e => e.preventDefault()}
+                  onClick={() => { setAddressInput(""); setSuggestions([]); setShowSuggestions(false); setAddressError(""); }}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontSize: 18, padding: 0, lineHeight: 1, display: "flex" }}
+                >×</button>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Card list */}
+        {/* Card list — contextual */}
         <div ref={listRef} style={{ flex: 1, overflowY: "auto", padding: "0 16px 40px" }}>
-          {showGrouped ? (
-            <GroupedResults
-              flyerGroups={flyerGroups}
-              search={search}
-              activeEntities={activeEntities}
-              onQuickLook={(flyer, initialSearch = "") => { setPreviewInitialSearch(initialSearch); setQuickLook(flyer); }}
-              onPreview={(flyer, initialSearch = "") => { setPreviewInitialSearch(initialSearch); setPreview(flyer); }}
-            />
-          ) : snap === "half" ? (
-            <SectionRow
-              title="Our Top Picks"
-              flyers={topPickFlyers.length > 0 ? topPickFlyers : flyers.slice(0, 8)}
-              animationDelay={0}
-              onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
-            />
-          ) : (
-            <>
-              <FeaturedCard
-                flyers={featuredFlyers.length > 0 ? featuredFlyers : flyers.slice(0, 5)}
+          {mode === "flyers" ? (
+            showGrouped ? (
+              <GroupedResults
+                flyerGroups={flyerGroups}
+                search={search}
+                activeEntities={activeEntities}
+                onQuickLook={(flyer, initialSearch = "") => { setPreviewInitialSearch(initialSearch); setQuickLook(flyer); }}
+                onPreview={(flyer, initialSearch = "") => { setPreviewInitialSearch(initialSearch); setPreview(flyer); }}
+              />
+            ) : snap === "half" ? (
+              <SectionRow
+                title="Our Top Picks"
+                flyers={topPickFlyers.length > 0 ? topPickFlyers : flyers.slice(0, 8)}
                 animationDelay={0}
                 onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
               />
-              <SectionRow
-                title="Recently Added"
-                dot="#3b82f6"
-                flyers={flyers.slice(0, 8)}
-                animationDelay={0.05}
-                onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
-              />
-              {(topPickFlyers.length > 0 || flyers.length > 0) && (
-                <SectionRow
-                  title="Our Top Picks"
-                      flyers={topPickFlyers.length > 0 ? topPickFlyers : flyers.slice(0, 8)}
-                  animationDelay={0.10}
+            ) : (
+              <>
+                <FeaturedCard
+                  flyers={featuredFlyers.length > 0 ? featuredFlyers : flyers.slice(0, 5)}
+                  animationDelay={0}
                   onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
                 />
+                <SectionRow
+                  title="Recently Added"
+                  dot="#3b82f6"
+                  flyers={flyers.slice(0, 8)}
+                  animationDelay={0.05}
+                  onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
+                />
+                {(topPickFlyers.length > 0 || flyers.length > 0) && (
+                  <SectionRow
+                    title="Our Top Picks"
+                    flyers={topPickFlyers.length > 0 ? topPickFlyers : flyers.slice(0, 8)}
+                    animationDelay={0.10}
+                    onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
+                  />
+                )}
+              </>
+            )
+          ) : (
+            <>
+              {/* Autocomplete suggestions */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div style={{ marginBottom: 12, borderRadius: 16, overflow: "hidden", border: "1.5px solid var(--border)" }}>
+                  {suggestions.map((f, i) => {
+                    const { title, subtitle } = formatSuggestion(f);
+                    return (
+                      <button
+                        key={`${f.properties.osm_type}${f.properties.osm_id}`}
+                        onMouseDown={e => e.preventDefault()}
+                        onClick={() => selectSuggestion(f)}
+                        style={{
+                          display: "flex", flexDirection: "column", alignItems: "flex-start",
+                          width: "100%", padding: "10px 14px",
+                          background: "var(--bg)", border: "none",
+                          borderBottom: i < suggestions.length - 1 ? "1px solid var(--border)" : "none",
+                          cursor: "pointer", textAlign: "left",
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.background = "var(--card-bg)")}
+                        onMouseLeave={e => (e.currentTarget.style.background = "var(--bg)")}
+                      >
+                        <span style={{ fontSize: 14, fontWeight: 500, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{title}</span>
+                        <span style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-sans)", marginTop: 2 }}>{subtitle}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {/* Address error */}
+              {addressError && (
+                <p style={{ margin: "0 0 12px", fontSize: 13, color: "#ef4444", fontFamily: "var(--font-sans)" }}>{addressError}</p>
+              )}
+              {/* Shelter list */}
+              {shelters.length === 0 ? (
+                <p style={{ color: "var(--muted)", fontSize: 14, fontFamily: "var(--font-sans)" }}>Loading shelters…</p>
+              ) : (
+                <div>
+                  {(snap === "half" ? sortedShelters.slice(0, 4) : sortedShelters).map((s, i) => (
+                    <div key={s.site_id} style={{ padding: "14px 0", borderBottom: i < (snap === "half" ? Math.min(4, sortedShelters.length) : sortedShelters.length) - 1 ? "1px solid var(--border)" : "none" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
+                        <div style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
+                          {s.agency && <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{s.agency}</p>}
+                          {s.site_name && s.site_name !== s.agency && <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{s.site_name}</p>}
+                        </div>
+                        {s.distance !== undefined && (
+                          <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 500, color: "var(--muted)", fontFamily: "var(--font-sans)", paddingTop: 2 }}>
+                            {s.distance < 0.1 ? "<0.1" : s.distance.toFixed(1)} mi
+                          </span>
+                        )}
+                      </div>
+                      {s.population && (
+                        <span style={{ display: "inline-block", fontSize: 11, fontWeight: 500, padding: "2px 8px", borderRadius: 99, background: "var(--border)", color: "var(--muted)", fontFamily: "var(--font-sans)", marginBottom: 6 }}>
+                          {s.population}
+                        </span>
+                      )}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                        {s.phone && (
+                          <a href={`tel:${s.phone.replace(/\D/g, "")}`} style={{ fontSize: 13, color: "#3b82f6", textDecoration: "none", fontWeight: 500, fontFamily: "var(--font-sans)" }}>
+                            {s.phone}
+                          </a>
+                        )}
+                        {s.address && (
+                          <p style={{ margin: 0, fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>{s.address}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </>
           )}
