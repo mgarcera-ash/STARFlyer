@@ -90,6 +90,12 @@ export default function MapPage() {
   const [showShelters,    setShowShelters]    = useState(true);
   const [showFlyers,      setShowFlyers]      = useState(true);
   const [selectedShelterSiteId, setSelectedShelterSiteId] = useState<number | null>(null);
+  const [expandedIds,     setExpandedIds]     = useState<Set<number>>(new Set());
+  const toggleExpand = (id: number) => setExpandedIds(prev => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
   const [addressInput,    setAddressInput]    = useState("");
   const [suggestions,     setSuggestions]     = useState<PhotonFeature[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -641,8 +647,13 @@ export default function MapPage() {
                 <div>
                   {sortedShelters.map((s, i) => {
                     const initials = (s.agency ?? s.site_name ?? "?").charAt(0).toUpperCase();
+                    const isExpanded = expandedIds.has(s.site_id);
                     return (
-                    <div key={s.site_id} style={{ padding: "12px 0", borderBottom: i < sortedShelters.length - 1 ? "1px solid var(--card-border)" : "none" }}>
+                    <div
+                      key={s.site_id}
+                      onClick={() => toggleExpand(s.site_id)}
+                      style={{ padding: "12px 0", borderBottom: i < sortedShelters.length - 1 ? "1px solid var(--card-border)" : "none", cursor: "pointer" }}
+                    >
                       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
                         {/* Circular image */}
                         <div style={{ flexShrink: 0, width: 56, height: 56, borderRadius: "50%", overflow: "hidden", background: "var(--card-border)" }}>
@@ -661,9 +672,13 @@ export default function MapPage() {
                             </p>
                           )}
                         </div>
+                        {/* Chevron */}
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--muted)", transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}>
+                          <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
                         {/* Route button */}
                         <button
-                          onClick={() => { animateTo("half"); setSelectedShelterSiteId(s.site_id); }}
+                          onClick={e => { e.stopPropagation(); animateTo("half"); setSelectedShelterSiteId(s.site_id); }}
                           aria-label="Show on map"
                           style={{ flexShrink: 0, width: 36, height: 36, borderRadius: "50%", border: "none", background: "#3b82f6", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
                         >
@@ -672,6 +687,42 @@ export default function MapPage() {
                           </svg>
                         </button>
                       </div>
+                      {/* Expanded detail */}
+                      {isExpanded && (
+                        <div style={{ marginTop: 10, paddingLeft: 70, display: "flex", flexDirection: "column", gap: 7 }}>
+                          {s.population && (
+                            <span style={{ display: "inline-block", alignSelf: "flex-start", fontSize: 11, fontWeight: 500, padding: "2px 8px", borderRadius: 99, background: "var(--card-border)", color: "var(--muted)", fontFamily: "var(--font-sans)" }}>{s.population}</span>
+                          )}
+                          {s.hours && (
+                            <div style={{ display: "flex", alignItems: "flex-start", gap: 7 }}>
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--muted)", marginTop: 1 }}>
+                                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8"/>
+                                <path d="M12 7v5l3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                              </svg>
+                              <span style={{ fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>{s.hours}</span>
+                            </div>
+                          )}
+                          {s.phone && (
+                            <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--muted)" }}>
+                                <path d="M5.1 3A1.5 1.5 0 0 0 3 4.5v1C3 13.51 10.49 21 18.5 21h1a1.5 1.5 0 0 0 1.5-1.5v-2a1.5 1.5 0 0 0-1.11-1.45l-2.43-.6a1.5 1.5 0 0 0-1.56.6l-.54.72A9.78 9.78 0 0 1 9.73 11.7l.72-.54a1.5 1.5 0 0 0 .6-1.56l-.6-2.43A1.5 1.5 0 0 0 9 6H7.1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                              </svg>
+                              <a href={`tel:${s.phone.replace(/\D/g, "")}`} onClick={e => e.stopPropagation()} style={{ fontSize: 13, color: "#3b82f6", fontFamily: "var(--font-sans)", textDecoration: "none", fontWeight: 500 }}>{s.phone}</a>
+                            </div>
+                          )}
+                          {s.address && (
+                            <div style={{ display: "flex", alignItems: "flex-start", gap: 7 }}>
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--muted)", marginTop: 1 }}>
+                                <path d="M12 2C8.69 2 6 4.69 6 8c0 5.25 6 14 6 14s6-8.75 6-14c0-3.31-2.69-6-6-6zm0 9a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" fill="currentColor" opacity=".25"/><path d="M12 2C8.69 2 6 4.69 6 8c0 5.25 6 14 6 14s6-8.75 6-14c0-3.31-2.69-6-6-6z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+                              </svg>
+                              <span style={{ fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>{s.address}</span>
+                            </div>
+                          )}
+                          {s.notes && (
+                            <p style={{ margin: 0, fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.5, paddingTop: 2 }}>{s.notes}</p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   );
                   })}
