@@ -27,6 +27,7 @@ export type PoliceStation = {
   address: string | null;
   phone: string | null;
   website: string | null;
+  image_url: string | null;
   lat: number;
   lng: number;
 };
@@ -162,19 +163,35 @@ function buildFlyerPopup(f: FlyerPin): string {
   return html;
 }
 
-function makeStationIcon() {
+function makeStationIcon(s: PoliceStation, isDark = false) {
+  const name = s.district_name ?? `District ${s.district}`;
+  const initial = name.charAt(0).toUpperCase();
+  const inner = s.image_url
+    ? `<img src="${esc(s.image_url)}" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:50%" />`
+    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;background:#dc2626;border-radius:50%">${initial}</div>`;
+  const label = `<span class="shelter-label" style="font-family:var(--font-sans),sans-serif;font-size:10px;font-weight:600;color:${isDark ? "#fff" : "#111"};white-space:nowrap;text-shadow:${isDark ? "0 1px 3px rgba(0,0,0,0.8)" : "0 0 3px #fff,0 0 3px #fff,0 1px 4px rgba(0,0,0,0.25)"};pointer-events:none;margin-top:3px;display:block;text-align:center">${esc(name)}</span>`;
   return L.divIcon({
-    html: `<div style="width:14px;height:14px;border-radius:50%;background:#dc2626;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.35)"></div>`,
+    html: `<div style="display:flex;flex-direction:column;align-items:center">
+      <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;border:2px solid #dc2626;box-shadow:0 2px 8px rgba(0,0,0,0.30);background:#dc2626">
+        ${inner}
+      </div>
+      ${label}
+    </div>`,
     className: "",
-    iconSize: [14, 14],
-    iconAnchor: [7, 7],
-    popupAnchor: [0, -9],
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+    popupAnchor: [0, -20],
   });
 }
 
 function buildStationPopup(s: PoliceStation): string {
   const name = s.district_name ? `${s.district_name} District` : `District ${s.district}`;
+  const initial = name.charAt(0).toUpperCase();
+  const avatar = s.image_url
+    ? `<img src="${esc(s.image_url)}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #dc2626" />`
+    : `<div style="width:44px;height:44px;border-radius:50%;background:#dc2626;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff">${initial}</div>`;
   let html = `<div style="font-family:system-ui,sans-serif;padding:10px 12px;min-width:200px">`;
+  html += `<div style="margin-bottom:8px">${avatar}</div>`;
   html += `<p style="margin:0 0 6px;font-size:14px;font-weight:600;color:#000;line-height:1.3">${esc(name)}</p>`;
   if (s.phone)   html += `<div style="display:flex;align-items:center;gap:6px;margin-top:4px">${PHONE_CIRCLE}<a href="tel:${s.phone.replace(/\D/g, "")}" style="font-size:12px;color:#3b82f6;text-decoration:none;font-weight:500">${esc(s.phone)}</a></div>`;
   if (s.address) html += `<div style="display:flex;align-items:center;gap:6px;margin-top:4px">${PIN_CIRCLE}<span style="font-size:11px;color:#737373">${esc(s.address)}</span></div>`;
@@ -293,13 +310,15 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, station
       if (!currentIds.has(id)) { marker.remove(); stationMarkers.current.delete(id); }
     });
     stationPins.forEach(s => {
-      if (stationMarkers.current.has(s.district)) return;
-      const marker = L.marker([s.lat, s.lng], { icon: makeStationIcon() })
+      const popup = buildStationPopup(s);
+      const existing = stationMarkers.current.get(s.district);
+      if (existing) { existing.setPopupContent(popup); existing.setIcon(makeStationIcon(s, isDark)); return; }
+      const marker = L.marker([s.lat, s.lng], { icon: makeStationIcon(s, isDark) })
         .addTo(map)
-        .bindPopup(buildStationPopup(s), { maxWidth: 260, offset: [0, -4], closeButton: false });
+        .bindPopup(popup, { maxWidth: 260, offset: [0, -4], closeButton: false });
       stationMarkers.current.set(s.district, marker);
     });
-  }, [stationPins]);
+  }, [stationPins, isDark]);
 
   // Sync flyer markers
   useEffect(() => {
