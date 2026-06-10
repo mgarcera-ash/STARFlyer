@@ -532,7 +532,7 @@ export default function MapPage() {
         </div>
 
         {/* Card list — contextual */}
-        <div ref={listRef} className="sheet-list" style={{ flex: 1, overflowY: "auto", padding: "0 16px 40px", overscrollBehavior: "contain", touchAction: "pan-y", maxHeight: snap === "half" && mode === "shelters" ? "calc(30dvh - 120px)" : undefined } as React.CSSProperties}>
+        <div ref={listRef} className="sheet-list" style={{ flex: 1, overflowY: "auto", padding: "0 16px 40px", overscrollBehavior: "contain", touchAction: "pan-y", maxHeight: snap === "half" ? "calc(70dvh - 150px)" : undefined } as React.CSSProperties}>
           {mode === "flyers" ? (
             isSearchTyping ? (
               <div style={{ display: "flex", justifyContent: "center", gap: 7, paddingTop: 32 }}>
