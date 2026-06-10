@@ -16,15 +16,15 @@ type SnapPoint = "collapsed" | "half" | "full";
 
 const SNAP_CSS: Record<SnapPoint, string> = {
   collapsed: "100dvh",
-  half:      "50dvh",
-  full:      "5dvh",
+  half:      "40dvh",
+  full:      "10dvh",
 };
 
 const SNAP_PX = (snap: SnapPoint): number => {
   const h = window.innerHeight;
   if (snap === "collapsed") return h;
-  if (snap === "half")      return h * 0.5;
-  return h * 0.05;
+  if (snap === "half")      return h * 0.4;
+  return h * 0.1;
 };
 
 const nearestSnap = (y: number): SnapPoint => {
@@ -451,14 +451,14 @@ export default function MapPage() {
         </div>
 
         {/* Mode toggle — icon chips top-right */}
-        <div style={{ position: "absolute", top: 14, right: 16, display: "flex", gap: 6, zIndex: 1 }}>
+        <div style={{ position: "absolute", top: 10, right: 12, display: "flex", gap: 8, zIndex: 1 }}>
           {(["shelters", "flyers"] as const).map(m => (
             <button
               key={m}
               onClick={() => setMode(m)}
               aria-label={m === "flyers" ? "Flyers mode" : "Shelters mode"}
               style={{
-                width: 34, height: 34, borderRadius: "50%", border: "none",
+                width: 68, height: 68, borderRadius: "50%", border: "none",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 background: mode === m ? (m === "flyers" ? "#eab308" : "#3b82f6") : "var(--card-border)",
                 color: mode === m ? "#fff" : "var(--muted)",
@@ -467,12 +467,12 @@ export default function MapPage() {
               }}
             >
               {m === "flyers" ? (
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+                <svg width="26" height="26" viewBox="0 0 20 20" fill="none">
                   <circle cx="10" cy="6.5" r="1.8" fill="currentColor"/>
                   <rect x="8.6" y="9.5" width="2.8" height="6.5" rx="1.2" fill="currentColor"/>
                 </svg>
               ) : (
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+                <svg width="26" height="26" viewBox="0 0 20 20" fill="none">
                   <path d="M10 3L3 9h2v8h4v-5h2v5h4V9h2L10 3z" fill="currentColor"/>
                 </svg>
               )}
@@ -532,7 +532,7 @@ export default function MapPage() {
         </div>
 
         {/* Card list — contextual */}
-        <div ref={listRef} className="sheet-list" style={{ flex: 1, overflowY: "auto", padding: "0 16px 40px", overscrollBehavior: "contain", touchAction: "pan-y", maxHeight: snap === "half" && mode === "shelters" ? "calc(50dvh - 120px)" : undefined } as React.CSSProperties}>
+        <div ref={listRef} className="sheet-list" style={{ flex: 1, overflowY: "auto", padding: "0 16px 40px", overscrollBehavior: "contain", touchAction: "pan-y", maxHeight: snap === "half" && mode === "shelters" ? "calc(40dvh - 120px)" : undefined } as React.CSSProperties}>
           {mode === "flyers" ? (
             isSearchTyping ? (
               <div style={{ display: "flex", justifyContent: "center", gap: 7, paddingTop: 32 }}>
