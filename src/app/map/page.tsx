@@ -320,7 +320,7 @@ export default function MapPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   useEffect(() => {
     if (!search) { setDebouncedSearch(""); return; }
-    const t = setTimeout(() => setDebouncedSearch(search), 180);
+    const t = setTimeout(() => setDebouncedSearch(search), 400);
     return () => clearTimeout(t);
   }, [search]);
   const isSearchTyping = search !== "" && search !== debouncedSearch;
@@ -532,7 +532,7 @@ export default function MapPage() {
         </div>
 
         {/* Card list — contextual */}
-        <div ref={listRef} className="sheet-list" style={{ flex: 1, overflowY: "auto", padding: "0 16px 40px", overscrollBehavior: "contain", touchAction: "pan-y" } as React.CSSProperties}>
+        <div ref={listRef} className="sheet-list" style={{ flex: 1, overflowY: "auto", padding: "0 16px 40px", overscrollBehavior: "contain", touchAction: "pan-y", maxHeight: snap === "half" && mode === "shelters" ? "calc(50dvh - 120px)" : undefined } as React.CSSProperties}>
           {mode === "flyers" ? (
             isSearchTyping ? (
               <div style={{ display: "flex", justifyContent: "center", gap: 7, paddingTop: 32 }}>
@@ -617,11 +617,10 @@ export default function MapPage() {
                 <p style={{ color: "var(--muted)", fontSize: 14, fontFamily: "var(--font-sans)" }}>Loading shelters…</p>
               ) : (
                 <div>
-                  {(snap === "half" ? sortedShelters.slice(0, 4) : sortedShelters).map((s, i) => {
-                    const visibleCount = snap === "half" ? Math.min(4, sortedShelters.length) : sortedShelters.length;
+                  {sortedShelters.map((s, i) => {
                     const initials = (s.agency ?? s.site_name ?? "?").charAt(0).toUpperCase();
                     return (
-                    <div key={s.site_id} style={{ padding: "12px 0", borderBottom: i < visibleCount - 1 ? "1px solid var(--card-border)" : "none" }}>
+                    <div key={s.site_id} style={{ padding: "12px 0", borderBottom: i < sortedShelters.length - 1 ? "1px solid var(--card-border)" : "none" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
                         {/* Circular image */}
                         <div style={{ flexShrink: 0, width: 56, height: 56, borderRadius: "50%", overflow: "hidden", background: "var(--card-border)" }}>
