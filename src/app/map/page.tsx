@@ -285,7 +285,7 @@ export default function MapPage() {
           height: "100dvh",
           background: "var(--bar-bg)",
           backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-          borderRadius: "20px 20px 0 0",
+          borderRadius: "32px 32px 0 0",
           boxShadow: "0 -4px 32px rgba(0,0,0,0.15)",
           display: "flex", flexDirection: "column",
           zIndex: 20,
@@ -297,7 +297,7 @@ export default function MapPage() {
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
           onMouseDown={onMouseDown}
-          style={{ flexShrink: 0, padding: "10px 16px 8px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, touchAction: "none", cursor: "grab", userSelect: "none" }}
+          style={{ flexShrink: 0, padding: "10px 16px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, touchAction: "none", cursor: "grab", userSelect: "none" }}
         >
           <div style={{ width: 36, height: 4, borderRadius: 99, background: "var(--border)" }} />
           <div style={{ width: "100%" }}>
@@ -315,8 +315,8 @@ export default function MapPage() {
         </div>
 
         {/* Search */}
-        <div style={{ padding: "4px 16px 10px", flexShrink: 0 }}>
-          <div style={{ background: "var(--bg)", borderRadius: 12, border: "1.5px solid var(--border)", display: "flex", alignItems: "center", gap: 8, padding: "10px 14px" }}>
+        <div style={{ padding: "0 16px 12px", flexShrink: 0 }}>
+          <div style={{ background: "var(--bg)", borderRadius: 99, border: "1.5px solid var(--border)", display: "flex", alignItems: "center", gap: 8, padding: "10px 14px" }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--muted)" }}>
               <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2"/>
               <path d="M16.5 16.5L21 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
