@@ -135,10 +135,8 @@ export default function MapPage() {
   const [showFlyers,      setShowFlyers]      = useState(true);
   const [showStations,    setShowStations]    = useState(true);
   const [stations,        setStations]        = useState<PoliceStation[]>([]);
-  const [layersOpen,      setLayersOpen]      = useState(false);
-  const [layersClosing,   setLayersClosing]   = useState(false);
-  const [settingsOpen,    setSettingsOpen]    = useState(false);
-  const [settingsClosing, setSettingsClosing] = useState(false);
+  const [layersOpen,   setLayersOpen]   = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedShelterSiteId, setSelectedShelterSiteId] = useState<number | null>(null);
   const [detailShelter,   setDetailShelter]   = useState<Shelter | null>(null);
   const [addressInput,    setAddressInput]    = useState("");
@@ -472,45 +470,128 @@ export default function MapPage() {
             </svg>
           )}
         </button>
-        {/* Settings button */}
-        <button
-          onClick={() => setSettingsOpen(true)}
-          aria-label="Settings"
-          style={{
-            width: 40, height: 40, borderRadius: "50%",
-            background: "var(--bar-bg)",
-            backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
-            border: "1.5px solid var(--bar-border)",
-            boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
-            cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "var(--text)",
-          }}
-        >
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.75"/>
-            <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/>
-          </svg>
-        </button>
-        {/* Layers toggle button */}
-        <button
-          onClick={() => setLayersOpen(true)}
-          aria-label="Map layers"
-          style={{
-            width: 40, height: 40, borderRadius: "50%",
-            background: "var(--bar-bg)",
-            backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
-            border: "1.5px solid var(--bar-border)",
-            boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
-            cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "var(--text)",
-          }}
-        >
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
+
+        {/* Layers button + anchored popover */}
+        <div style={{ position: "relative" }}>
+          <button
+            onClick={() => setLayersOpen(v => !v)}
+            aria-label="Map layers"
+            style={{
+              width: 40, height: 40, borderRadius: "50%",
+              background: "var(--bar-bg)",
+              backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
+              border: "1.5px solid var(--bar-border)",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
+              cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "var(--text)",
+            }}
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+          {layersOpen && (
+            <>
+              <div style={{ position: "fixed", inset: 0, zIndex: 28 }} onClick={() => setLayersOpen(false)} />
+              <div style={{
+                position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 29,
+                minWidth: 220,
+                background: "var(--bar-bg)",
+                backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+                borderRadius: 18, border: "1.5px solid var(--bar-border)",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+                padding: "6px 0",
+                animation: "dropDown 0.16s cubic-bezier(0.32,0.72,0,1) forwards",
+              }}>
+                {([
+                  { key: "shelters", label: "Shelters",        dot: "#3b82f6", active: showShelters, toggle: () => setShowShelters(v => !v) },
+                  { key: "flyers",   label: "Flyers",          dot: "#eab308", active: showFlyers,   toggle: () => setShowFlyers(v => !v)   },
+                  { key: "stations", label: "Police Stations", dot: "#dc2626", active: showStations, toggle: () => setShowStations(v => !v) },
+                ] as const).map(({ key, label, dot, active, toggle }, i, arr) => (
+                  <div
+                    key={key}
+                    onClick={toggle}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 10,
+                      padding: "10px 16px",
+                      borderBottom: i < arr.length - 1 ? "1px solid var(--card-border)" : "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <div style={{ width: 10, height: 10, borderRadius: "50%", background: dot, flexShrink: 0, opacity: active ? 1 : 0.3 }} />
+                    <span style={{ flex: 1, fontSize: 14, color: "var(--text)", fontFamily: "var(--font-sans)", opacity: active ? 1 : 0.45 }}>{label}</span>
+                    {active && (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path d="M5 12l5 5L20 7" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Map overlay controls — top right */}
+      <div style={{ position: "fixed", top: 16, right: 16, zIndex: 25 }}>
+        {/* Settings button + anchored popover */}
+        <div style={{ position: "relative" }}>
+          <button
+            onClick={() => setSettingsOpen(v => !v)}
+            aria-label="Settings"
+            style={{
+              width: 40, height: 40, borderRadius: "50%",
+              background: "var(--bar-bg)",
+              backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
+              border: "1.5px solid var(--bar-border)",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
+              cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "var(--text)",
+            }}
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+              <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" stroke="currentColor" strokeWidth="1.75"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" strokeWidth="1.75"/>
+            </svg>
+          </button>
+          {settingsOpen && (
+            <>
+              <div style={{ position: "fixed", inset: 0, zIndex: 28 }} onClick={() => setSettingsOpen(false)} />
+              <div style={{
+                position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 29,
+                minWidth: 200,
+                background: "var(--bar-bg)",
+                backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+                borderRadius: 18, border: "1.5px solid var(--bar-border)",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+                padding: "6px 0",
+                animation: "dropDown 0.16s cubic-bezier(0.32,0.72,0,1) forwards",
+              }}>
+                {([
+                  { label: "Upload a Flyer", href: "/upload", icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+                  { label: "Admin",          href: "/admin",  icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.75"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.75"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.75"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.75"/></svg> },
+                ]).map(({ label, href, icon }, i, arr) => (
+                  <a
+                    key={href}
+                    href={href}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 10,
+                      padding: "10px 16px",
+                      borderBottom: i < arr.length - 1 ? "1px solid var(--card-border)" : "none",
+                      textDecoration: "none", color: "var(--text)",
+                    }}
+                  >
+                    <span style={{ color: "var(--muted)", display: "flex", flexShrink: 0 }}>{icon}</span>
+                    <span style={{ flex: 1, fontSize: 14, fontFamily: "var(--font-sans)" }}>{label}</span>
+                  </a>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Bottom sheet */}
@@ -935,142 +1016,6 @@ export default function MapPage() {
         </button>
       )}
 
-      {/* Settings modal */}
-      {settingsOpen && (
-        <div
-          role="presentation"
-          onClick={() => { setSettingsClosing(true); setTimeout(() => { setSettingsOpen(false); setSettingsClosing(false); }, 180); }}
-          style={{
-            position: "fixed", inset: 0, zIndex: 200,
-            background: "rgba(0,0,0,0.5)",
-            backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            padding: 24,
-            animation: settingsClosing ? "fadeOut 0.18s ease forwards" : "fadeIn 0.2s ease forwards",
-          }}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label="Settings"
-            onClick={e => e.stopPropagation()}
-            style={{
-              background: "var(--bar-bg)",
-              backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-              borderRadius: 28,
-              border: "1.5px solid var(--bar-border)",
-              boxShadow: "0 24px 80px rgba(0,0,0,0.4)",
-              width: "100%", maxWidth: 320,
-              padding: "24px 24px 20px",
-              animation: settingsClosing ? "fadeScaleOut 0.18s ease forwards" : "fadeScale 0.22s cubic-bezier(0.34,1.4,0.64,1) forwards",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-              <p style={{ margin: 0, fontSize: 17, fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-sans)", letterSpacing: "-0.02em" }}>
-                Settings
-              </p>
-              <button
-                onClick={() => { setSettingsClosing(true); setTimeout(() => { setSettingsOpen(false); setSettingsClosing(false); }, 180); }}
-                style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--card-border)", border: "none", color: "var(--muted)", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-sans)" }}
-              >✕</button>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              {([
-                { label: "Upload a Flyer", href: "/upload",  icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/></svg> },
-                { label: "Admin",          href: "/admin",   icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.75"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.75"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.75"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.75"/></svg> },
-              ]).map(({ label, href, icon }, i, arr) => (
-                <a
-                  key={href}
-                  href={href}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 12,
-                    padding: "13px 0",
-                    borderBottom: i < arr.length - 1 ? "1px solid var(--card-border)" : "none",
-                    textDecoration: "none",
-                    color: "var(--text)",
-                  }}
-                >
-                  <span style={{ color: "var(--muted)", display: "flex" }}>{icon}</span>
-                  <span style={{ flex: 1, fontSize: 15, fontFamily: "var(--font-sans)", fontWeight: 400 }}>{label}</span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <path d="M9 6l6 6-6 6" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </a>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Layers modal */}
-      {layersOpen && (
-        <div
-          role="presentation"
-          onClick={() => { setLayersClosing(true); setTimeout(() => { setLayersOpen(false); setLayersClosing(false); }, 180); }}
-          style={{
-            position: "fixed", inset: 0, zIndex: 200,
-            background: "rgba(0,0,0,0.5)",
-            backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            padding: 24,
-            animation: layersClosing ? "fadeOut 0.18s ease forwards" : "fadeIn 0.2s ease forwards",
-          }}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label="Map layers"
-            onClick={e => e.stopPropagation()}
-            style={{
-              background: "var(--bar-bg)",
-              backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-              borderRadius: 28,
-              border: "1.5px solid var(--bar-border)",
-              boxShadow: "0 24px 80px rgba(0,0,0,0.4)",
-              width: "100%", maxWidth: 320,
-              padding: "24px 24px 20px",
-              animation: layersClosing ? "fadeScaleOut 0.18s ease forwards" : "fadeScale 0.22s cubic-bezier(0.34,1.4,0.64,1) forwards",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-              <p style={{ margin: 0, fontSize: 17, fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-sans)", letterSpacing: "-0.02em" }}>
-                Map Layers
-              </p>
-              <button
-                onClick={() => { setLayersClosing(true); setTimeout(() => { setLayersOpen(false); setLayersClosing(false); }, 180); }}
-                style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--card-border)", border: "none", color: "var(--muted)", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-sans)" }}
-              >✕</button>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              {([
-                { key: "shelters",  label: "Shelters",         dot: "#3b82f6", active: showShelters,  toggle: () => setShowShelters(v => !v)  },
-                { key: "flyers",    label: "Flyers",           dot: "#eab308", active: showFlyers,    toggle: () => setShowFlyers(v => !v)    },
-                { key: "stations",  label: "Police Stations",  dot: "#dc2626", active: showStations,  toggle: () => setShowStations(v => !v)  },
-              ] as const).map(({ key, label, dot, active, toggle }, i, arr) => (
-                <div
-                  key={key}
-                  onClick={toggle}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 12,
-                    padding: "13px 0",
-                    borderBottom: i < arr.length - 1 ? "1px solid var(--card-border)" : "none",
-                    cursor: "pointer",
-                  }}
-                >
-                  <div style={{ width: 12, height: 12, borderRadius: "50%", background: dot, flexShrink: 0, opacity: active ? 1 : 0.3 }} />
-                  <span style={{ flex: 1, fontSize: 15, color: "var(--text)", fontFamily: "var(--font-sans)", fontWeight: 400, opacity: active ? 1 : 0.45 }}>{label}</span>
-                  {active && (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path d="M5 12l5 5L20 7" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
       {quickLook && (
         <QuickLook
           flyer={quickLook}
@@ -1086,10 +1031,7 @@ export default function MapPage() {
         html { overscroll-behavior: none; }
         .sheet-list { scrollbar-width: none; -ms-overflow-style: none; }
         .sheet-list::-webkit-scrollbar { display: none; }
-        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-        @keyframes fadeOut { from { opacity: 1 } to { opacity: 0 } }
-        @keyframes fadeScale { from { opacity: 0; transform: scale(0.92) } to { opacity: 1; transform: scale(1) } }
-        @keyframes fadeScaleOut { from { opacity: 1; transform: scale(1) } to { opacity: 0; transform: scale(0.92) } }
+        @keyframes dropDown { from { opacity: 0; transform: translateY(-6px) scale(0.97) } to { opacity: 1; transform: translateY(0) scale(1) } }
         @keyframes searchDot {
           0%, 80%, 100% { transform: scale(0.55); opacity: 0.35; }
           40% { transform: scale(1); opacity: 1; }
