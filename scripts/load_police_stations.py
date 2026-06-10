@@ -12,6 +12,7 @@ Reads NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY from the environmen
 The service role key is required to bypass RLS.
 """
 
+from __future__ import annotations
 import sys
 import os
 
