@@ -168,11 +168,11 @@ function makeStationIcon(s: PoliceStation, isDark = false) {
   const initial = name.charAt(0).toUpperCase();
   const inner = s.image_url
     ? `<img src="${esc(s.image_url)}" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:50%" />`
-    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;background:#dc2626;border-radius:50%">${initial}</div>`;
+    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;background:#60a5fa;border-radius:50%">${initial}</div>`;
   const label = `<span class="shelter-label" style="font-family:var(--font-sans),sans-serif;font-size:10px;font-weight:600;color:${isDark ? "#fff" : "#111"};white-space:nowrap;text-shadow:${isDark ? "0 1px 3px rgba(0,0,0,0.8)" : "0 0 3px #fff,0 0 3px #fff,0 1px 4px rgba(0,0,0,0.25)"};pointer-events:none;margin-top:3px;display:block;text-align:center">${esc(name)}</span>`;
   return L.divIcon({
     html: `<div style="display:flex;flex-direction:column;align-items:center">
-      <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;border:2px solid #dc2626;box-shadow:0 2px 8px rgba(0,0,0,0.30);background:#dc2626">
+      <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;border:2px solid #60a5fa;box-shadow:0 2px 8px rgba(0,0,0,0.30);background:#60a5fa">
         ${inner}
       </div>
       ${label}
@@ -188,8 +188,8 @@ function buildStationPopup(s: PoliceStation): string {
   const name = s.district_name ? `${s.district_name} District` : `District ${s.district}`;
   const initial = name.charAt(0).toUpperCase();
   const avatar = s.image_url
-    ? `<img src="${esc(s.image_url)}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #dc2626" />`
-    : `<div style="width:44px;height:44px;border-radius:50%;background:#dc2626;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff">${initial}</div>`;
+    ? `<img src="${esc(s.image_url)}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #60a5fa" />`
+    : `<div style="width:44px;height:44px;border-radius:50%;background:#60a5fa;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff">${initial}</div>`;
   let html = `<div style="font-family:system-ui,sans-serif;padding:10px 12px;min-width:200px">`;
   html += `<div style="margin-bottom:8px">${avatar}</div>`;
   html += `<p style="margin:0 0 6px;font-size:14px;font-weight:600;color:#000;line-height:1.3">${esc(name)}</p>`;

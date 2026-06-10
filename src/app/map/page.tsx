@@ -507,7 +507,7 @@ export default function MapPage() {
                 {([
                   { key: "shelters", label: "Shelters",        dot: "#3b82f6", active: showShelters, toggle: () => setShowShelters(v => !v) },
                   { key: "flyers",   label: "Flyers",          dot: "#eab308", active: showFlyers,   toggle: () => setShowFlyers(v => !v)   },
-                  { key: "stations", label: "Police Stations", dot: "#dc2626", active: showStations, toggle: () => setShowStations(v => !v) },
+                  { key: "stations", label: "Police Stations", dot: "#60a5fa", active: showStations, toggle: () => setShowStations(v => !v) },
                 ] as const).map(({ key, label, dot, active, toggle }, i, arr) => (
                   <div
                     key={key}
