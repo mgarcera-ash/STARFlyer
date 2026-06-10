@@ -87,6 +87,8 @@ export default function MapPage() {
   const [previewInitialSearch, setPreviewInitialSearch] = useState("");
   const [isDesktop, setIsDesktop] = useState(false);
   const [mode,            setMode]            = useState<"flyers" | "shelters">("shelters");
+  const [showShelters,    setShowShelters]    = useState(true);
+  const [showFlyers,      setShowFlyers]      = useState(true);
   const [selectedShelterSiteId, setSelectedShelterSiteId] = useState<number | null>(null);
   const [addressInput,    setAddressInput]    = useState("");
   const [suggestions,     setSuggestions]     = useState<PhotonFeature[]>([]);
@@ -378,7 +380,7 @@ export default function MapPage() {
       <div style={{ position: "fixed", inset: 0 }}>
         <MapView
           userLat={userLat} userLng={userLng}
-          shelters={shelters} flyerPins={flyerPins}
+          shelters={showShelters ? shelters : []} flyerPins={showFlyers ? flyerPins : []}
           onFlyerPinClick={handlePinClick}
           selectedShelterSiteId={selectedShelterSiteId}
           isDark={isDark}
@@ -413,24 +415,24 @@ export default function MapPage() {
             </svg>
           )}
         </button>
-        {/* Mode toggles */}
+        {/* Map layer toggles */}
         {([
-          { m: "shelters" as const, color: "#3b82f6", icon: <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><path d="M10 3L3 9h2v8h4v-5h2v5h4V9h2L10 3z" fill="currentColor"/></svg> },
-          { m: "flyers"   as const, color: "#eab308", icon: <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6.5" r="1.8" fill="currentColor"/><rect x="8.6" y="9.5" width="2.8" height="6.5" rx="1.2" fill="currentColor"/></svg> },
-        ]).map(({ m, color, icon }) => (
+          { key: "shelters", active: showShelters, toggle: () => setShowShelters(v => !v), color: "#3b82f6", icon: <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><path d="M10 3L3 9h2v8h4v-5h2v5h4V9h2L10 3z" fill="currentColor"/></svg> },
+          { key: "flyers",   active: showFlyers,   toggle: () => setShowFlyers(v => !v),   color: "#eab308", icon: <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6.5" r="1.8" fill="currentColor"/><rect x="8.6" y="9.5" width="2.8" height="6.5" rx="1.2" fill="currentColor"/></svg> },
+        ]).map(({ key, active, toggle, color, icon }) => (
           <button
-            key={m}
-            onClick={() => setMode(m)}
-            aria-label={m === "flyers" ? "Flyers mode" : "Shelters mode"}
+            key={key}
+            onClick={toggle}
+            aria-label={key === "flyers" ? "Toggle flyer pins" : "Toggle shelter pins"}
             style={{
               width: 40, height: 40, borderRadius: "50%",
-              background: mode === m ? color : "var(--bar-bg)",
+              background: active ? color : "var(--bar-bg)",
               backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
               border: "1.5px solid var(--bar-border)",
               boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
               cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center",
-              color: mode === m ? "#fff" : "var(--muted)",
+              color: active ? "#fff" : "var(--muted)",
               transition: "background 0.15s, color 0.15s",
             }}
           >
@@ -474,6 +476,33 @@ export default function MapPage() {
               </p>
             </div>
           )}
+        </div>
+
+        {/* Mode toggle — compact segmented pill */}
+        <div style={{ padding: "0 16px 10px", flexShrink: 0, display: "flex" }}>
+          <div style={{ display: "flex", background: "var(--card-border)", borderRadius: 99, padding: 3, gap: 2 }}>
+            {(["shelters", "flyers"] as const).map(m => (
+              <button
+                key={m}
+                onClick={() => setMode(m)}
+                aria-label={m === "flyers" ? "Flyers mode" : "Shelters mode"}
+                style={{
+                  width: 32, height: 32, borderRadius: "50%", border: "none",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  background: mode === m ? (m === "flyers" ? "#eab308" : "#3b82f6") : "transparent",
+                  color: mode === m ? "#fff" : "var(--muted)",
+                  cursor: "pointer", transition: "all 0.15s",
+                  boxShadow: mode === m ? "0 1px 4px rgba(0,0,0,0.2)" : "none",
+                }}
+              >
+                {m === "shelters" ? (
+                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M10 3L3 9h2v8h4v-5h2v5h4V9h2L10 3z" fill="currentColor"/></svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6.5" r="1.8" fill="currentColor"/><rect x="8.6" y="9.5" width="2.8" height="6.5" rx="1.2" fill="currentColor"/></svg>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Search bar — contextual */}
