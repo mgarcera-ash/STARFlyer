@@ -65,6 +65,50 @@ function haversine(lat1: number, lng1: number, lat2: number, lng2: number): numb
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+type DayKey = "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat";
+type ShelterHours = Partial<Record<DayKey, string>>;
+const DAY_KEYS: DayKey[] = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+const DAY_LABELS: Record<DayKey, string> = { sun: "Sunday", mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday" };
+
+function parseTime12(s: string): number {
+  const m = s.trim().match(/^(\d+):(\d+)\s*(AM|PM)$/i);
+  if (!m) return -1;
+  const h = parseInt(m[1]), min = parseInt(m[2]), pm = m[3].toUpperCase() === "PM";
+  return (pm ? (h === 12 ? 12 : h + 12) : (h === 12 ? 0 : h)) + min / 60;
+}
+
+function getOpenStatus(hours: ShelterHours): { open: boolean | null; todayHours: string | null } {
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", weekday: "short", hour: "numeric", minute: "2-digit", hour12: true }).formatToParts(new Date());
+    const dayKey = (parts.find(p => p.type === "weekday")?.value ?? "").toLowerCase().slice(0, 3) as DayKey;
+    const h = parseInt(parts.find(p => p.type === "hour")?.value ?? "0");
+    const min = parseInt(parts.find(p => p.type === "minute")?.value ?? "0");
+    const pm = (parts.find(p => p.type === "dayPeriod")?.value ?? "AM").toUpperCase() === "PM";
+    const now = (pm ? (h === 12 ? 12 : h + 12) : (h === 12 ? 0 : h)) + min / 60;
+    const todayHours = hours[dayKey] ?? null;
+    if (!todayHours || todayHours.toLowerCase() === "closed") return { open: false, todayHours: todayHours ?? "Closed" };
+    const [a, b] = todayHours.split("–").map(s => s.trim());
+    const openH = parseTime12(a), closeH = parseTime12(b);
+    if (openH < 0 || closeH < 0) return { open: null, todayHours };
+    return { open: now >= openH && now < closeH, todayHours };
+  } catch { return { open: null, todayHours: null }; }
+}
+
+function groupHours(hours: ShelterHours): { label: string; value: string }[] {
+  const short: Record<DayKey, string> = { sun: "Sun", mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat" };
+  const result: { label: string; value: string }[] = [];
+  let i = 0;
+  while (i < DAY_KEYS.length) {
+    const day = DAY_KEYS[i]; const val = hours[day];
+    if (!val) { i++; continue; }
+    let j = i + 1;
+    while (j < DAY_KEYS.length && hours[DAY_KEYS[j]] === val) j++;
+    result.push({ label: j - i > 1 ? `${short[day]} – ${short[DAY_KEYS[j-1]]}` : DAY_LABELS[day], value: val });
+    i = j;
+  }
+  return result;
+}
+
 export default function MapPage() {
   const [flyers,    setFlyers]    = useState<Flyer[]>([]);
   const [shelters,  setShelters]  = useState<Shelter[]>([]);
@@ -90,12 +134,7 @@ export default function MapPage() {
   const [showShelters,    setShowShelters]    = useState(true);
   const [showFlyers,      setShowFlyers]      = useState(true);
   const [selectedShelterSiteId, setSelectedShelterSiteId] = useState<number | null>(null);
-  const [expandedIds,     setExpandedIds]     = useState<Set<number>>(new Set());
-  const toggleExpand = (id: number) => setExpandedIds(prev => {
-    const next = new Set(prev);
-    next.has(id) ? next.delete(id) : next.add(id);
-    return next;
-  });
+  const [detailShelter,   setDetailShelter]   = useState<Shelter | null>(null);
   const [addressInput,    setAddressInput]    = useState("");
   const [suggestions,     setSuggestions]     = useState<PhotonFeature[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -460,276 +499,346 @@ export default function MapPage() {
           zIndex: 20,
         }}
       >
-        {/* Drag handle */}
+        {/* Drag handle — pill only */}
         <div
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
           onMouseDown={onMouseDown}
-          style={{ flexShrink: 0, padding: "10px 16px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, touchAction: "none", cursor: "grab", userSelect: "none" }}
+          style={{ flexShrink: 0, padding: "10px 0 8px", display: "flex", justifyContent: "center", touchAction: "none", cursor: "grab", userSelect: "none" }}
         >
           <div style={{ width: 36, height: 4, borderRadius: 99, background: "var(--card-border)" }} />
-          {snap !== "collapsed" && (
-            <div style={{ width: "100%" }}>
-              <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 600, color: "var(--text)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
-                Find the right resource.
-              </p>
-              <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 400, color: "var(--muted)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
-                {mode === "shelters"
-                  ? shelters.length === 0 ? "Loading…" : userLat !== null ? `${shelters.length} shelters, sorted by distance.` : `${shelters.length} shelters in Chicago.`
-                  : flyers.length === 0 ? "Loading…" : showGrouped ? `${flyerGroups.length} result${flyerGroups.length !== 1 ? "s" : ""} of ${flyers.length}` : `Browse ${flyers.length} flyer${flyers.length !== 1 ? "s" : ""} below.`}
-              </p>
-            </div>
-          )}
         </div>
 
-        {/* Mode toggle — compact segmented pill, absolute top-right */}
-        <div style={{ position: "absolute", top: 14, right: 16, display: "flex", background: "var(--card-border)", borderRadius: 99, padding: 3, gap: 2, zIndex: 1 }}>
-          {(["shelters", "flyers"] as const).map(m => (
-            <button
-              key={m}
-              onClick={() => setMode(m)}
-              aria-label={m === "flyers" ? "Flyers mode" : "Shelters mode"}
-              style={{
-                width: 32, height: 32, borderRadius: "50%", border: "none",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                background: mode === m ? (m === "flyers" ? "#eab308" : "#3b82f6") : "transparent",
-                color: mode === m ? "#fff" : "var(--muted)",
-                cursor: "pointer", transition: "all 0.15s",
-                boxShadow: mode === m ? "0 1px 4px rgba(0,0,0,0.2)" : "none",
-              }}
-            >
-              {m === "shelters" ? (
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M10 3L3 9h2v8h4v-5h2v5h4V9h2L10 3z" fill="currentColor"/></svg>
-              ) : (
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6.5" r="1.8" fill="currentColor"/><rect x="8.6" y="9.5" width="2.8" height="6.5" rx="1.2" fill="currentColor"/></svg>
-              )}
-            </button>
-          ))}
-        </div>
+        {/* Sliding panels */}
+        <div style={{ flex: 1, overflow: "hidden" }}>
+          <div style={{
+            display: "flex", height: "100%", width: "200%",
+            transform: detailShelter ? "translateX(-50%)" : "translateX(0)",
+            transition: "transform 0.32s cubic-bezier(0.32,0.72,0,1)",
+          }}>
 
-        {/* Search bar — contextual */}
-        <div style={{ padding: "0 16px 12px", flexShrink: 0 }}>
-          {mode === "flyers" ? (
-            <div style={{ background: "var(--bg)", borderRadius: 99, border: "1.5px solid var(--card-border)", display: "flex", alignItems: "center", gap: 8, padding: "10px 14px" }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--muted)" }}>
-                <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2"/>
-                <path d="M16.5 16.5L21 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-              <input
-                ref={searchInputRef}
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                onFocus={() => animateTo("full")}
-                onKeyDown={e => { if (e.key === "Escape") { animateTo("collapsed"); e.currentTarget.blur(); } }}
-                placeholder="Search flyers…"
-                style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 16, fontFamily: "var(--font-sans)", color: "var(--text)" }}
-              />
-              {search && (
-                <button onClick={() => setSearch("")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontSize: 18, padding: 0, lineHeight: 1, display: "flex" }}>×</button>
-              )}
-            </div>
-          ) : (
-            <div style={{ background: "var(--bg)", borderRadius: 99, border: "1.5px solid var(--card-border)", display: "flex", alignItems: "center", gap: 8, padding: "10px 14px" }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--muted)" }}>
-                <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.8"/>
-                <path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-              </svg>
-              <input
-                value={addressInput}
-                onChange={e => { setAddressInput(e.target.value); setAddressError(""); }}
-                onFocus={() => { animateTo("full"); if (suggestions.length > 0) setShowSuggestions(true); }}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                onKeyDown={e => {
-                  if (e.key === "Enter") geocodeAddress();
-                  if (e.key === "Escape") { setShowSuggestions(false); setAddressInput(""); }
-                }}
-                placeholder="Enter an address in Chicago…"
-                style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 16, fontFamily: "var(--font-sans)", color: "var(--text)" }}
-              />
-              {geocoding && <span style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-sans)", flexShrink: 0 }}>Searching…</span>}
-              {addressInput && !geocoding && (
-                <button
-                  onMouseDown={e => e.preventDefault()}
-                  onClick={() => { setAddressInput(""); setSuggestions([]); setShowSuggestions(false); setAddressError(""); }}
-                  style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontSize: 18, padding: 0, lineHeight: 1, display: "flex" }}
-                >×</button>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Card list — contextual */}
-        <div ref={listRef} className="sheet-list" style={{ flex: 1, overflowY: "auto", padding: "0 16px 40px", overscrollBehavior: "contain", touchAction: "pan-y", maxHeight: snap === "half" ? "calc(70dvh - 150px)" : undefined } as React.CSSProperties}>
-          {mode === "flyers" ? (
-            isSearchTyping ? (
-              <div style={{ display: "flex", justifyContent: "center", gap: 7, paddingTop: 32 }}>
-                {[0, 1, 2].map(i => (
-                  <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--muted)", animation: "searchDot 1s ease-in-out infinite", animationDelay: `${i * 0.18}s` }} />
-                ))}
-              </div>
-            ) : showGrouped ? (
-              <GroupedResults
-                flyerGroups={flyerGroups}
-                search={debouncedSearch}
-                activeEntities={activeEntities}
-                onQuickLook={(flyer, initialSearch = "") => { setPreviewInitialSearch(initialSearch); setQuickLook(flyer); }}
-                onPreview={(flyer, initialSearch = "") => { setPreviewInitialSearch(initialSearch); setPreview(flyer); }}
-              />
-            ) : snap === "half" ? (
-              <SectionRow
-                title="Our Top Picks"
-                flyers={topPickFlyers.length > 0 ? topPickFlyers : flyers.slice(0, 8)}
-                animationDelay={0}
-                onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
-              />
-            ) : (
-              <>
-                <FeaturedCard
-                  flyers={featuredFlyers.length > 0 ? featuredFlyers : flyers.slice(0, 5)}
-                  animationDelay={0}
-                  onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
-                />
-                <SectionRow
-                  title="Recently Added"
-                  dot="#3b82f6"
-                  flyers={flyers.slice(0, 8)}
-                  animationDelay={0.05}
-                  onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
-                />
-                {(topPickFlyers.length > 0 || flyers.length > 0) && (
-                  <SectionRow
-                    title="Our Top Picks"
-                    flyers={topPickFlyers.length > 0 ? topPickFlyers : flyers.slice(0, 8)}
-                    animationDelay={0.10}
-                    onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
-                  />
-                )}
-              </>
-            )
-          ) : (
-            <>
-              {/* Autocomplete suggestions */}
-              {showSuggestions && suggestions.length > 0 && (
-                <div style={{ marginBottom: 12, borderRadius: 16, overflow: "hidden", border: "1.5px solid var(--card-border)" }}>
-                  {suggestions.map((f, i) => {
-                    const { title, subtitle } = formatSuggestion(f);
-                    return (
+            {/* ── Panel 1: list ── */}
+            <div style={{ width: "50%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+              {/* Header + mode toggle */}
+              {snap !== "collapsed" && (
+                <div style={{ padding: "4px 16px 12px", flexShrink: 0, display: "flex", alignItems: "flex-start", gap: 12 }}>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 600, color: "var(--text)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>Find the right resource.</p>
+                    <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 400, color: "var(--muted)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
+                      {mode === "shelters"
+                        ? shelters.length === 0 ? "Loading…" : userLat !== null ? `${shelters.length} shelters, sorted by distance.` : `${shelters.length} shelters in Chicago.`
+                        : flyers.length === 0 ? "Loading…" : showGrouped ? `${flyerGroups.length} result${flyerGroups.length !== 1 ? "s" : ""} of ${flyers.length}` : `Browse ${flyers.length} flyer${flyers.length !== 1 ? "s" : ""} below.`}
+                    </p>
+                  </div>
+                  {/* Mode toggle pill */}
+                  <div style={{ display: "flex", background: "var(--card-border)", borderRadius: 99, padding: 3, gap: 2, flexShrink: 0, marginTop: 4 }}>
+                    {(["shelters", "flyers"] as const).map(m => (
                       <button
-                        key={`${f.properties.osm_type}${f.properties.osm_id}`}
-                        onMouseDown={e => e.preventDefault()}
-                        onClick={() => selectSuggestion(f)}
+                        key={m}
+                        onClick={() => setMode(m)}
+                        aria-label={m === "flyers" ? "Flyers mode" : "Shelters mode"}
                         style={{
-                          display: "flex", flexDirection: "column", alignItems: "flex-start",
-                          width: "100%", padding: "10px 14px",
-                          background: "var(--bg)", border: "none",
-                          borderBottom: i < suggestions.length - 1 ? "1px solid var(--card-border)" : "none",
-                          cursor: "pointer", textAlign: "left",
+                          width: 32, height: 32, borderRadius: "50%", border: "none",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          background: mode === m ? (m === "flyers" ? "#eab308" : "#3b82f6") : "transparent",
+                          color: mode === m ? "#fff" : "var(--muted)",
+                          cursor: "pointer", transition: "all 0.15s",
+                          boxShadow: mode === m ? "0 1px 4px rgba(0,0,0,0.2)" : "none",
                         }}
-                        onMouseEnter={e => (e.currentTarget.style.background = "var(--card-bg)")}
-                        onMouseLeave={e => (e.currentTarget.style.background = "var(--bg)")}
                       >
-                        <span style={{ fontSize: 14, fontWeight: 500, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{title}</span>
-                        <span style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-sans)", marginTop: 2 }}>{subtitle}</span>
+                        {m === "shelters"
+                          ? <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M10 3L3 9h2v8h4v-5h2v5h4V9h2L10 3z" fill="currentColor"/></svg>
+                          : <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6.5" r="1.8" fill="currentColor"/><rect x="8.6" y="9.5" width="2.8" height="6.5" rx="1.2" fill="currentColor"/></svg>}
                       </button>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
               )}
-              {/* Address error */}
-              {addressError && (
-                <p style={{ margin: "0 0 12px", fontSize: 13, color: "#ef4444", fontFamily: "var(--font-sans)" }}>{addressError}</p>
-              )}
-              {/* Shelter list */}
-              {shelters.length === 0 ? (
-                <p style={{ color: "var(--muted)", fontSize: 14, fontFamily: "var(--font-sans)" }}>Loading shelters…</p>
-              ) : (
-                <div>
-                  {sortedShelters.map((s, i) => {
-                    const initials = (s.agency ?? s.site_name ?? "?").charAt(0).toUpperCase();
-                    const isExpanded = expandedIds.has(s.site_id);
-                    return (
-                    <div
-                      key={s.site_id}
-                      onClick={() => toggleExpand(s.site_id)}
-                      style={{ padding: "12px 0", borderBottom: i < sortedShelters.length - 1 ? "1px solid var(--card-border)" : "none", cursor: "pointer" }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                        {/* Circular image */}
-                        <div style={{ flexShrink: 0, width: 56, height: 56, borderRadius: "50%", overflow: "hidden", background: "var(--card-border)" }}>
-                          {s.image_url
-                            ? <img src={s.image_url} alt={s.agency ?? ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                            : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 700, color: "var(--muted)" }}>{initials}</div>
-                          }
-                        </div>
-                        {/* Text */}
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          {s.agency && <p style={{ margin: 0, fontSize: 16, fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{s.agency}</p>}
-                          {s.site_name && s.site_name !== s.agency && <p style={{ margin: "3px 0 0", fontSize: 14, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{s.site_name}</p>}
-                          {s.distance !== undefined && (
-                            <p style={{ margin: "3px 0 0", fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>
-                              {s.distance < 0.1 ? "<0.1" : s.distance.toFixed(1)} mi away
-                            </p>
-                          )}
-                        </div>
-                        {/* Chevron */}
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--muted)", transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}>
-                          <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                        {/* Route button */}
-                        <button
-                          onClick={e => { e.stopPropagation(); animateTo("half"); setSelectedShelterSiteId(s.site_id); }}
-                          aria-label="Show on map"
-                          style={{ flexShrink: 0, width: 36, height: 36, borderRadius: "50%", border: "none", background: "#3b82f6", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M3.4 20.4l17.45-7.48a1 1 0 0 0 0-1.84L3.4 3.6a1 1 0 0 0-1.39.91L2 9.12c0 .5.37.93.87.99L17 12 2.87 13.88c-.5.07-.87.5-.87 1l.01 4.51c0 .71.73 1.2 1.39.91z"/>
-                          </svg>
-                        </button>
+
+              {/* Search bar */}
+              <div style={{ padding: "0 16px 12px", flexShrink: 0 }}>
+                {mode === "flyers" ? (
+                  <div style={{ background: "var(--bg)", borderRadius: 99, border: "1.5px solid var(--card-border)", display: "flex", alignItems: "center", gap: 8, padding: "10px 14px" }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--muted)" }}>
+                      <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2"/>
+                      <path d="M16.5 16.5L21 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                    <input
+                      ref={searchInputRef}
+                      value={search}
+                      onChange={e => setSearch(e.target.value)}
+                      onFocus={() => animateTo("full")}
+                      onKeyDown={e => { if (e.key === "Escape") { animateTo("collapsed"); e.currentTarget.blur(); } }}
+                      placeholder="Search flyers…"
+                      style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 16, fontFamily: "var(--font-sans)", color: "var(--text)" }}
+                    />
+                    {search && (
+                      <button onClick={() => setSearch("")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontSize: 18, padding: 0, lineHeight: 1, display: "flex" }}>×</button>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ background: "var(--bg)", borderRadius: 99, border: "1.5px solid var(--card-border)", display: "flex", alignItems: "center", gap: 8, padding: "10px 14px" }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--muted)" }}>
+                      <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.8"/>
+                      <path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                    </svg>
+                    <input
+                      value={addressInput}
+                      onChange={e => { setAddressInput(e.target.value); setAddressError(""); }}
+                      onFocus={() => { animateTo("full"); if (suggestions.length > 0) setShowSuggestions(true); }}
+                      onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter") geocodeAddress();
+                        if (e.key === "Escape") { setShowSuggestions(false); setAddressInput(""); }
+                      }}
+                      placeholder="Enter an address in Chicago…"
+                      style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 16, fontFamily: "var(--font-sans)", color: "var(--text)" }}
+                    />
+                    {geocoding && <span style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-sans)", flexShrink: 0 }}>Searching…</span>}
+                    {addressInput && !geocoding && (
+                      <button
+                        onMouseDown={e => e.preventDefault()}
+                        onClick={() => { setAddressInput(""); setSuggestions([]); setShowSuggestions(false); setAddressError(""); }}
+                        style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontSize: 18, padding: 0, lineHeight: 1, display: "flex" }}
+                      >×</button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Card list */}
+              <div ref={listRef} className="sheet-list" style={{ flex: 1, overflowY: "auto", padding: "0 16px 40px", overscrollBehavior: "contain", touchAction: "pan-y" } as React.CSSProperties}>
+                {mode === "flyers" ? (
+                  isSearchTyping ? (
+                    <div style={{ display: "flex", justifyContent: "center", gap: 7, paddingTop: 32 }}>
+                      {[0, 1, 2].map(i => (
+                        <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--muted)", animation: "searchDot 1s ease-in-out infinite", animationDelay: `${i * 0.18}s` }} />
+                      ))}
+                    </div>
+                  ) : showGrouped ? (
+                    <GroupedResults
+                      flyerGroups={flyerGroups}
+                      search={debouncedSearch}
+                      activeEntities={activeEntities}
+                      onQuickLook={(flyer, initialSearch = "") => { setPreviewInitialSearch(initialSearch); setQuickLook(flyer); }}
+                      onPreview={(flyer, initialSearch = "") => { setPreviewInitialSearch(initialSearch); setPreview(flyer); }}
+                    />
+                  ) : snap === "half" ? (
+                    <SectionRow
+                      title="Our Top Picks"
+                      flyers={topPickFlyers.length > 0 ? topPickFlyers : flyers.slice(0, 8)}
+                      animationDelay={0}
+                      onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
+                    />
+                  ) : (
+                    <>
+                      <FeaturedCard
+                        flyers={featuredFlyers.length > 0 ? featuredFlyers : flyers.slice(0, 5)}
+                        animationDelay={0}
+                        onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
+                      />
+                      <SectionRow
+                        title="Recently Added"
+                        dot="#3b82f6"
+                        flyers={flyers.slice(0, 8)}
+                        animationDelay={0.05}
+                        onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
+                      />
+                      {(topPickFlyers.length > 0 || flyers.length > 0) && (
+                        <SectionRow
+                          title="Our Top Picks"
+                          flyers={topPickFlyers.length > 0 ? topPickFlyers : flyers.slice(0, 8)}
+                          animationDelay={0.10}
+                          onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
+                        />
+                      )}
+                    </>
+                  )
+                ) : (
+                  <>
+                    {/* Autocomplete suggestions */}
+                    {showSuggestions && suggestions.length > 0 && (
+                      <div style={{ marginBottom: 12, borderRadius: 16, overflow: "hidden", border: "1.5px solid var(--card-border)" }}>
+                        {suggestions.map((f, i) => {
+                          const { title, subtitle } = formatSuggestion(f);
+                          return (
+                            <button
+                              key={`${f.properties.osm_type}${f.properties.osm_id}`}
+                              onMouseDown={e => e.preventDefault()}
+                              onClick={() => selectSuggestion(f)}
+                              style={{
+                                display: "flex", flexDirection: "column", alignItems: "flex-start",
+                                width: "100%", padding: "10px 14px",
+                                background: "var(--bg)", border: "none",
+                                borderBottom: i < suggestions.length - 1 ? "1px solid var(--card-border)" : "none",
+                                cursor: "pointer", textAlign: "left",
+                              }}
+                              onMouseEnter={e => (e.currentTarget.style.background = "var(--card-bg)")}
+                              onMouseLeave={e => (e.currentTarget.style.background = "var(--bg)")}
+                            >
+                              <span style={{ fontSize: 14, fontWeight: 500, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{title}</span>
+                              <span style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-sans)", marginTop: 2 }}>{subtitle}</span>
+                            </button>
+                          );
+                        })}
                       </div>
-                      {/* Expanded detail */}
-                      {isExpanded && (
-                        <div style={{ marginTop: 10, paddingLeft: 70, display: "flex", flexDirection: "column", gap: 7 }}>
-                          {s.population && (
-                            <span style={{ display: "inline-block", alignSelf: "flex-start", fontSize: 11, fontWeight: 500, padding: "2px 8px", borderRadius: 99, background: "var(--card-border)", color: "var(--muted)", fontFamily: "var(--font-sans)" }}>{s.population}</span>
-                          )}
-                          {s.hours && (
-                            <div style={{ display: "flex", alignItems: "flex-start", gap: 7 }}>
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--muted)", marginTop: 1 }}>
-                                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8"/>
-                                <path d="M12 7v5l3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-                              </svg>
-                              <span style={{ fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>{s.hours}</span>
+                    )}
+                    {/* Address error */}
+                    {addressError && (
+                      <p style={{ margin: "0 0 12px", fontSize: 13, color: "#ef4444", fontFamily: "var(--font-sans)" }}>{addressError}</p>
+                    )}
+                    {/* Shelter list */}
+                    {shelters.length === 0 ? (
+                      <p style={{ color: "var(--muted)", fontSize: 14, fontFamily: "var(--font-sans)" }}>Loading shelters…</p>
+                    ) : (
+                      <div>
+                        {sortedShelters.map((s, i) => {
+                          const initials = (s.agency ?? s.site_name ?? "?").charAt(0).toUpperCase();
+                          return (
+                            <div
+                              key={s.site_id}
+                              onClick={() => { setDetailShelter(s); animateTo("full"); }}
+                              style={{ padding: "12px 0", borderBottom: i < sortedShelters.length - 1 ? "1px solid var(--card-border)" : "none", cursor: "pointer" }}
+                            >
+                              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                                {/* Circular image */}
+                                <div style={{ flexShrink: 0, width: 56, height: 56, borderRadius: "50%", overflow: "hidden", background: "var(--card-border)" }}>
+                                  {s.image_url
+                                    ? <img src={s.image_url} alt={s.agency ?? ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                    : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 700, color: "var(--muted)" }}>{initials}</div>
+                                  }
+                                </div>
+                                {/* Text */}
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  {s.agency && <p style={{ margin: 0, fontSize: 16, fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{s.agency}</p>}
+                                  {s.site_name && s.site_name !== s.agency && <p style={{ margin: "3px 0 0", fontSize: 14, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{s.site_name}</p>}
+                                  {s.distance !== undefined && (
+                                    <p style={{ margin: "3px 0 0", fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>
+                                      {s.distance < 0.1 ? "<0.1" : s.distance.toFixed(1)} mi away
+                                    </p>
+                                  )}
+                                </div>
+                                {/* Chevron */}
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--muted)" }}>
+                                  <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                                {/* Route button */}
+                                <button
+                                  onClick={e => { e.stopPropagation(); animateTo("half"); setSelectedShelterSiteId(s.site_id); }}
+                                  aria-label="Show on map"
+                                  style={{ flexShrink: 0, width: 36, height: 36, borderRadius: "50%", border: "none", background: "#3b82f6", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                >
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M3.4 20.4l17.45-7.48a1 1 0 0 0 0-1.84L3.4 3.6a1 1 0 0 0-1.39.91L2 9.12c0 .5.37.93.87.99L17 12 2.87 13.88c-.5.07-.87.5-.87 1l.01 4.51c0 .71.73 1.2 1.39.91z"/>
+                                  </svg>
+                                </button>
+                              </div>
                             </div>
-                          )}
-                          {s.phone && (
-                            <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--muted)" }}>
-                                <path d="M5.1 3A1.5 1.5 0 0 0 3 4.5v1C3 13.51 10.49 21 18.5 21h1a1.5 1.5 0 0 0 1.5-1.5v-2a1.5 1.5 0 0 0-1.11-1.45l-2.43-.6a1.5 1.5 0 0 0-1.56.6l-.54.72A9.78 9.78 0 0 1 9.73 11.7l.72-.54a1.5 1.5 0 0 0 .6-1.56l-.6-2.43A1.5 1.5 0 0 0 9 6H7.1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-                              </svg>
-                              <a href={`tel:${s.phone.replace(/\D/g, "")}`} onClick={e => e.stopPropagation()} style={{ fontSize: 13, color: "#3b82f6", fontFamily: "var(--font-sans)", textDecoration: "none", fontWeight: 500 }}>{s.phone}</a>
-                            </div>
-                          )}
-                          {s.address && (
-                            <div style={{ display: "flex", alignItems: "flex-start", gap: 7 }}>
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--muted)", marginTop: 1 }}>
-                                <path d="M12 2C8.69 2 6 4.69 6 8c0 5.25 6 14 6 14s6-8.75 6-14c0-3.31-2.69-6-6-6zm0 9a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" fill="currentColor" opacity=".25"/><path d="M12 2C8.69 2 6 4.69 6 8c0 5.25 6 14 6 14s6-8.75 6-14c0-3.31-2.69-6-6-6z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-                              </svg>
-                              <span style={{ fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>{s.address}</span>
-                            </div>
-                          )}
-                          {s.notes && (
-                            <p style={{ margin: 0, fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.5, paddingTop: 2 }}>{s.notes}</p>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* ── Panel 2: detail ── */}
+            <div style={{ width: "50%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+              {/* Back + title */}
+              <div style={{ padding: "4px 16px 16px", flexShrink: 0, display: "flex", alignItems: "center", gap: 10 }}>
+                <button
+                  onClick={() => setDetailShelter(null)}
+                  style={{ flexShrink: 0, width: 32, height: 32, borderRadius: "50%", border: "none", background: "var(--card-border)", color: "var(--text)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+                <p style={{ margin: 0, fontSize: 17, fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.3, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {detailShelter?.agency ?? detailShelter?.site_name ?? ""}
+                </p>
+              </div>
+
+              {/* Detail scroll area */}
+              <div className="sheet-list" style={{ flex: 1, overflowY: "auto", padding: "0 16px 40px" }}>
+                {detailShelter && (() => {
+                  const hours = detailShelter.hours as ShelterHours | null;
+                  const { open, todayHours } = hours ? getOpenStatus(hours) : { open: null, todayHours: null };
+                  const grouped = hours ? groupHours(hours) : [];
+                  return (
+                    <>
+                      {/* Open/closed banner */}
+                      {hours && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+                          <span style={{ fontSize: 16, fontWeight: 600, fontFamily: "var(--font-sans)", color: open === true ? "#22c55e" : open === false ? "#ef4444" : "var(--muted)" }}>
+                            {open === true ? "Open" : open === false ? "Closed" : "—"}
+                          </span>
+                          {todayHours && todayHours.toLowerCase() !== "closed" && (
+                            <span style={{ fontSize: 15, color: "var(--text)", fontFamily: "var(--font-sans)" }}>{todayHours}</span>
                           )}
                         </div>
                       )}
-                    </div>
+
+                      {/* Hours table */}
+                      {grouped.length > 0 && (
+                        <div style={{ marginBottom: 28 }}>
+                          <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 700, color: "var(--muted)", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Hours</p>
+                          {grouped.map(({ label, value }, idx) => (
+                            <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: idx < grouped.length - 1 ? "1px solid var(--card-border)" : "none" }}>
+                              <span style={{ fontSize: 14, color: "var(--text)", fontFamily: "var(--font-sans)" }}>{label}</span>
+                              <span style={{ fontSize: 14, color: value.toLowerCase() === "closed" ? "#ef4444" : "var(--text)", fontFamily: "var(--font-sans)", fontWeight: value.toLowerCase() === "closed" ? 500 : 400 }}>{value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Details section */}
+                      <div>
+                        <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 700, color: "var(--muted)", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Details</p>
+                        <div style={{ display: "flex", flexDirection: "column" }}>
+                          {detailShelter.population && (
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: "1px solid var(--card-border)" }}>
+                              <span style={{ fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Population</span>
+                              <span style={{ fontSize: 14, color: "var(--text)", fontFamily: "var(--font-sans)" }}>{detailShelter.population}</span>
+                            </div>
+                          )}
+                          {detailShelter.phone && (
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: "1px solid var(--card-border)" }}>
+                              <span style={{ fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Phone</span>
+                              <a href={`tel:${detailShelter.phone.replace(/\D/g, "")}`} style={{ fontSize: 14, color: "#3b82f6", fontFamily: "var(--font-sans)", textDecoration: "none", fontWeight: 500 }}>{detailShelter.phone}</a>
+                            </div>
+                          )}
+                          {detailShelter.website && (
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: "1px solid var(--card-border)" }}>
+                              <span style={{ fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Website</span>
+                              <a href={detailShelter.website} target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, color: "#3b82f6", fontFamily: "var(--font-sans)", textDecoration: "none", fontWeight: 500, maxWidth: "60%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {detailShelter.website.replace(/^https?:\/\//, "")}
+                              </a>
+                            </div>
+                          )}
+                          {detailShelter.address && (
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "9px 0", borderBottom: detailShelter.notes ? "1px solid var(--card-border)" : "none" }}>
+                              <span style={{ fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)", flexShrink: 0, marginRight: 12 }}>Address</span>
+                              <span style={{ fontSize: 14, color: "var(--text)", fontFamily: "var(--font-sans)", textAlign: "right", lineHeight: 1.4 }}>{detailShelter.address}</span>
+                            </div>
+                          )}
+                          {detailShelter.notes && (
+                            <div style={{ padding: "9px 0" }}>
+                              <p style={{ margin: "0 0 4px", fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Notes</p>
+                              <p style={{ margin: 0, fontSize: 14, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.5 }}>{detailShelter.notes}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
                   );
-                  })}
-                </div>
-              )}
-            </>
-          )}
+                })()}
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
 

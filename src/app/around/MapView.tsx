@@ -13,8 +13,9 @@ export type Shelter = {
   address: string | null;
   phone: string | null;
   image_url: string | null;
-  hours: string | null;
+  hours: Record<string, string> | null;
   notes: string | null;
+  website: string | null;
   lat: number;
   lng: number;
   distance?: number;
