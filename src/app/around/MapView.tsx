@@ -170,7 +170,7 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, onFlyer
 
     // Show shelter labels only when zoomed in enough
     const updateLabels = () =>
-      containerRef.current?.classList.toggle("labels-visible", map.getZoom() >= 14);
+      containerRef.current?.classList.toggle("labels-visible", map.getZoom() >= 12);
     map.on("zoomend", updateLabels);
 
     // Wire popup image → QuickLook
