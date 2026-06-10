@@ -72,7 +72,7 @@ export default function MapPage() {
   const [userLat,   setUserLat]   = useState<number | null>(null);
   const [userLng,   setUserLng]   = useState<number | null>(null);
   const [isDark,    setIsDark]    = useState(false);
-  const [snap,      setSnap]      = useState<SnapPoint>("full");
+  const [snap,      setSnap]      = useState<SnapPoint>("half");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [quickLook, setQuickLook] = useState<Flyer | null>(null);
   const [preview,   setPreview]   = useState<Flyer | null>(null);
@@ -174,7 +174,7 @@ export default function MapPage() {
   // ── Sheet position (imperative — never set via JSX style to avoid re-render conflicts) ──
   useLayoutEffect(() => {
     if (!sheetRef.current) return;
-    sheetRef.current.style.transform  = `translateY(${SNAP_CSS["full"]})`;
+    sheetRef.current.style.transform  = `translateY(${SNAP_CSS["half"]})`;
     sheetRef.current.style.transition = "transform 0.38s cubic-bezier(0.32,0.72,0,1)";
   }, []);
 
@@ -330,9 +330,8 @@ export default function MapPage() {
   // ── Pin click → open QuickLook ────────────────────────────────────────────────
   const handlePinClick = useCallback((pin: FlyerPin) => {
     const flyer = flyers.find(f => f.id === pin.flyerId);
-    animateTo("full");
     if (flyer) { setPreviewInitialSearch(""); setQuickLook(flyer); }
-  }, [animateTo, flyers]);
+  }, [flyers]);
 
   // ── Filtered flyers ───────────────────────────────────────────────────────────
   const pinnedIds = useMemo(() => new Set(flyerPins.map(p => p.flyerId)), [flyerPins]);
