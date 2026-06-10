@@ -478,31 +478,29 @@ export default function MapPage() {
           )}
         </div>
 
-        {/* Mode toggle — compact segmented pill */}
-        <div style={{ padding: "0 16px 10px", flexShrink: 0, display: "flex" }}>
-          <div style={{ display: "flex", background: "var(--card-border)", borderRadius: 99, padding: 3, gap: 2 }}>
-            {(["shelters", "flyers"] as const).map(m => (
-              <button
-                key={m}
-                onClick={() => setMode(m)}
-                aria-label={m === "flyers" ? "Flyers mode" : "Shelters mode"}
-                style={{
-                  width: 32, height: 32, borderRadius: "50%", border: "none",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  background: mode === m ? (m === "flyers" ? "#eab308" : "#3b82f6") : "transparent",
-                  color: mode === m ? "#fff" : "var(--muted)",
-                  cursor: "pointer", transition: "all 0.15s",
-                  boxShadow: mode === m ? "0 1px 4px rgba(0,0,0,0.2)" : "none",
-                }}
-              >
-                {m === "shelters" ? (
-                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M10 3L3 9h2v8h4v-5h2v5h4V9h2L10 3z" fill="currentColor"/></svg>
-                ) : (
-                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6.5" r="1.8" fill="currentColor"/><rect x="8.6" y="9.5" width="2.8" height="6.5" rx="1.2" fill="currentColor"/></svg>
-                )}
-              </button>
-            ))}
-          </div>
+        {/* Mode toggle — compact segmented pill, absolute top-right */}
+        <div style={{ position: "absolute", top: 14, right: 16, display: "flex", background: "var(--card-border)", borderRadius: 99, padding: 3, gap: 2, zIndex: 1 }}>
+          {(["shelters", "flyers"] as const).map(m => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              aria-label={m === "flyers" ? "Flyers mode" : "Shelters mode"}
+              style={{
+                width: 32, height: 32, borderRadius: "50%", border: "none",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: mode === m ? (m === "flyers" ? "#eab308" : "#3b82f6") : "transparent",
+                color: mode === m ? "#fff" : "var(--muted)",
+                cursor: "pointer", transition: "all 0.15s",
+                boxShadow: mode === m ? "0 1px 4px rgba(0,0,0,0.2)" : "none",
+              }}
+            >
+              {m === "shelters" ? (
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M10 3L3 9h2v8h4v-5h2v5h4V9h2L10 3z" fill="currentColor"/></svg>
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6.5" r="1.8" fill="currentColor"/><rect x="8.6" y="9.5" width="2.8" height="6.5" rx="1.2" fill="currentColor"/></svg>
+              )}
+            </button>
+          ))}
         </div>
 
         {/* Search bar — contextual */}
@@ -520,7 +518,7 @@ export default function MapPage() {
                 onFocus={() => animateTo("full")}
                 onKeyDown={e => { if (e.key === "Escape") { animateTo("collapsed"); e.currentTarget.blur(); } }}
                 placeholder="Search flyers…"
-                style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 15, fontFamily: "var(--font-sans)", color: "var(--text)" }}
+                style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 16, fontFamily: "var(--font-sans)", color: "var(--text)" }}
               />
               {search && (
                 <button onClick={() => setSearch("")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontSize: 18, padding: 0, lineHeight: 1, display: "flex" }}>×</button>
@@ -542,7 +540,7 @@ export default function MapPage() {
                   if (e.key === "Escape") { setShowSuggestions(false); setAddressInput(""); }
                 }}
                 placeholder="Enter an address in Chicago…"
-                style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 15, fontFamily: "var(--font-sans)", color: "var(--text)" }}
+                style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 16, fontFamily: "var(--font-sans)", color: "var(--text)" }}
               />
               {geocoding && <span style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-sans)", flexShrink: 0 }}>Searching…</span>}
               {addressInput && !geocoding && (
