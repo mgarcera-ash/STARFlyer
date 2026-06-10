@@ -437,11 +437,11 @@ export default function MapPage() {
         >
           <div style={{ width: 36, height: 4, borderRadius: 99, background: "var(--card-border)" }} />
           {snap !== "collapsed" && (
-            <div style={{ width: "100%" }}>
-              <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 600, color: "var(--text)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
+            <div style={{ width: "100%", paddingRight: 160 }}>
+              <p style={{ fontFamily: "var(--font-sans)", fontSize: 16, fontWeight: 600, color: "var(--text)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.01em" }}>
                 Find the right resource.
               </p>
-              <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 400, color: "var(--muted)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
+              <p style={{ fontFamily: "var(--font-sans)", fontSize: 16, fontWeight: 400, color: "var(--muted)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.01em" }}>
                 {mode === "shelters"
                   ? shelters.length === 0 ? "Loading…" : userLat !== null ? `${shelters.length} shelters, sorted by distance.` : `${shelters.length} shelters in Chicago.`
                   : flyers.length === 0 ? "Loading…" : showGrouped ? `${flyerGroups.length} result${flyerGroups.length !== 1 ? "s" : ""} of ${flyers.length}` : `Browse ${flyers.length} flyer${flyers.length !== 1 ? "s" : ""} below.`}
