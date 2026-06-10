@@ -3,7 +3,7 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Flyer, Hotspot } from "@/types/flyer";
-import type { FlyerPin, Shelter } from "@/app/around/MapView";
+import type { FlyerPin, PoliceStation, Shelter } from "@/app/around/MapView";
 import QuickLook from "@/components/QuickLook";
 import FlyerPreview from "@/components/FlyerPreview";
 import FeaturedCard from "@/components/FeaturedCard";
@@ -133,6 +133,10 @@ export default function MapPage() {
   const [mode,            setMode]            = useState<"flyers" | "shelters">("shelters");
   const [showShelters,    setShowShelters]    = useState(true);
   const [showFlyers,      setShowFlyers]      = useState(true);
+  const [showStations,    setShowStations]    = useState(true);
+  const [stations,        setStations]        = useState<PoliceStation[]>([]);
+  const [layersOpen,      setLayersOpen]      = useState(false);
+  const [layersClosing,   setLayersClosing]   = useState(false);
   const [selectedShelterSiteId, setSelectedShelterSiteId] = useState<number | null>(null);
   const [detailShelter,   setDetailShelter]   = useState<Shelter | null>(null);
   const [addressInput,    setAddressInput]    = useState("");
@@ -187,6 +191,11 @@ export default function MapPage() {
     fetch("/api/shelters/all")
       .then(r => r.json())
       .then(d => setShelters(d.shelters ?? []))
+      .catch(() => {});
+
+    fetch("/api/stations/all")
+      .then(r => r.json())
+      .then(d => setStations(Array.isArray(d) ? d : []))
       .catch(() => {});
   }, []);
 
@@ -426,7 +435,7 @@ export default function MapPage() {
       <div style={{ position: "fixed", inset: 0 }}>
         <MapView
           userLat={userLat} userLng={userLng}
-          shelters={showShelters ? shelters : []} flyerPins={showFlyers ? flyerPins : []}
+          shelters={showShelters ? shelters : []} flyerPins={showFlyers ? flyerPins : []} stationPins={showStations ? stations : []}
           onFlyerPinClick={handlePinClick}
           selectedShelterSiteId={selectedShelterSiteId}
           isDark={isDark}
@@ -461,30 +470,25 @@ export default function MapPage() {
             </svg>
           )}
         </button>
-        {/* Map layer toggles */}
-        {([
-          { key: "shelters", active: showShelters, toggle: () => setShowShelters(v => !v), tint: "rgba(59,130,246,0.55)",  icon: <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><path d="M10 3L3 9h2v8h4v-5h2v5h4V9h2L10 3z" fill="currentColor"/></svg> },
-          { key: "flyers",   active: showFlyers,   toggle: () => setShowFlyers(v => !v),   tint: "rgba(234,179,8,0.55)", icon: <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6.5" r="1.8" fill="currentColor"/><rect x="8.6" y="9.5" width="2.8" height="6.5" rx="1.2" fill="currentColor"/></svg> },
-        ]).map(({ key, active, toggle, tint, icon }) => (
-          <button
-            key={key}
-            onClick={toggle}
-            aria-label={key === "flyers" ? "Toggle flyer pins" : "Toggle shelter pins"}
-            style={{
-              width: 40, height: 40, borderRadius: "50%",
-              background: active ? tint : "var(--bar-bg)",
-              backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
-              border: "1.5px solid var(--bar-border)",
-              boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
-              cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: active ? "#fff" : "var(--muted)",
-              transition: "background 0.15s, color 0.15s",
-            }}
-          >
-            {icon}
-          </button>
-        ))}
+        {/* Layers toggle button */}
+        <button
+          onClick={() => setLayersOpen(true)}
+          aria-label="Map layers"
+          style={{
+            width: 40, height: 40, borderRadius: "50%",
+            background: "var(--bar-bg)",
+            backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
+            border: "1.5px solid var(--bar-border)",
+            boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
+            cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: "var(--text)",
+          }}
+        >
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
       </div>
 
       {/* Bottom sheet */}
@@ -909,6 +913,75 @@ export default function MapPage() {
         </button>
       )}
 
+      {/* Layers modal */}
+      {layersOpen && (
+        <div
+          role="presentation"
+          onClick={() => { setLayersClosing(true); setTimeout(() => { setLayersOpen(false); setLayersClosing(false); }, 180); }}
+          style={{
+            position: "fixed", inset: 0, zIndex: 200,
+            background: "rgba(0,0,0,0.5)",
+            backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: 24,
+            animation: layersClosing ? "fadeOut 0.18s ease forwards" : "fadeIn 0.2s ease forwards",
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Map layers"
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: "var(--bar-bg)",
+              backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+              borderRadius: 28,
+              border: "1.5px solid var(--bar-border)",
+              boxShadow: "0 24px 80px rgba(0,0,0,0.4)",
+              width: "100%", maxWidth: 320,
+              padding: "24px 24px 20px",
+              animation: layersClosing ? "fadeScaleOut 0.18s ease forwards" : "fadeScale 0.22s cubic-bezier(0.34,1.4,0.64,1) forwards",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+              <p style={{ margin: 0, fontSize: 17, fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-sans)", letterSpacing: "-0.02em" }}>
+                Map Layers
+              </p>
+              <button
+                onClick={() => { setLayersClosing(true); setTimeout(() => { setLayersOpen(false); setLayersClosing(false); }, 180); }}
+                style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--card-border)", border: "none", color: "var(--muted)", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-sans)" }}
+              >✕</button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              {([
+                { key: "shelters",  label: "Shelters",         dot: "#3b82f6", active: showShelters,  toggle: () => setShowShelters(v => !v)  },
+                { key: "flyers",    label: "Flyers",           dot: "#eab308", active: showFlyers,    toggle: () => setShowFlyers(v => !v)    },
+                { key: "stations",  label: "Police Stations",  dot: "#dc2626", active: showStations,  toggle: () => setShowStations(v => !v)  },
+              ] as const).map(({ key, label, dot, active, toggle }, i, arr) => (
+                <div
+                  key={key}
+                  onClick={toggle}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    padding: "13px 0",
+                    borderBottom: i < arr.length - 1 ? "1px solid var(--card-border)" : "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  <div style={{ width: 12, height: 12, borderRadius: "50%", background: dot, flexShrink: 0, opacity: active ? 1 : 0.3 }} />
+                  <span style={{ flex: 1, fontSize: 15, color: "var(--text)", fontFamily: "var(--font-sans)", fontWeight: 400, opacity: active ? 1 : 0.45 }}>{label}</span>
+                  {active && (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M5 12l5 5L20 7" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {quickLook && (
         <QuickLook
           flyer={quickLook}
@@ -924,6 +997,10 @@ export default function MapPage() {
         html { overscroll-behavior: none; }
         .sheet-list { scrollbar-width: none; -ms-overflow-style: none; }
         .sheet-list::-webkit-scrollbar { display: none; }
+        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes fadeOut { from { opacity: 1 } to { opacity: 0 } }
+        @keyframes fadeScale { from { opacity: 0; transform: scale(0.92) } to { opacity: 1; transform: scale(1) } }
+        @keyframes fadeScaleOut { from { opacity: 1; transform: scale(1) } to { opacity: 0; transform: scale(0.92) } }
         @keyframes searchDot {
           0%, 80%, 100% { transform: scale(0.55); opacity: 0.35; }
           40% { transform: scale(1); opacity: 1; }

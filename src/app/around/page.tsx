@@ -239,6 +239,7 @@ export default function AroundPage() {
           userLng={userLng}
           shelters={showShelters ? shelters : []}
           flyerPins={showFlyers ? flyerPins : []}
+          stationPins={[]}
           onFlyerPinClick={pin => setMapQuickLook(pin)}
           isDark={isDark}
         />

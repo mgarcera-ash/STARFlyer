@@ -21,6 +21,16 @@ export type Shelter = {
   distance?: number;
 };
 
+export type PoliceStation = {
+  district: string;
+  district_name: string | null;
+  address: string | null;
+  phone: string | null;
+  website: string | null;
+  lat: number;
+  lng: number;
+};
+
 export type FlyerPin = {
   pinId: string;
   flyerId: string;
@@ -38,6 +48,7 @@ type Props = {
   userLng: number | null;
   shelters: Shelter[];
   flyerPins: FlyerPin[];
+  stationPins: PoliceStation[];
   onFlyerPinClick: (pin: FlyerPin) => void;
   selectedShelterSiteId?: number | null;
   isDark: boolean;
@@ -151,12 +162,32 @@ function buildFlyerPopup(f: FlyerPin): string {
   return html;
 }
 
-export default function MapView({ userLat, userLng, shelters, flyerPins, onFlyerPinClick, selectedShelterSiteId, isDark }: Props) {
+function makeStationIcon() {
+  return L.divIcon({
+    html: `<div style="width:14px;height:14px;border-radius:50%;background:#dc2626;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.35)"></div>`,
+    className: "",
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
+    popupAnchor: [0, -9],
+  });
+}
+
+function buildStationPopup(s: PoliceStation): string {
+  const name = s.district_name ? `${s.district_name} District` : `District ${s.district}`;
+  let html = `<div style="font-family:system-ui,sans-serif;padding:10px 12px;min-width:180px">`;
+  html += `<p style="margin:0 0 6px;font-size:14px;font-weight:600;color:#000;line-height:1.3">${esc(name)}</p>`;
+  if (s.phone) html += `<div style="display:flex;align-items:center;gap:6px">${PHONE_CIRCLE}<a href="tel:${s.phone.replace(/\D/g, "")}" style="font-size:12px;color:#3b82f6;text-decoration:none;font-weight:500">${esc(s.phone)}</a></div>`;
+  html += `</div>`;
+  return html;
+}
+
+export default function MapView({ userLat, userLng, shelters, flyerPins, stationPins, onFlyerPinClick, selectedShelterSiteId, isDark }: Props) {
   const containerRef        = useRef<HTMLDivElement>(null);
   const mapRef              = useRef<L.Map | null>(null);
   const tileLayerRef        = useRef<L.TileLayer | null>(null);
   const shelterMarkers      = useRef<Map<number, L.Marker>>(new Map());
   const flyerMarkers        = useRef<Map<string, L.Marker>>(new Map());
+  const stationMarkers      = useRef<Map<string, L.Marker>>(new Map());
   const userMarkerRef       = useRef<L.CircleMarker | null>(null);
   const flyerPinsRef        = useRef<FlyerPin[]>(flyerPins);
   const onFlyerPinClickRef  = useRef(onFlyerPinClick);
@@ -250,6 +281,23 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, onFlyer
       shelterMarkers.current.set(s.site_id, marker);
     });
   }, [shelters, isDark]);
+
+  // Sync station markers
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const currentIds = new Set(stationPins.map(s => s.district));
+    stationMarkers.current.forEach((marker, id) => {
+      if (!currentIds.has(id)) { marker.remove(); stationMarkers.current.delete(id); }
+    });
+    stationPins.forEach(s => {
+      if (stationMarkers.current.has(s.district)) return;
+      const marker = L.marker([s.lat, s.lng], { icon: makeStationIcon() })
+        .addTo(map)
+        .bindPopup(buildStationPopup(s), { maxWidth: 220, offset: [0, -4], closeButton: false });
+      stationMarkers.current.set(s.district, marker);
+    });
+  }, [stationPins]);
 
   // Sync flyer markers
   useEffect(() => {
