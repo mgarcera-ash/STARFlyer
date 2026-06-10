@@ -67,7 +67,7 @@ function makeShelterIcon(s: Shelter, isDark = false) {
   const initial = (s.agency ?? s.site_name ?? "?").charAt(0).toUpperCase();
   const inner = s.image_url
     ? `<img src="${esc(s.image_url)}" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:50%" />`
-    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#9ca3af;background:#e5e7eb;border-radius:50%">${initial}</div>`;
+    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;background:#111827;border-radius:50%">${initial}</div>`;
   const label = name ? `<span class="shelter-label" style="font-family:var(--font-sans),sans-serif;font-size:10px;font-weight:600;color:${isDark ? "#fff" : "#111"};white-space:nowrap;text-shadow:${isDark ? "0 1px 3px rgba(0,0,0,0.8)" : "0 0 3px #fff,0 0 3px #fff,0 1px 4px rgba(0,0,0,0.25)"};pointer-events:none;margin-top:3px;display:block;text-align:center">${esc(name)}</span>` : "";
   return L.divIcon({
     html: `<div style="display:flex;flex-direction:column;align-items:center">
@@ -97,7 +97,7 @@ function buildShelterPopup(s: Shelter): string {
   const initials = (s.agency ?? s.site_name ?? "?").charAt(0).toUpperCase();
   const avatar = s.image_url
     ? `<img src="${esc(s.image_url)}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:1.5px solid #e5e7eb" />`
-    : `<div style="width:44px;height:44px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#9ca3af">${initials}</div>`;
+    : `<div style="width:44px;height:44px;border-radius:50%;background:#111827;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff">${initials}</div>`;
 
   let html = `<div style="font-family:system-ui,sans-serif;padding:10px 12px;min-width:200px">`;
 

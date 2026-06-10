@@ -505,7 +505,7 @@ export default function MapPage() {
                 animation: "dropDown 0.16s cubic-bezier(0.32,0.72,0,1) forwards",
               }}>
                 {([
-                  { key: "shelters", label: "Shelters",        dot: "#3b82f6", active: showShelters, toggle: () => setShowShelters(v => !v) },
+                  { key: "shelters", label: "Shelters",        dot: "#111827", active: showShelters, toggle: () => setShowShelters(v => !v) },
                   { key: "flyers",   label: "Flyers",          dot: "#eab308", active: showFlyers,   toggle: () => setShowFlyers(v => !v)   },
                   { key: "stations", label: "Police Stations", dot: "#60a5fa", active: showStations, toggle: () => setShowStations(v => !v) },
                 ] as const).map(({ key, label, dot, active, toggle }, i, arr) => (
