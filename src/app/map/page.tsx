@@ -316,6 +316,15 @@ export default function MapPage() {
     }
   };
 
+  // ── Debounced search → animated ellipsis ─────────────────────────────────────
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    if (!search) { setDebouncedSearch(""); return; }
+    const t = setTimeout(() => setDebouncedSearch(search), 180);
+    return () => clearTimeout(t);
+  }, [search]);
+  const isSearchTyping = search !== "" && search !== debouncedSearch;
+
   // ── Pin click → open QuickLook ────────────────────────────────────────────────
   const handlePinClick = useCallback((pin: FlyerPin) => {
     const flyer = flyers.find(f => f.id === pin.flyerId);
@@ -327,7 +336,7 @@ export default function MapPage() {
   const pinnedIds = useMemo(() => new Set(flyerPins.map(p => p.flyerId)), [flyerPins]);
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const q = debouncedSearch.trim().toLowerCase();
     return flyers.filter(f => {
       const matchSearch = !q ||
         f.title.toLowerCase().includes(q) ||
@@ -337,13 +346,13 @@ export default function MapPage() {
       const matchEntities = activeEntities.length === 0 || (f.entity != null && activeEntities.includes(f.entity));
       return matchSearch && matchTags && matchEntities;
     });
-  }, [flyers, search, activeTags, activeEntities]);
+  }, [flyers, debouncedSearch, activeTags, activeEntities]);
 
-  const showGrouped = search !== "" || activeTags.length > 0;
+  const showGrouped = debouncedSearch !== "" || activeTags.length > 0;
 
   const flyerGroups: FlyerGroup[] = useMemo(() => showGrouped ? filtered.map(f => {
-    const q = search.toLowerCase();
-    const matchingHotspots = search !== ""
+    const q = debouncedSearch.toLowerCase();
+    const matchingHotspots = debouncedSearch !== ""
       ? (f.hotspots?.filter(h => h.label?.toLowerCase().includes(q) || h.value.toLowerCase().includes(q)) ?? [])
       : (f.hotspots?.filter(h => activeTags.some(tag =>
           h.label?.toLowerCase().includes(tag.toLowerCase()) || h.value.toLowerCase().includes(tag.toLowerCase())
@@ -354,10 +363,12 @@ export default function MapPage() {
       hotspotsByType[h.type]!.push(h);
     }
     return { flyer: f, hotspotsByType, isFallback: matchingHotspots.length === 0 };
-  }) : [], [showGrouped, filtered, search, activeTags]);
+  }) : [], [showGrouped, filtered, debouncedSearch, activeTags]);
 
   const sortedShelters = useMemo(() =>
-    userLat !== null ? [...shelters].sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity)) : shelters,
+    userLat !== null
+      ? [...shelters].sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity))
+      : [...shelters].sort((a, b) => (a.agency ?? "").localeCompare(b.agency ?? "")),
   [shelters, userLat]);
 
   // ── Render ────────────────────────────────────────────────────────────────────
@@ -379,7 +390,7 @@ export default function MapPage() {
         onClick={toggleDark}
         aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
         style={{
-          position: "fixed", top: 16, right: 16, zIndex: 25,
+          position: "fixed", top: 16, left: 16, zIndex: 25,
           width: 40, height: 40, borderRadius: "50%",
           background: "var(--bar-bg)",
           backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
@@ -521,12 +532,18 @@ export default function MapPage() {
         </div>
 
         {/* Card list — contextual */}
-        <div ref={listRef} style={{ flex: 1, overflowY: "auto", padding: "0 16px 40px" }}>
+        <div ref={listRef} className="sheet-list" style={{ flex: 1, overflowY: "auto", padding: "0 16px 40px", overscrollBehavior: "contain", touchAction: "pan-y" } as React.CSSProperties}>
           {mode === "flyers" ? (
-            showGrouped ? (
+            isSearchTyping ? (
+              <div style={{ display: "flex", justifyContent: "center", gap: 7, paddingTop: 32 }}>
+                {[0, 1, 2].map(i => (
+                  <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--muted)", animation: "searchDot 1s ease-in-out infinite", animationDelay: `${i * 0.18}s` }} />
+                ))}
+              </div>
+            ) : showGrouped ? (
               <GroupedResults
                 flyerGroups={flyerGroups}
-                search={search}
+                search={debouncedSearch}
                 activeEntities={activeEntities}
                 onQuickLook={(flyer, initialSearch = "") => { setPreviewInitialSearch(initialSearch); setQuickLook(flyer); }}
                 onPreview={(flyer, initialSearch = "") => { setPreviewInitialSearch(initialSearch); setPreview(flyer); }}
@@ -676,6 +693,12 @@ export default function MapPage() {
 
       <style>{`
         html { overscroll-behavior: none; }
+        .sheet-list { scrollbar-width: none; -ms-overflow-style: none; }
+        .sheet-list::-webkit-scrollbar { display: none; }
+        @keyframes searchDot {
+          0%, 80%, 100% { transform: scale(0.55); opacity: 0.35; }
+          40% { transform: scale(1); opacity: 1; }
+        }
         .flyer-popup .leaflet-popup-content-wrapper {
           background: #1c1c1e;
           border: 1.5px solid rgba(255,255,255,0.12);
