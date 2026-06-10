@@ -197,15 +197,20 @@ export default function MapPage() {
     document.addEventListener("mouseup", onUp);
   };
 
-  // ── Global key capture → focus search ────────────────────────────────────────
+  // ── Global key capture → focus search / Escape → collapse ────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        animateTo("collapsed");
+        (e.target as HTMLElement)?.blur?.();
+        return;
+      }
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key.length !== 1) return;
       const tag = (e.target as HTMLElement).tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
-      searchInputRef.current?.focus();
       animateTo("full");
+      searchInputRef.current?.focus();
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
@@ -343,6 +348,7 @@ export default function MapPage() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               onFocus={() => animateTo("full")}
+              onKeyDown={e => { if (e.key === "Escape") { animateTo("collapsed"); e.currentTarget.blur(); } }}
               placeholder="Search flyers…"
               style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 15, fontFamily: "var(--font-sans)", color: "var(--text)" }}
             />
