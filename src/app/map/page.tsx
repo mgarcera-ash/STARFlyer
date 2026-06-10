@@ -719,18 +719,16 @@ export default function MapPage() {
                                     </p>
                                   )}
                                 </div>
-                                {/* Chevron */}
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--muted)" }}>
-                                  <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                </svg>
-                                {/* Route button */}
+                                {/* Arrow button — gray, opens map */}
                                 <button
                                   onClick={e => { e.stopPropagation(); animateTo("half"); setSelectedShelterSiteId(s.site_id); }}
                                   aria-label="Show on map"
-                                  style={{ flexShrink: 0, width: 36, height: 36, borderRadius: "50%", border: "none", background: "#3b82f6", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                  style={{ flexShrink: 0, width: 36, height: 36, borderRadius: "50%", border: "none", background: "var(--card-border)", color: "var(--muted)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
                                 >
-                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M3.4 20.4l17.45-7.48a1 1 0 0 0 0-1.84L3.4 3.6a1 1 0 0 0-1.39.91L2 9.12c0 .5.37.93.87.99L17 12 2.87 13.88c-.5.07-.87.5-.87 1l.01 4.51c0 .71.73 1.2 1.39.91z"/>
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                    <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                </button>
                                   </svg>
                                 </button>
                               </div>
