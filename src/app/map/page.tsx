@@ -137,6 +137,8 @@ export default function MapPage() {
   const [stations,        setStations]        = useState<PoliceStation[]>([]);
   const [layersOpen,      setLayersOpen]      = useState(false);
   const [layersClosing,   setLayersClosing]   = useState(false);
+  const [settingsOpen,    setSettingsOpen]    = useState(false);
+  const [settingsClosing, setSettingsClosing] = useState(false);
   const [selectedShelterSiteId, setSelectedShelterSiteId] = useState<number | null>(null);
   const [detailShelter,   setDetailShelter]   = useState<Shelter | null>(null);
   const [addressInput,    setAddressInput]    = useState("");
@@ -469,6 +471,26 @@ export default function MapPage() {
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           )}
+        </button>
+        {/* Settings button */}
+        <button
+          onClick={() => setSettingsOpen(true)}
+          aria-label="Settings"
+          style={{
+            width: 40, height: 40, borderRadius: "50%",
+            background: "var(--bar-bg)",
+            backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
+            border: "1.5px solid var(--bar-border)",
+            boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
+            cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: "var(--text)",
+          }}
+        >
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.75"/>
+            <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/>
+          </svg>
         </button>
         {/* Layers toggle button */}
         <button
@@ -911,6 +933,73 @@ export default function MapPage() {
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 3L2 11h12L8 3z" fill="currentColor"/></svg>
           Flyers
         </button>
+      )}
+
+      {/* Settings modal */}
+      {settingsOpen && (
+        <div
+          role="presentation"
+          onClick={() => { setSettingsClosing(true); setTimeout(() => { setSettingsOpen(false); setSettingsClosing(false); }, 180); }}
+          style={{
+            position: "fixed", inset: 0, zIndex: 200,
+            background: "rgba(0,0,0,0.5)",
+            backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: 24,
+            animation: settingsClosing ? "fadeOut 0.18s ease forwards" : "fadeIn 0.2s ease forwards",
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Settings"
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: "var(--bar-bg)",
+              backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+              borderRadius: 28,
+              border: "1.5px solid var(--bar-border)",
+              boxShadow: "0 24px 80px rgba(0,0,0,0.4)",
+              width: "100%", maxWidth: 320,
+              padding: "24px 24px 20px",
+              animation: settingsClosing ? "fadeScaleOut 0.18s ease forwards" : "fadeScale 0.22s cubic-bezier(0.34,1.4,0.64,1) forwards",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+              <p style={{ margin: 0, fontSize: 17, fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-sans)", letterSpacing: "-0.02em" }}>
+                Settings
+              </p>
+              <button
+                onClick={() => { setSettingsClosing(true); setTimeout(() => { setSettingsOpen(false); setSettingsClosing(false); }, 180); }}
+                style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--card-border)", border: "none", color: "var(--muted)", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-sans)" }}
+              >✕</button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              {([
+                { label: "Upload a Flyer", href: "/upload",  icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+                { label: "Admin",          href: "/admin",   icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.75"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.75"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.75"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.75"/></svg> },
+              ]).map(({ label, href, icon }, i, arr) => (
+                <a
+                  key={href}
+                  href={href}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    padding: "13px 0",
+                    borderBottom: i < arr.length - 1 ? "1px solid var(--card-border)" : "none",
+                    textDecoration: "none",
+                    color: "var(--text)",
+                  }}
+                >
+                  <span style={{ color: "var(--muted)", display: "flex" }}>{icon}</span>
+                  <span style={{ flex: 1, fontSize: 15, fontFamily: "var(--font-sans)", fontWeight: 400 }}>{label}</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 6l6 6-6 6" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Layers modal */}

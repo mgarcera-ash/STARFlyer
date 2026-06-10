@@ -52,6 +52,11 @@ export default function AdminPage() {
             title="Upload Shelter Data"
             description="Load a DFSS Shelter Bed Availability CSV"
           />
+          <HubCard
+            href="/admin/stations"
+            title="Upload Police Station Data"
+            description="Load a Chicago Police Stations CSV"
+          />
         </div>
       </div>
     </main>
