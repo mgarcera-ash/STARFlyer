@@ -385,33 +385,59 @@ export default function MapPage() {
         />
       </div>
 
-      {/* Dark mode toggle */}
-      <button
-        onClick={toggleDark}
-        aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-        style={{
-          position: "fixed", top: 16, left: 16, zIndex: 25,
-          width: 40, height: 40, borderRadius: "50%",
-          background: "var(--bar-bg)",
-          backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
-          border: "1.5px solid var(--bar-border)",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
-          cursor: "pointer",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          color: "var(--text)",
-        }}
-      >
-        {isDark ? (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5"/>
-            <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-          </svg>
-        ) : (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        )}
-      </button>
+      {/* Map overlay controls — top left */}
+      <div style={{ position: "fixed", top: 16, left: 16, zIndex: 25, display: "flex", gap: 8 }}>
+        {/* Dark mode toggle */}
+        <button
+          onClick={toggleDark}
+          aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+          style={{
+            width: 40, height: 40, borderRadius: "50%",
+            background: "var(--bar-bg)",
+            backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
+            border: "1.5px solid var(--bar-border)",
+            boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
+            cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: "var(--text)",
+          }}
+        >
+          {isDark ? (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          )}
+        </button>
+        {/* Mode toggles */}
+        {([
+          { m: "shelters" as const, color: "#3b82f6", icon: <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><path d="M10 3L3 9h2v8h4v-5h2v5h4V9h2L10 3z" fill="currentColor"/></svg> },
+          { m: "flyers"   as const, color: "#eab308", icon: <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6.5" r="1.8" fill="currentColor"/><rect x="8.6" y="9.5" width="2.8" height="6.5" rx="1.2" fill="currentColor"/></svg> },
+        ]).map(({ m, color, icon }) => (
+          <button
+            key={m}
+            onClick={() => setMode(m)}
+            aria-label={m === "flyers" ? "Flyers mode" : "Shelters mode"}
+            style={{
+              width: 40, height: 40, borderRadius: "50%",
+              background: mode === m ? color : "var(--bar-bg)",
+              backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
+              border: "1.5px solid var(--bar-border)",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
+              cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: mode === m ? "#fff" : "var(--muted)",
+              transition: "background 0.15s, color 0.15s",
+            }}
+          >
+            {icon}
+          </button>
+        ))}
+      </div>
 
       {/* Bottom sheet */}
       <div
@@ -437,7 +463,7 @@ export default function MapPage() {
         >
           <div style={{ width: 36, height: 4, borderRadius: 99, background: "var(--card-border)" }} />
           {snap !== "collapsed" && (
-            <div style={{ width: "100%", paddingRight: 96 }}>
+            <div style={{ width: "100%" }}>
               <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 600, color: "var(--text)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
                 Find the right resource.
               </p>
@@ -448,36 +474,6 @@ export default function MapPage() {
               </p>
             </div>
           )}
-        </div>
-
-        {/* Mode toggle — compact segmented pill top-right */}
-        <div style={{ position: "absolute", top: 14, right: 16, display: "flex", background: "var(--card-border)", borderRadius: 99, padding: 3, gap: 2, zIndex: 1 }}>
-          {(["shelters", "flyers"] as const).map(m => (
-            <button
-              key={m}
-              onClick={() => setMode(m)}
-              aria-label={m === "flyers" ? "Flyers mode" : "Shelters mode"}
-              style={{
-                width: 32, height: 32, borderRadius: "50%", border: "none",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                background: mode === m ? (m === "flyers" ? "#eab308" : "#3b82f6") : "transparent",
-                color: mode === m ? "#fff" : "var(--muted)",
-                cursor: "pointer", transition: "all 0.15s",
-                boxShadow: mode === m ? "0 1px 4px rgba(0,0,0,0.2)" : "none",
-              }}
-            >
-              {m === "flyers" ? (
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-                  <circle cx="10" cy="6.5" r="1.8" fill="currentColor"/>
-                  <rect x="8.6" y="9.5" width="2.8" height="6.5" rx="1.2" fill="currentColor"/>
-                </svg>
-              ) : (
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-                  <path d="M10 3L3 9h2v8h4v-5h2v5h4V9h2L10 3z" fill="currentColor"/>
-                </svg>
-              )}
-            </button>
-          ))}
         </div>
 
         {/* Search bar — contextual */}
