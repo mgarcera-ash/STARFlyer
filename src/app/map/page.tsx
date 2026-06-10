@@ -793,15 +793,15 @@ export default function MapPage() {
 
                       {/* ── Action buttons ── */}
                       <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-                        {/* Directions */}
+                        {/* Location */}
                         <button
-                          onClick={() => { animateTo("half"); setSelectedShelterSiteId(detailShelter.site_id); }}
-                          style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 5, padding: "12px 8px", borderRadius: 14, border: "none", background: "var(--card-border)", color: "var(--text)", cursor: "pointer", fontFamily: "var(--font-sans)" }}
+                          onClick={() => { animateTo("collapsed"); setSelectedShelterSiteId(detailShelter.site_id); }}
+                          style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 5, padding: "12px 8px", borderRadius: 14, border: "none", background: "#3b82f6", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)" }}
                         >
                           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
                           </svg>
-                          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text)" }}>Directions</span>
+                          <span style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>Location</span>
                         </button>
                         {/* Website — only if available */}
                         {detailShelter.website && (
