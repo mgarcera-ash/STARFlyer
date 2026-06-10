@@ -297,21 +297,19 @@ export default function MapPage() {
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
           onMouseDown={onMouseDown}
-          style={{ flexShrink: 0, padding: "10px 16px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, touchAction: "none", cursor: "grab", userSelect: "none" }}
+          style={{ flexShrink: 0, padding: snap === "half" ? "10px 16px 16px" : "10px 16px 6px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, touchAction: "none", cursor: "grab", userSelect: "none" }}
         >
           <div style={{ width: 36, height: 4, borderRadius: 99, background: "var(--border)" }} />
-          <div style={{ width: "100%" }}>
-            <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 600, color: "var(--text)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
-              Find the right resource.
-            </p>
-            <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 400, color: "var(--muted)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
-              {flyers.length === 0
-                ? "Loading…"
-                : showGrouped
-                  ? `${flyerGroups.length} result${flyerGroups.length !== 1 ? "s" : ""} of ${flyers.length}`
-                  : `Browse ${flyers.length} flyer${flyers.length !== 1 ? "s" : ""} below.`}
-            </p>
-          </div>
+          {snap === "half" && (
+            <div style={{ width: "100%" }}>
+              <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 600, color: "var(--text)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
+                Find the right resource.
+              </p>
+              <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 400, color: "var(--muted)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
+                {flyers.length === 0 ? "Loading…" : `Browse ${flyers.length} flyer${flyers.length !== 1 ? "s" : ""} below.`}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Search */}
@@ -323,7 +321,7 @@ export default function MapPage() {
             </svg>
             <input
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={e => { setSearch(e.target.value); animateTo("full"); }}
               onFocus={() => animateTo("full")}
               placeholder="Search flyers…"
               style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 15, fontFamily: "var(--font-sans)", color: "var(--text)" }}
@@ -343,6 +341,14 @@ export default function MapPage() {
               activeEntities={activeEntities}
               onQuickLook={(flyer, initialSearch = "") => { setPreviewInitialSearch(initialSearch); setQuickLook(flyer); }}
               onPreview={(flyer, initialSearch = "") => { setPreviewInitialSearch(initialSearch); setPreview(flyer); }}
+            />
+          ) : snap === "half" ? (
+            <SectionRow
+              title="Our Top Picks"
+              dot="#eab308"
+              flyers={topPickFlyers.length > 0 ? topPickFlyers : flyers.slice(0, 8)}
+              animationDelay={0}
+              onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
             />
           ) : (
             <>
