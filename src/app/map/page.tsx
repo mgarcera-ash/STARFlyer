@@ -387,6 +387,8 @@ export default function MapPage() {
       const matchSearch = !q ||
         f.title.toLowerCase().includes(q) ||
         f.entity?.toLowerCase().includes(q) ||
+        f.description?.toLowerCase().includes(q) ||
+        f.tags?.some(t => t.toLowerCase().includes(q)) ||
         (f.hotspots ?? []).some(h => h.value.toLowerCase().includes(q) || h.label?.toLowerCase().includes(q));
       const matchTags = activeTags.length === 0 || activeTags.some(t => f.tags?.includes(t));
       const matchEntities = activeEntities.length === 0 || (f.entity != null && activeEntities.includes(f.entity));
