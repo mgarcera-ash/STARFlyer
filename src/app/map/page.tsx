@@ -437,11 +437,11 @@ export default function MapPage() {
         >
           <div style={{ width: 36, height: 4, borderRadius: 99, background: "var(--card-border)" }} />
           {snap !== "collapsed" && (
-            <div style={{ width: "100%", paddingRight: 160 }}>
-              <p style={{ fontFamily: "var(--font-sans)", fontSize: 16, fontWeight: 600, color: "var(--text)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.01em" }}>
+            <div style={{ width: "100%", paddingRight: 96 }}>
+              <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 600, color: "var(--text)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
                 Find the right resource.
               </p>
-              <p style={{ fontFamily: "var(--font-sans)", fontSize: 16, fontWeight: 400, color: "var(--muted)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.01em" }}>
+              <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 400, color: "var(--muted)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
                 {mode === "shelters"
                   ? shelters.length === 0 ? "Loading…" : userLat !== null ? `${shelters.length} shelters, sorted by distance.` : `${shelters.length} shelters in Chicago.`
                   : flyers.length === 0 ? "Loading…" : showGrouped ? `${flyerGroups.length} result${flyerGroups.length !== 1 ? "s" : ""} of ${flyers.length}` : `Browse ${flyers.length} flyer${flyers.length !== 1 ? "s" : ""} below.`}
@@ -450,29 +450,29 @@ export default function MapPage() {
           )}
         </div>
 
-        {/* Mode toggle — icon chips top-right */}
-        <div style={{ position: "absolute", top: 10, right: 12, display: "flex", gap: 8, zIndex: 1 }}>
+        {/* Mode toggle — compact segmented pill top-right */}
+        <div style={{ position: "absolute", top: 14, right: 16, display: "flex", background: "var(--card-border)", borderRadius: 99, padding: 3, gap: 2, zIndex: 1 }}>
           {(["shelters", "flyers"] as const).map(m => (
             <button
               key={m}
               onClick={() => setMode(m)}
               aria-label={m === "flyers" ? "Flyers mode" : "Shelters mode"}
               style={{
-                width: 68, height: 68, borderRadius: "50%", border: "none",
+                width: 32, height: 32, borderRadius: "50%", border: "none",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                background: mode === m ? (m === "flyers" ? "#eab308" : "#3b82f6") : "var(--card-border)",
+                background: mode === m ? (m === "flyers" ? "#eab308" : "#3b82f6") : "transparent",
                 color: mode === m ? "#fff" : "var(--muted)",
                 cursor: "pointer", transition: "all 0.15s",
-                boxShadow: mode === m ? "0 2px 8px rgba(0,0,0,0.18)" : "none",
+                boxShadow: mode === m ? "0 1px 4px rgba(0,0,0,0.2)" : "none",
               }}
             >
               {m === "flyers" ? (
-                <svg width="26" height="26" viewBox="0 0 20 20" fill="none">
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
                   <circle cx="10" cy="6.5" r="1.8" fill="currentColor"/>
                   <rect x="8.6" y="9.5" width="2.8" height="6.5" rx="1.2" fill="currentColor"/>
                 </svg>
               ) : (
-                <svg width="26" height="26" viewBox="0 0 20 20" fill="none">
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
                   <path d="M10 3L3 9h2v8h4v-5h2v5h4V9h2L10 3z" fill="currentColor"/>
                 </svg>
               )}
