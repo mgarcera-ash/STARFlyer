@@ -174,9 +174,11 @@ function makeStationIcon() {
 
 function buildStationPopup(s: PoliceStation): string {
   const name = s.district_name ? `${s.district_name} District` : `District ${s.district}`;
-  let html = `<div style="font-family:system-ui,sans-serif;padding:10px 12px;min-width:180px">`;
+  let html = `<div style="font-family:system-ui,sans-serif;padding:10px 12px;min-width:200px">`;
   html += `<p style="margin:0 0 6px;font-size:14px;font-weight:600;color:#000;line-height:1.3">${esc(name)}</p>`;
-  if (s.phone) html += `<div style="display:flex;align-items:center;gap:6px">${PHONE_CIRCLE}<a href="tel:${s.phone.replace(/\D/g, "")}" style="font-size:12px;color:#3b82f6;text-decoration:none;font-weight:500">${esc(s.phone)}</a></div>`;
+  if (s.phone)   html += `<div style="display:flex;align-items:center;gap:6px;margin-top:4px">${PHONE_CIRCLE}<a href="tel:${s.phone.replace(/\D/g, "")}" style="font-size:12px;color:#3b82f6;text-decoration:none;font-weight:500">${esc(s.phone)}</a></div>`;
+  if (s.address) html += `<div style="display:flex;align-items:center;gap:6px;margin-top:4px">${PIN_CIRCLE}<span style="font-size:11px;color:#737373">${esc(s.address)}</span></div>`;
+  if (s.website) html += `<div style="margin-top:6px"><a href="${esc(s.website)}" target="_blank" rel="noopener noreferrer" style="font-size:11px;color:#3b82f6;text-decoration:none">${esc(s.website.replace(/^https?:\/\//, ""))}</a></div>`;
   html += `</div>`;
   return html;
 }
@@ -294,7 +296,7 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, station
       if (stationMarkers.current.has(s.district)) return;
       const marker = L.marker([s.lat, s.lng], { icon: makeStationIcon() })
         .addTo(map)
-        .bindPopup(buildStationPopup(s), { maxWidth: 220, offset: [0, -4], closeButton: false });
+        .bindPopup(buildStationPopup(s), { maxWidth: 260, offset: [0, -4], closeButton: false });
       stationMarkers.current.set(s.district, marker);
     });
   }, [stationPins]);
