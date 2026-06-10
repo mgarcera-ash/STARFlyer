@@ -58,9 +58,10 @@ export default function MapPage() {
   const [previewInitialSearch, setPreviewInitialSearch] = useState("");
   const [isDesktop, setIsDesktop] = useState(false);
 
-  const sheetRef = useRef<HTMLDivElement>(null);
-  const listRef  = useRef<HTMLDivElement>(null);
-  const dragRef  = useRef<{ startY: number; startTranslate: number } | null>(null);
+  const sheetRef     = useRef<HTMLDivElement>(null);
+  const listRef      = useRef<HTMLDivElement>(null);
+  const dragRef      = useRef<{ startY: number; startTranslate: number } | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // ── Data ─────────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -196,6 +197,20 @@ export default function MapPage() {
     document.addEventListener("mouseup", onUp);
   };
 
+  // ── Global key capture → focus search ────────────────────────────────────────
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key.length !== 1) return;
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      searchInputRef.current?.focus();
+      animateTo("full");
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [animateTo]);
+
   // ── Pin click → open QuickLook ────────────────────────────────────────────────
   const handlePinClick = useCallback((pin: FlyerPin) => {
     const flyer = flyers.find(f => f.id === pin.flyerId);
@@ -297,16 +312,20 @@ export default function MapPage() {
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
           onMouseDown={onMouseDown}
-          style={{ flexShrink: 0, padding: snap === "half" ? "10px 16px 16px" : "10px 16px 6px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, touchAction: "none", cursor: "grab", userSelect: "none" }}
+          style={{ flexShrink: 0, padding: "10px 16px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, touchAction: "none", cursor: "grab", userSelect: "none" }}
         >
           <div style={{ width: 36, height: 4, borderRadius: 99, background: "var(--border)" }} />
-          {snap === "half" && (
+          {snap !== "collapsed" && (
             <div style={{ width: "100%" }}>
               <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 600, color: "var(--text)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
                 Find the right resource.
               </p>
               <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 400, color: "var(--muted)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
-                {flyers.length === 0 ? "Loading…" : `Browse ${flyers.length} flyer${flyers.length !== 1 ? "s" : ""} below.`}
+                {flyers.length === 0
+                  ? "Loading…"
+                  : showGrouped
+                    ? `${flyerGroups.length} result${flyerGroups.length !== 1 ? "s" : ""} of ${flyers.length}`
+                    : `Browse ${flyers.length} flyer${flyers.length !== 1 ? "s" : ""} below.`}
               </p>
             </div>
           )}
@@ -320,8 +339,9 @@ export default function MapPage() {
               <path d="M16.5 16.5L21 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
             </svg>
             <input
+              ref={searchInputRef}
               value={search}
-              onChange={e => { setSearch(e.target.value); animateTo("full"); }}
+              onChange={e => setSearch(e.target.value)}
               onFocus={() => animateTo("full")}
               placeholder="Search flyers…"
               style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 15, fontFamily: "var(--font-sans)", color: "var(--text)" }}
@@ -345,7 +365,6 @@ export default function MapPage() {
           ) : snap === "half" ? (
             <SectionRow
               title="Our Top Picks"
-              dot="#eab308"
               flyers={topPickFlyers.length > 0 ? topPickFlyers : flyers.slice(0, 8)}
               animationDelay={0}
               onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
@@ -367,8 +386,7 @@ export default function MapPage() {
               {(topPickFlyers.length > 0 || flyers.length > 0) && (
                 <SectionRow
                   title="Our Top Picks"
-                  dot="#eab308"
-                  flyers={topPickFlyers.length > 0 ? topPickFlyers : flyers.slice(0, 8)}
+                      flyers={topPickFlyers.length > 0 ? topPickFlyers : flyers.slice(0, 8)}
                   animationDelay={0.10}
                   onQuickLook={f => { setPreviewInitialSearch(""); setQuickLook(f); }}
                 />
