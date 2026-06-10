@@ -719,10 +719,10 @@ export default function MapPage() {
                                     </p>
                                   )}
                                 </div>
-                                {/* Arrow button — gray, opens map */}
+                                {/* Arrow button — opens detail */}
                                 <button
-                                  onClick={e => { e.stopPropagation(); animateTo("half"); setSelectedShelterSiteId(s.site_id); }}
-                                  aria-label="Show on map"
+                                  onClick={e => { e.stopPropagation(); setDetailShelter(s); animateTo("full"); }}
+                                  aria-label="View details"
                                   style={{ flexShrink: 0, width: 36, height: 36, borderRadius: "50%", border: "none", background: "var(--card-border)", color: "var(--muted)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
                                 >
                                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -742,19 +742,17 @@ export default function MapPage() {
 
             {/* ── Panel 2: detail ── */}
             <div style={{ width: "50%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-              {/* Back + title */}
-              <div style={{ padding: "4px 16px 16px", flexShrink: 0, display: "flex", alignItems: "center", gap: 10 }}>
+              {/* Back button row */}
+              <div style={{ padding: "4px 16px 8px", flexShrink: 0 }}>
                 <button
                   onClick={() => setDetailShelter(null)}
-                  style={{ flexShrink: 0, width: 32, height: 32, borderRadius: "50%", border: "none", background: "var(--card-border)", color: "var(--text)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                  style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "#3b82f6", cursor: "pointer", padding: "4px 0", fontSize: 15, fontFamily: "var(--font-sans)", fontWeight: 500 }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
+                  Shelters
                 </button>
-                <p style={{ margin: 0, fontSize: 17, fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.3, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {detailShelter?.agency ?? detailShelter?.site_name ?? ""}
-                </p>
               </div>
 
               {/* Detail scroll area */}
@@ -763,24 +761,88 @@ export default function MapPage() {
                   const hours = detailShelter.hours as ShelterHours | null;
                   const { open, todayHours } = hours ? getOpenStatus(hours) : { open: null, todayHours: null };
                   const grouped = hours ? groupHours(hours) : [];
+                  const initials = (detailShelter.agency ?? detailShelter.site_name ?? "?").split(" ").slice(0, 2).map(w => w[0]).join("").toUpperCase();
                   return (
                     <>
-                      {/* Open/closed banner */}
-                      {hours && (
-                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-                          <span style={{ fontSize: 16, fontWeight: 600, fontFamily: "var(--font-sans)", color: open === true ? "#22c55e" : open === false ? "#ef4444" : "var(--muted)" }}>
-                            {open === true ? "Open" : open === false ? "Closed" : "—"}
+                      {/* ── Hero header ── */}
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingBottom: 20, borderBottom: "1px solid var(--card-border)", marginBottom: 16 }}>
+                        {/* Avatar */}
+                        <div style={{ width: 72, height: 72, borderRadius: "50%", overflow: "hidden", background: "var(--card-border)", marginBottom: 12, flexShrink: 0 }}>
+                          {detailShelter.image_url
+                            ? <img src={detailShelter.image_url} alt={detailShelter.agency ?? ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, fontWeight: 700, color: "var(--muted)" }}>{initials}</div>
+                          }
+                        </div>
+                        {/* Agency name */}
+                        <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.25, textAlign: "center" }}>
+                          {detailShelter.agency ?? detailShelter.site_name}
+                        </p>
+                        {/* Site name subtitle */}
+                        {detailShelter.site_name && detailShelter.site_name !== detailShelter.agency && (
+                          <p style={{ margin: "4px 0 0", fontSize: 14, color: "var(--muted)", fontFamily: "var(--font-sans)", textAlign: "center" }}>
+                            {detailShelter.site_name}
+                          </p>
+                        )}
+                        {/* Population tag */}
+                        {detailShelter.population && (
+                          <span style={{ marginTop: 8, display: "inline-block", padding: "3px 10px", borderRadius: 99, background: "var(--card-border)", fontSize: 12, fontWeight: 600, color: "var(--muted)", fontFamily: "var(--font-sans)", letterSpacing: "0.02em" }}>
+                            {detailShelter.population}
                           </span>
+                        )}
+                      </div>
+
+                      {/* ── Action buttons ── */}
+                      <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+                        {/* Directions */}
+                        <button
+                          onClick={() => { animateTo("half"); setSelectedShelterSiteId(detailShelter.site_id); }}
+                          style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 5, padding: "12px 8px", borderRadius: 14, border: "none", background: "var(--card-border)", color: "var(--text)", cursor: "pointer", fontFamily: "var(--font-sans)" }}
+                        >
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
+                          </svg>
+                          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text)" }}>Directions</span>
+                        </button>
+                        {/* Website — only if available */}
+                        {detailShelter.website && (
+                          <a
+                            href={detailShelter.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 5, padding: "12px 8px", borderRadius: 14, border: "none", background: "var(--card-border)", color: "var(--text)", cursor: "pointer", fontFamily: "var(--font-sans)", textDecoration: "none" }}
+                          >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.8"/>
+                              <path d="M2 12h20M12 2c-2.5 3-4 6.5-4 10s1.5 7 4 10M12 2c2.5 3 4 6.5 4 10s-1.5 7-4 10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                            </svg>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text)" }}>Website</span>
+                          </a>
+                        )}
+                      </div>
+
+                      {/* ── Quick info strip ── */}
+                      {(open !== null || detailShelter.distance !== undefined) && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+                          {open !== null && (
+                            <span style={{ padding: "4px 10px", borderRadius: 99, fontSize: 13, fontWeight: 700, fontFamily: "var(--font-sans)", background: open ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)", color: open ? "#16a34a" : "#dc2626" }}>
+                              {open ? "Open" : "Closed"}
+                            </span>
+                          )}
                           {todayHours && todayHours.toLowerCase() !== "closed" && (
-                            <span style={{ fontSize: 15, color: "var(--text)", fontFamily: "var(--font-sans)" }}>{todayHours}</span>
+                            <span style={{ fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>{todayHours}</span>
+                          )}
+                          {detailShelter.distance !== undefined && (
+                            <span style={{ marginLeft: "auto", padding: "4px 10px", borderRadius: 99, fontSize: 13, fontWeight: 600, fontFamily: "var(--font-sans)", background: "var(--card-border)", color: "var(--muted)" }}>
+                              {detailShelter.distance < 0.1 ? "<0.1" : detailShelter.distance.toFixed(1)} mi
+                            </span>
                           )}
                         </div>
                       )}
 
-                      {/* Hours table */}
+                      {/* ── Hours table ── */}
                       {grouped.length > 0 && (
-                        <div style={{ marginBottom: 28 }}>
-                          <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 700, color: "var(--muted)", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Hours</p>
+                        <div style={{ marginBottom: 24 }}>
+                          <p style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 700, color: "var(--muted)", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Hours</p>
                           {grouped.map(({ label, value }, idx) => (
                             <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: idx < grouped.length - 1 ? "1px solid var(--card-border)" : "none" }}>
                               <span style={{ fontSize: 14, color: "var(--text)", fontFamily: "var(--font-sans)" }}>{label}</span>
@@ -790,44 +852,32 @@ export default function MapPage() {
                         </div>
                       )}
 
-                      {/* Details section */}
-                      <div>
-                        <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 700, color: "var(--muted)", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Details</p>
-                        <div style={{ display: "flex", flexDirection: "column" }}>
-                          {detailShelter.population && (
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: "1px solid var(--card-border)" }}>
-                              <span style={{ fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Population</span>
-                              <span style={{ fontSize: 14, color: "var(--text)", fontFamily: "var(--font-sans)" }}>{detailShelter.population}</span>
-                            </div>
-                          )}
-                          {detailShelter.phone && (
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: "1px solid var(--card-border)" }}>
-                              <span style={{ fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Phone</span>
-                              <a href={`tel:${detailShelter.phone.replace(/\D/g, "")}`} style={{ fontSize: 14, color: "#3b82f6", fontFamily: "var(--font-sans)", textDecoration: "none", fontWeight: 500 }}>{detailShelter.phone}</a>
-                            </div>
-                          )}
-                          {detailShelter.website && (
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: "1px solid var(--card-border)" }}>
-                              <span style={{ fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Website</span>
-                              <a href={detailShelter.website} target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, color: "#3b82f6", fontFamily: "var(--font-sans)", textDecoration: "none", fontWeight: 500, maxWidth: "60%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                {detailShelter.website.replace(/^https?:\/\//, "")}
-                              </a>
-                            </div>
-                          )}
-                          {detailShelter.address && (
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "9px 0", borderBottom: detailShelter.notes ? "1px solid var(--card-border)" : "none" }}>
-                              <span style={{ fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)", flexShrink: 0, marginRight: 12 }}>Address</span>
-                              <span style={{ fontSize: 14, color: "var(--text)", fontFamily: "var(--font-sans)", textAlign: "right", lineHeight: 1.4 }}>{detailShelter.address}</span>
-                            </div>
-                          )}
-                          {detailShelter.notes && (
-                            <div style={{ padding: "9px 0" }}>
-                              <p style={{ margin: "0 0 4px", fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Notes</p>
-                              <p style={{ margin: 0, fontSize: 14, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.5 }}>{detailShelter.notes}</p>
-                            </div>
-                          )}
+                      {/* ── Details section ── */}
+                      {(detailShelter.phone || detailShelter.address || detailShelter.notes) && (
+                        <div style={{ marginBottom: 8 }}>
+                          <p style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 700, color: "var(--muted)", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Details</p>
+                          <div style={{ display: "flex", flexDirection: "column" }}>
+                            {detailShelter.phone && (
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: (detailShelter.address || detailShelter.notes) ? "1px solid var(--card-border)" : "none" }}>
+                                <span style={{ fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Phone</span>
+                                <a href={`tel:${detailShelter.phone.replace(/\D/g, "")}`} style={{ fontSize: 14, color: "#3b82f6", fontFamily: "var(--font-sans)", textDecoration: "none", fontWeight: 500 }}>{detailShelter.phone}</a>
+                              </div>
+                            )}
+                            {detailShelter.address && (
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "9px 0", borderBottom: detailShelter.notes ? "1px solid var(--card-border)" : "none" }}>
+                                <span style={{ fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)", flexShrink: 0, marginRight: 12 }}>Address</span>
+                                <span style={{ fontSize: 14, color: "var(--text)", fontFamily: "var(--font-sans)", textAlign: "right", lineHeight: 1.4 }}>{detailShelter.address}</span>
+                              </div>
+                            )}
+                            {detailShelter.notes && (
+                              <div style={{ padding: "9px 0" }}>
+                                <p style={{ margin: "0 0 4px", fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Notes</p>
+                                <p style={{ margin: 0, fontSize: 14, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.5 }}>{detailShelter.notes}</p>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </>
                   );
                 })()}
