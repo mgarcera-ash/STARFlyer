@@ -505,7 +505,7 @@ export default function MapPage() {
                 animation: "dropDown 0.16s cubic-bezier(0.32,0.72,0,1) forwards",
               }}>
                 {([
-                  { key: "shelters", label: "Shelters",        dot: "#111827", active: showShelters, toggle: () => setShowShelters(v => !v) },
+                  { key: "shelters", label: "Shelters",        dot: isDark ? "#fff" : "#111827", active: showShelters, toggle: () => setShowShelters(v => !v) },
                   { key: "flyers",   label: "Flyers",          dot: "#eab308", active: showFlyers,   toggle: () => setShowFlyers(v => !v)   },
                   { key: "stations", label: "Police Stations", dot: "#60a5fa", active: showStations, toggle: () => setShowStations(v => !v) },
                 ] as const).map(({ key, label, dot, active, toggle }, i, arr) => (
@@ -650,8 +650,8 @@ export default function MapPage() {
                         style={{
                           width: 32, height: 32, borderRadius: "50%", border: "none",
                           display: "flex", alignItems: "center", justifyContent: "center",
-                          background: mode === m ? (m === "flyers" ? "#eab308" : "#3b82f6") : "transparent",
-                          color: mode === m ? "#fff" : "var(--muted)",
+                          background: mode === m ? (m === "flyers" ? "#eab308" : isDark ? "#fff" : "#111827") : "transparent",
+                          color: mode === m ? (m === "shelters" ? (isDark ? "#111" : "#fff") : "#fff") : "var(--muted)",
                           cursor: "pointer", transition: "all 0.15s",
                           boxShadow: mode === m ? "0 1px 4px rgba(0,0,0,0.2)" : "none",
                         }}

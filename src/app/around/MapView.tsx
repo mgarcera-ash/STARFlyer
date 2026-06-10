@@ -67,7 +67,7 @@ function makeShelterIcon(s: Shelter, isDark = false) {
   const initial = (s.agency ?? s.site_name ?? "?").charAt(0).toUpperCase();
   const inner = s.image_url
     ? `<img src="${esc(s.image_url)}" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:50%" />`
-    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;background:#111827;border-radius:50%">${initial}</div>`;
+    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:${isDark ? "#111" : "#fff"};background:${isDark ? "#fff" : "#111827"};border-radius:50%">${initial}</div>`;
   const label = name ? `<span class="shelter-label" style="font-family:var(--font-sans),sans-serif;font-size:10px;font-weight:600;color:${isDark ? "#fff" : "#111"};white-space:nowrap;text-shadow:${isDark ? "0 1px 3px rgba(0,0,0,0.8)" : "0 0 3px #fff,0 0 3px #fff,0 1px 4px rgba(0,0,0,0.25)"};pointer-events:none;margin-top:3px;display:block;text-align:center">${esc(name)}</span>` : "";
   return L.divIcon({
     html: `<div style="display:flex;flex-direction:column;align-items:center">
