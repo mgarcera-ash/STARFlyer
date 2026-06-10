@@ -124,10 +124,10 @@ function buildFlyerPopup(f: FlyerPin): string {
     </div>`;
   }
 
-  // Header — entity + title
+  // Header — address location name + title
   html += `<div style="padding:10px 12px 8px;border-bottom:1px solid rgba(255,255,255,0.08)">`;
-  if (f.entity) html += `<p style="margin:0 0 1px;font-size:10px;font-weight:700;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.06em;line-height:1.3">${esc(f.entity)}</p>`;
-  if (f.title)  html += `<p style="margin:0;font-size:13px;font-weight:500;color:#fff;line-height:1.4">${esc(f.title)}</p>`;
+  if (f.addressLabel) html += `<p style="margin:0 0 1px;font-size:10px;font-weight:700;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.06em;line-height:1.3">${esc(f.addressLabel)}</p>`;
+  if (f.title)        html += `<p style="margin:0;font-size:13px;font-weight:500;color:#fff;line-height:1.4">${esc(f.title)}</p>`;
   html += `</div>`;
 
   // Contacts
