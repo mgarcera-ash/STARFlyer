@@ -422,7 +422,7 @@ export default function MapPage() {
           onMouseDown={onMouseDown}
           style={{ flexShrink: 0, padding: "10px 16px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, touchAction: "none", cursor: "grab", userSelect: "none" }}
         >
-          <div style={{ width: 36, height: 4, borderRadius: 99, background: "var(--border)" }} />
+          <div style={{ width: 36, height: 4, borderRadius: 99, background: "var(--card-border)" }} />
           {snap !== "collapsed" && (
             <div style={{ width: "100%" }}>
               <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 600, color: "var(--text)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
@@ -440,15 +440,15 @@ export default function MapPage() {
         {/* Mode toggle */}
         {snap !== "collapsed" && (
           <div style={{ padding: "0 16px 10px", flexShrink: 0 }}>
-            <div style={{ display: "flex", background: "var(--border)", borderRadius: 99, padding: 3 }}>
+            <div style={{ display: "flex", background: "var(--card-border)", borderRadius: 99, padding: 3 }}>
               {(["flyers", "shelters"] as const).map(m => (
                 <button
                   key={m}
                   onClick={() => setMode(m)}
                   style={{
                     flex: 1, padding: "7px 0", borderRadius: 99, border: "none",
-                    background: mode === m ? "var(--surface)" : "transparent",
-                    color: mode === m ? "var(--text)" : "var(--muted)",
+                    background: mode === m ? (m === "flyers" ? "#eab308" : "#3b82f6") : "transparent",
+                    color: mode === m ? "#fff" : "var(--muted)",
                     fontSize: 13, fontWeight: 600, fontFamily: "var(--font-sans)",
                     cursor: "pointer",
                     boxShadow: mode === m ? "0 1px 4px rgba(0,0,0,0.12)" : "none",
@@ -465,7 +465,7 @@ export default function MapPage() {
         {/* Search bar — contextual */}
         <div style={{ padding: "0 16px 12px", flexShrink: 0 }}>
           {mode === "flyers" ? (
-            <div style={{ background: "var(--bg)", borderRadius: 99, border: "1.5px solid var(--border)", display: "flex", alignItems: "center", gap: 8, padding: "10px 14px" }}>
+            <div style={{ background: "var(--bg)", borderRadius: 99, border: "1.5px solid var(--card-border)", display: "flex", alignItems: "center", gap: 8, padding: "10px 14px" }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--muted)" }}>
                 <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2"/>
                 <path d="M16.5 16.5L21 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -484,7 +484,7 @@ export default function MapPage() {
               )}
             </div>
           ) : (
-            <div style={{ background: "var(--bg)", borderRadius: 99, border: "1.5px solid var(--border)", display: "flex", alignItems: "center", gap: 8, padding: "10px 14px" }}>
+            <div style={{ background: "var(--bg)", borderRadius: 99, border: "1.5px solid var(--card-border)", display: "flex", alignItems: "center", gap: 8, padding: "10px 14px" }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--muted)" }}>
                 <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.8"/>
                 <path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
@@ -559,7 +559,7 @@ export default function MapPage() {
             <>
               {/* Autocomplete suggestions */}
               {showSuggestions && suggestions.length > 0 && (
-                <div style={{ marginBottom: 12, borderRadius: 16, overflow: "hidden", border: "1.5px solid var(--border)" }}>
+                <div style={{ marginBottom: 12, borderRadius: 16, overflow: "hidden", border: "1.5px solid var(--card-border)" }}>
                   {suggestions.map((f, i) => {
                     const { title, subtitle } = formatSuggestion(f);
                     return (
@@ -571,7 +571,7 @@ export default function MapPage() {
                           display: "flex", flexDirection: "column", alignItems: "flex-start",
                           width: "100%", padding: "10px 14px",
                           background: "var(--bg)", border: "none",
-                          borderBottom: i < suggestions.length - 1 ? "1px solid var(--border)" : "none",
+                          borderBottom: i < suggestions.length - 1 ? "1px solid var(--card-border)" : "none",
                           cursor: "pointer", textAlign: "left",
                         }}
                         onMouseEnter={e => (e.currentTarget.style.background = "var(--card-bg)")}
@@ -594,7 +594,7 @@ export default function MapPage() {
               ) : (
                 <div>
                   {(snap === "half" ? sortedShelters.slice(0, 4) : sortedShelters).map((s, i) => (
-                    <div key={s.site_id} style={{ padding: "14px 0", borderBottom: i < (snap === "half" ? Math.min(4, sortedShelters.length) : sortedShelters.length) - 1 ? "1px solid var(--border)" : "none" }}>
+                    <div key={s.site_id} style={{ padding: "14px 0", borderBottom: i < (snap === "half" ? Math.min(4, sortedShelters.length) : sortedShelters.length) - 1 ? "1px solid var(--card-border)" : "none" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
                         <div style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
                           {s.agency && <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{s.agency}</p>}
@@ -607,7 +607,7 @@ export default function MapPage() {
                         )}
                       </div>
                       {s.population && (
-                        <span style={{ display: "inline-block", fontSize: 11, fontWeight: 500, padding: "2px 8px", borderRadius: 99, background: "var(--border)", color: "var(--muted)", fontFamily: "var(--font-sans)", marginBottom: 6 }}>
+                        <span style={{ display: "inline-block", fontSize: 11, fontWeight: 500, padding: "2px 8px", borderRadius: 99, background: "var(--card-border)", color: "var(--muted)", fontFamily: "var(--font-sans)", marginBottom: 6 }}>
                           {s.population}
                         </span>
                       )}
