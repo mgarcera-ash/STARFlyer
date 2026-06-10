@@ -12,6 +12,7 @@ export type Shelter = {
   population: string | null;
   address: string | null;
   phone: string | null;
+  image_url: string | null;
   lat: number;
   lng: number;
   distance?: number;
@@ -74,12 +75,24 @@ function makeFlyerIcon() {
 }
 
 function buildShelterPopup(s: Shelter): string {
-  let html = `<div style="font-family:system-ui,sans-serif;padding:2px 0;min-width:160px">`;
-  if (s.agency)     html += `<p style="margin:0 0 2px;font-size:14px;font-weight:600;color:#000;line-height:1.3">${esc(s.agency)}</p>`;
-  if (s.site_name)  html += `<p style="margin:0 0 6px;font-size:12px;color:#000;line-height:1.3">${esc(s.site_name)}</p>`;
-  if (s.population) html += `<span style="display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;background:#e5e7eb;color:#737373;margin-bottom:8px">${esc(s.population)}</span>`;
-  if (s.phone)      html += `<div style="display:flex;align-items:center;gap:6px;margin-top:6px">${PHONE_CIRCLE}<a href="tel:${s.phone.replace(/\D/g, "")}" style="font-size:12px;color:#3b82f6;text-decoration:none;font-weight:500">${esc(s.phone)}</a></div>`;
-  if (s.address)    html += `<div style="display:flex;align-items:center;gap:6px;margin-top:4px">${PIN_CIRCLE}<span style="font-size:11px;color:#737373">${esc(s.address)}</span></div>`;
+  const initials = (s.agency ?? s.site_name ?? "?").charAt(0).toUpperCase();
+  const avatar = s.image_url
+    ? `<img src="${esc(s.image_url)}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid #e5e7eb" />`
+    : `<div style="width:44px;height:44px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;font-weight:700;color:#9ca3af">${initials}</div>`;
+
+  let html = `<div style="font-family:system-ui,sans-serif;padding:10px 12px;min-width:180px">`;
+
+  // Header: avatar + agency + population capsule
+  html += `<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px">`;
+  html += avatar;
+  html += `<div style="flex:1;min-width:0;padding-top:2px">`;
+  if (s.agency)     html += `<p style="margin:0 0 4px;font-size:14px;font-weight:600;color:#000;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.agency)}</p>`;
+  if (s.population) html += `<span style="display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;background:#e5e7eb;color:#737373">${esc(s.population)}</span>`;
+  html += `</div></div>`;
+
+  if (s.site_name && s.site_name !== s.agency) html += `<p style="margin:0 0 8px;font-size:12px;color:#737373;line-height:1.3">${esc(s.site_name)}</p>`;
+  if (s.phone)   html += `<div style="display:flex;align-items:center;gap:6px;margin-top:4px">${PHONE_CIRCLE}<a href="tel:${s.phone.replace(/\D/g, "")}" style="font-size:12px;color:#3b82f6;text-decoration:none;font-weight:500">${esc(s.phone)}</a></div>`;
+  if (s.address) html += `<div style="display:flex;align-items:center;gap:6px;margin-top:4px">${PIN_CIRCLE}<span style="font-size:11px;color:#737373">${esc(s.address)}</span></div>`;
   if (s.distance !== undefined) {
     const dist = s.distance < 0.1 ? "&lt;0.1" : s.distance.toFixed(1);
     html += `<p style="margin:8px 0 0;font-size:11px;color:#737373">${dist} mi away</p>`;

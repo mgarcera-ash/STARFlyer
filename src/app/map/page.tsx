@@ -598,36 +598,51 @@ export default function MapPage() {
                 <p style={{ color: "var(--muted)", fontSize: 14, fontFamily: "var(--font-sans)" }}>Loading shelters…</p>
               ) : (
                 <div>
-                  {(snap === "half" ? sortedShelters.slice(0, 4) : sortedShelters).map((s, i) => (
-                    <div key={s.site_id} style={{ padding: "14px 0", borderBottom: i < (snap === "half" ? Math.min(4, sortedShelters.length) : sortedShelters.length) - 1 ? "1px solid var(--card-border)" : "none" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
-                        <div style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
-                          {s.agency && <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{s.agency}</p>}
-                          {s.site_name && s.site_name !== s.agency && <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{s.site_name}</p>}
+                  {(snap === "half" ? sortedShelters.slice(0, 4) : sortedShelters).map((s, i) => {
+                    const visibleCount = snap === "half" ? Math.min(4, sortedShelters.length) : sortedShelters.length;
+                    const initials = (s.agency ?? s.site_name ?? "?").charAt(0).toUpperCase();
+                    return (
+                    <div key={s.site_id} style={{ padding: "12px 0", borderBottom: i < visibleCount - 1 ? "1px solid var(--card-border)" : "none" }}>
+                      {/* Avatar row */}
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                        <div style={{ flexShrink: 0, width: 44, height: 44, borderRadius: "50%", overflow: "hidden", background: "var(--card-border)", border: "1.5px solid var(--card-border)" }}>
+                          {s.image_url
+                            ? <img src={s.image_url} alt={s.agency ?? ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, color: "var(--muted)" }}>{initials}</div>
+                          }
                         </div>
-                        {s.distance !== undefined && (
-                          <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 500, color: "var(--muted)", fontFamily: "var(--font-sans)", paddingTop: 2 }}>
-                            {s.distance < 0.1 ? "<0.1" : s.distance.toFixed(1)} mi
-                          </span>
-                        )}
-                      </div>
-                      {s.population && (
-                        <span style={{ display: "inline-block", fontSize: 11, fontWeight: 500, padding: "2px 8px", borderRadius: 99, background: "var(--card-border)", color: "var(--muted)", fontFamily: "var(--font-sans)", marginBottom: 6 }}>
-                          {s.population}
-                        </span>
-                      )}
-                      <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                        {s.phone && (
-                          <a href={`tel:${s.phone.replace(/\D/g, "")}`} style={{ fontSize: 13, color: "#3b82f6", textDecoration: "none", fontWeight: 500, fontFamily: "var(--font-sans)" }}>
-                            {s.phone}
-                          </a>
-                        )}
-                        {s.address && (
-                          <p style={{ margin: 0, fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>{s.address}</p>
-                        )}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                            <div style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
+                              {s.agency && <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{s.agency}</p>}
+                              {s.site_name && s.site_name !== s.agency && <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{s.site_name}</p>}
+                            </div>
+                            {s.distance !== undefined && (
+                              <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 500, color: "var(--muted)", fontFamily: "var(--font-sans)", paddingTop: 2 }}>
+                                {s.distance < 0.1 ? "<0.1" : s.distance.toFixed(1)} mi
+                              </span>
+                            )}
+                          </div>
+                          {s.population && (
+                            <span style={{ display: "inline-block", fontSize: 11, fontWeight: 500, padding: "2px 8px", borderRadius: 99, background: "var(--card-border)", color: "var(--muted)", fontFamily: "var(--font-sans)", marginTop: 4 }}>
+                              {s.population}
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 3, marginTop: 4 }}>
+                          {s.phone && (
+                            <a href={`tel:${s.phone.replace(/\D/g, "")}`} style={{ fontSize: 13, color: "#3b82f6", textDecoration: "none", fontWeight: 500, fontFamily: "var(--font-sans)" }}>
+                              {s.phone}
+                            </a>
+                          )}
+                          {s.address && (
+                            <p style={{ margin: 0, fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>{s.address}</p>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  ))}
+                  );
+                  })}
                 </div>
               )}
             </>
