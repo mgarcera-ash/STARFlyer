@@ -437,30 +437,35 @@ export default function MapPage() {
           )}
         </div>
 
-        {/* Mode toggle */}
-        {snap !== "collapsed" && (
-          <div style={{ padding: "0 16px 10px", flexShrink: 0 }}>
-            <div style={{ display: "flex", background: "var(--card-border)", borderRadius: 99, padding: 3 }}>
-              {(["flyers", "shelters"] as const).map(m => (
-                <button
-                  key={m}
-                  onClick={() => setMode(m)}
-                  style={{
-                    flex: 1, padding: "7px 0", borderRadius: 99, border: "none",
-                    background: mode === m ? (m === "flyers" ? "#eab308" : "#3b82f6") : "transparent",
-                    color: mode === m ? "#fff" : "var(--muted)",
-                    fontSize: 13, fontWeight: 600, fontFamily: "var(--font-sans)",
-                    cursor: "pointer",
-                    boxShadow: mode === m ? "0 1px 4px rgba(0,0,0,0.12)" : "none",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  {m === "flyers" ? "Flyers" : "Shelters"}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Mode toggle — icon chips top-right */}
+        <div style={{ position: "absolute", top: 14, right: 16, display: "flex", gap: 6, zIndex: 1 }}>
+          {(["flyers", "shelters"] as const).map(m => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              aria-label={m === "flyers" ? "Flyers mode" : "Shelters mode"}
+              style={{
+                width: 34, height: 34, borderRadius: "50%", border: "none",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: mode === m ? (m === "flyers" ? "#eab308" : "#3b82f6") : "var(--card-border)",
+                color: mode === m ? "#fff" : "var(--muted)",
+                cursor: "pointer", transition: "all 0.15s",
+                boxShadow: mode === m ? "0 2px 8px rgba(0,0,0,0.18)" : "none",
+              }}
+            >
+              {m === "flyers" ? (
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="6.5" r="1.8" fill="currentColor"/>
+                  <rect x="8.6" y="9.5" width="2.8" height="6.5" rx="1.2" fill="currentColor"/>
+                </svg>
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+                  <path d="M10 3L3 9h2v8h4v-5h2v5h4V9h2L10 3z" fill="currentColor"/>
+                </svg>
+              )}
+            </button>
+          ))}
+        </div>
 
         {/* Search bar — contextual */}
         <div style={{ padding: "0 16px 12px", flexShrink: 0 }}>
