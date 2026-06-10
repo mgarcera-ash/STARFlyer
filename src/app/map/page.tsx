@@ -86,7 +86,8 @@ export default function MapPage() {
   const [activeEntities,  setActiveEntities]  = useState<string[]>([]);
   const [previewInitialSearch, setPreviewInitialSearch] = useState("");
   const [isDesktop, setIsDesktop] = useState(false);
-  const [mode,            setMode]            = useState<"flyers" | "shelters">("flyers");
+  const [mode,            setMode]            = useState<"flyers" | "shelters">("shelters");
+  const [selectedShelterSiteId, setSelectedShelterSiteId] = useState<number | null>(null);
   const [addressInput,    setAddressInput]    = useState("");
   const [suggestions,     setSuggestions]     = useState<PhotonFeature[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -368,6 +369,7 @@ export default function MapPage() {
           userLat={userLat} userLng={userLng}
           shelters={shelters} flyerPins={flyerPins}
           onFlyerPinClick={handlePinClick}
+          selectedShelterSiteId={selectedShelterSiteId}
           isDark={isDark}
         />
       </div>
@@ -439,7 +441,7 @@ export default function MapPage() {
 
         {/* Mode toggle — icon chips top-right */}
         <div style={{ position: "absolute", top: 14, right: 16, display: "flex", gap: 6, zIndex: 1 }}>
-          {(["flyers", "shelters"] as const).map(m => (
+          {(["shelters", "flyers"] as const).map(m => (
             <button
               key={m}
               onClick={() => setMode(m)}
@@ -603,42 +605,34 @@ export default function MapPage() {
                     const initials = (s.agency ?? s.site_name ?? "?").charAt(0).toUpperCase();
                     return (
                     <div key={s.site_id} style={{ padding: "12px 0", borderBottom: i < visibleCount - 1 ? "1px solid var(--card-border)" : "none" }}>
-                      {/* Avatar row */}
-                      <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                        <div style={{ flexShrink: 0, width: 44, height: 44, borderRadius: "50%", overflow: "hidden", background: "var(--card-border)", border: "1.5px solid var(--card-border)" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                        {/* Circular image */}
+                        <div style={{ flexShrink: 0, width: 56, height: 56, borderRadius: "50%", overflow: "hidden", background: "var(--card-border)" }}>
                           {s.image_url
                             ? <img src={s.image_url} alt={s.agency ?? ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                            : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, color: "var(--muted)" }}>{initials}</div>
+                            : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 700, color: "var(--muted)" }}>{initials}</div>
                           }
                         </div>
+                        {/* Text */}
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                            <div style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
-                              {s.agency && <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{s.agency}</p>}
-                              {s.site_name && s.site_name !== s.agency && <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{s.site_name}</p>}
-                            </div>
-                            {s.distance !== undefined && (
-                              <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 500, color: "var(--muted)", fontFamily: "var(--font-sans)", paddingTop: 2 }}>
-                                {s.distance < 0.1 ? "<0.1" : s.distance.toFixed(1)} mi
-                              </span>
-                            )}
-                          </div>
-                          {s.population && (
-                            <span style={{ display: "inline-block", fontSize: 11, fontWeight: 500, padding: "2px 8px", borderRadius: 99, background: "var(--card-border)", color: "var(--muted)", fontFamily: "var(--font-sans)", marginTop: 4 }}>
-                              {s.population}
-                            </span>
+                          {s.agency && <p style={{ margin: 0, fontSize: 16, fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{s.agency}</p>}
+                          {s.site_name && s.site_name !== s.agency && <p style={{ margin: "3px 0 0", fontSize: 14, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{s.site_name}</p>}
+                          {s.distance !== undefined && (
+                            <p style={{ margin: "3px 0 0", fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>
+                              {s.distance < 0.1 ? "<0.1" : s.distance.toFixed(1)} mi away
+                            </p>
                           )}
                         </div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 3, marginTop: 4 }}>
-                          {s.phone && (
-                            <a href={`tel:${s.phone.replace(/\D/g, "")}`} style={{ fontSize: 13, color: "#3b82f6", textDecoration: "none", fontWeight: 500, fontFamily: "var(--font-sans)" }}>
-                              {s.phone}
-                            </a>
-                          )}
-                          {s.address && (
-                            <p style={{ margin: 0, fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.4 }}>{s.address}</p>
-                          )}
-                        </div>
+                        {/* Route button */}
+                        <button
+                          onClick={() => { animateTo("half"); setSelectedShelterSiteId(s.site_id); }}
+                          aria-label="Show on map"
+                          style={{ flexShrink: 0, width: 36, height: 36, borderRadius: "50%", border: "none", background: "#3b82f6", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M3.4 20.4l17.45-7.48a1 1 0 0 0 0-1.84L3.4 3.6a1 1 0 0 0-1.39.91L2 9.12c0 .5.37.93.87.99L17 12 2.87 13.88c-.5.07-.87.5-.87 1l.01 4.51c0 .71.73 1.2 1.39.91z"/>
+                          </svg>
+                        </button>
                       </div>
                     </div>
                   );
