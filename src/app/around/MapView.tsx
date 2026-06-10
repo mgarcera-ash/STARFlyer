@@ -53,7 +53,7 @@ function makeShelterIcon(s: Shelter, isDark = false) {
   const inner = s.image_url
     ? `<img src="${esc(s.image_url)}" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:50%" />`
     : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#9ca3af;background:#e5e7eb;border-radius:50%">${initial}</div>`;
-  const label = name ? `<span style="font-family:var(--font-sans),sans-serif;font-size:10px;font-weight:600;color:${isDark ? "#fff" : "#111"};white-space:nowrap;text-shadow:${isDark ? "0 1px 3px rgba(0,0,0,0.8)" : "0 0 3px #fff,0 0 3px #fff,0 1px 4px rgba(0,0,0,0.25)"};pointer-events:none;margin-top:3px;display:block;text-align:center">${esc(name)}</span>` : "";
+  const label = name ? `<span class="shelter-label" style="font-family:var(--font-sans),sans-serif;font-size:10px;font-weight:600;color:${isDark ? "#fff" : "#111"};white-space:nowrap;text-shadow:${isDark ? "0 1px 3px rgba(0,0,0,0.8)" : "0 0 3px #fff,0 0 3px #fff,0 1px 4px rgba(0,0,0,0.25)"};pointer-events:none;margin-top:3px;display:block;text-align:center">${esc(name)}</span>` : "";
   return L.divIcon({
     html: `<div style="display:flex;flex-direction:column;align-items:center">
       <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.30);background:#e5e7eb">
@@ -168,6 +168,11 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, onFlyer
     const map = L.map(containerRef.current, { center: CHICAGO, zoom: 11, zoomControl: false });
     L.control.zoom({ position: "bottomright" }).addTo(map);
 
+    // Show shelter labels only when zoomed in enough
+    const updateLabels = () =>
+      containerRef.current?.classList.toggle("labels-visible", map.getZoom() >= 14);
+    map.on("zoomend", updateLabels);
+
     // Wire popup image → QuickLook
     map.on("popupopen", (e: L.PopupEvent) => {
       const img = e.popup.getElement()?.querySelector<HTMLElement>("[data-flyer-pin-id]");
@@ -260,5 +265,13 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, onFlyer
     });
   }, [flyerPins]);
 
-return <div ref={containerRef} style={{ width: "100%", height: "100%" }} />;
+  return (
+    <>
+      <style>{`
+        .shelter-label { opacity: 0; transition: opacity 0.2s ease; }
+        .labels-visible .shelter-label { opacity: 1; }
+      `}</style>
+      <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
+    </>
+  );
 }
