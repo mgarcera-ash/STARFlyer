@@ -115,7 +115,9 @@ export default function MapPage() {
   const [flyerPins, setFlyerPins] = useState<FlyerPin[]>([]);
   const [userLat,   setUserLat]   = useState<number | null>(null);
   const [userLng,   setUserLng]   = useState<number | null>(null);
-  const [isDark,    setIsDark]    = useState(false);
+  type ThemeMode = "light" | "dark" | "positron";
+  const [themeMode, setThemeMode] = useState<ThemeMode>("light");
+  const isDark = themeMode === "dark";
   const [snap,      setSnap]      = useState<SnapPoint>("half");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [quickLook, setQuickLook] = useState<Flyer | null>(null);
@@ -197,22 +199,31 @@ export default function MapPage() {
       .catch(() => {});
   }, []);
 
-  // ── Dark mode ─────────────────────────────────────────────────────────────────
+  // ── Theme mode ────────────────────────────────────────────────────────────────
   useEffect(() => {
-    const stored = localStorage.getItem("theme");
-    if (stored) setIsDark(stored === "dark");
-    else if (window.matchMedia("(prefers-color-scheme: dark)").matches) setIsDark(true);
-    const handle = (e: StorageEvent) => { if (e.key === "theme") setIsDark(e.newValue === "dark"); };
+    const stored = localStorage.getItem("theme") as ThemeMode | null;
+    if (stored === "dark" || stored === "positron" || stored === "light") setThemeMode(stored);
+    else if (window.matchMedia("(prefers-color-scheme: dark)").matches) setThemeMode("dark");
+    const handle = (e: StorageEvent) => {
+      if (e.key === "theme" && (e.newValue === "dark" || e.newValue === "positron" || e.newValue === "light"))
+        setThemeMode(e.newValue as ThemeMode);
+    };
     window.addEventListener("storage", handle);
     return () => window.removeEventListener("storage", handle);
   }, []);
 
-  const toggleDark = () => {
-    const next = !isDark;
-    setIsDark(next);
-    localStorage.setItem("theme", next ? "dark" : "light");
-    document.documentElement.setAttribute("data-theme", next ? "dark" : "light");
+  const cycleTheme = () => {
+    const next: ThemeMode = themeMode === "light" ? "dark" : themeMode === "dark" ? "positron" : "light";
+    setThemeMode(next);
+    localStorage.setItem("theme", next);
+    document.documentElement.setAttribute("data-theme", next === "dark" ? "dark" : "light");
   };
+
+  const mapStyle = themeMode === "dark"
+    ? "https://tiles.openfreemap.org/styles/dark"
+    : themeMode === "positron"
+    ? "https://tiles.openfreemap.org/styles/positron"
+    : "https://tiles.openfreemap.org/styles/bright";
 
   // ── Desktop detection ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -458,6 +469,7 @@ export default function MapPage() {
           onFlyerPinClick={handlePinClick}
           selectedShelterSiteId={selectedShelterSiteId}
           isDark={isDark}
+          mapStyle={mapStyle}
         />
       </div>
 
@@ -465,8 +477,8 @@ export default function MapPage() {
       <div style={{ position: "fixed", top: 16, left: 16, zIndex: 25, display: "flex", gap: 8 }}>
         {/* Dark mode toggle */}
         <button
-          onClick={toggleDark}
-          aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+          onClick={cycleTheme}
+          aria-label="Cycle map theme"
           style={{
             width: 40, height: 40, borderRadius: "50%",
             background: "var(--bar-bg)",
@@ -478,14 +490,18 @@ export default function MapPage() {
             color: "var(--text)",
           }}
         >
-          {isDark ? (
+          {themeMode === "light" ? (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5"/>
-              <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          ) : themeMode === "dark" ? (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           ) : (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
           )}
         </button>

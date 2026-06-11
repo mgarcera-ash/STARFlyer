@@ -55,6 +55,7 @@ type Props = {
   onFlyerPinClick: (pin: FlyerPin) => void;
   selectedShelterSiteId?: number | null;
   isDark: boolean;
+  mapStyle: string;
 };
 
 function esc(s: string) {
@@ -202,7 +203,7 @@ function buildStationPopup(s: PoliceStation): string {
   return html;
 }
 
-export default function MapView({ userLat, userLng, shelters, flyerPins, stationPins, onFlyerPinClick, selectedShelterSiteId, isDark }: Props) {
+export default function MapView({ userLat, userLng, shelters, flyerPins, stationPins, onFlyerPinClick, selectedShelterSiteId, isDark, mapStyle }: Props) {
   const containerRef        = useRef<HTMLDivElement>(null);
   const mapRef              = useRef<L.Map | null>(null);
   const tileLayerRef        = useRef<L.Layer | null>(null);
@@ -245,17 +246,13 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, station
     return () => { map.remove(); mapRef.current = null; tileLayerRef.current = null; setMapReady(false); };
   }, []);
 
-  // Swap vector tile style when dark mode changes
+  // Swap vector tile style when theme changes
   useEffect(() => {
     if (!mapReady) return;
     const map = mapRef.current!;
     if (tileLayerRef.current) tileLayerRef.current.remove();
-    tileLayerRef.current = L.maplibreGL({
-      style: isDark
-        ? "https://tiles.openfreemap.org/styles/dark"
-        : "https://tiles.openfreemap.org/styles/bright",
-    }).addTo(map);
-  }, [mapReady, isDark]);
+    tileLayerRef.current = L.maplibreGL({ style: mapStyle }).addTo(map);
+  }, [mapReady, mapStyle]);
 
   // Fly to user location
   useEffect(() => {

@@ -242,6 +242,7 @@ export default function AroundPage() {
           stationPins={[]}
           onFlyerPinClick={pin => setMapQuickLook(pin)}
           isDark={isDark}
+          mapStyle={isDark ? "https://tiles.openfreemap.org/styles/dark" : "https://tiles.openfreemap.org/styles/bright"}
         />
       </div>
 
