@@ -238,8 +238,8 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, station
     const updateZoom = () => {
       const z = map.getZoom();
       containerRef.current?.classList.toggle("labels-visible", z >= 12);
-      if (z >= 12) stationLayer.addTo(map); else map.removeLayer(stationLayer);
-      if (z >= 13) flyerLayer.addTo(map);   else map.removeLayer(flyerLayer);
+      if (z >= 11) stationLayer.addTo(map); else map.removeLayer(stationLayer);
+      if (z >= 12) flyerLayer.addTo(map);   else map.removeLayer(flyerLayer);
     };
     map.on("zoomend", updateZoom);
     updateZoom();
