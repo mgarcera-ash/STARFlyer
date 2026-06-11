@@ -118,7 +118,7 @@ export default function MapPage() {
   type ThemeMode = "light" | "dark" | "positron";
   const [themeMode, setThemeMode] = useState<ThemeMode>("light");
   const isDark = themeMode === "dark";
-  const [snap,      setSnap]      = useState<SnapPoint>("half");
+  const [snap,      setSnap]      = useState<SnapPoint>("collapsed");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [quickLook, setQuickLook] = useState<Flyer | null>(null);
   const [preview,   setPreview]   = useState<Flyer | null>(null);
