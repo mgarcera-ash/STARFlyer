@@ -66,7 +66,7 @@ export default function QuickLook({ flyer, onClose, onExpand }: {
               <path d="M10 2h4v4M6 14H2v-4M14 2l-5.5 5.5M2 14l5.5-5.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
             <span style={{ fontSize: 11, fontWeight: 500, color: "#fff", fontFamily: "var(--font-sans)", whiteSpace: "nowrap" }}>
-              Tap again to expand
+              Tap again to expand more
             </span>
           </div>
           {flyer.image_url ? (

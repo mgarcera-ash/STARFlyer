@@ -19,6 +19,7 @@ export default function FlyerPreview({ flyer, initialSearch = "", onClose }: {
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef<{ startX: number; startY: number; panX: number; panY: number } | null>(null);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
 
   const clampPan = (x: number, y: number, z: number) => {
     const maxX = (window.innerWidth * (z - 1)) / 2;
@@ -49,6 +50,21 @@ export default function FlyerPreview({ flyer, initialSearch = "", onClose }: {
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const el = imageContainerRef.current;
+    if (!el) return;
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      setZoom(prev => {
+        const next = Math.max(1, Math.min(3, prev + e.deltaY * -0.005));
+        if (next <= 1) setPan({ x: 0, y: 0 });
+        return next;
+      });
+    };
+    el.addEventListener("wheel", handleWheel, { passive: false });
+    return () => el.removeEventListener("wheel", handleWheel);
   }, []);
 
   const handleClose = () => {
@@ -82,6 +98,7 @@ export default function FlyerPreview({ flyer, initialSearch = "", onClose }: {
     }}>
       {/* Full-screen image */}
       <div
+        ref={imageContainerRef}
         style={{
           position: "absolute", inset: 0,
           display: "flex", alignItems: "center", justifyContent: "center",
@@ -132,6 +149,20 @@ export default function FlyerPreview({ flyer, initialSearch = "", onClose }: {
         transition: "opacity 0.35s ease 0.1s",
         zIndex: 10,
       }}>
+        <button
+          onClick={handleClose}
+          aria-label="Close"
+          style={{
+            flexShrink: 0, width: 36, height: 36, borderRadius: "50%",
+            background: "rgba(255,255,255,0.15)", border: "none",
+            color: "#fff", fontSize: 20, lineHeight: 1,
+            cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "background 0.15s",
+          }}
+          onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.25)")}
+          onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}
+        >×</button>
+        <div style={{ width: 1, height: 24, background: "rgba(255,255,255,0.15)", flexShrink: 0 }} />
         <svg width="18" height="18" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, opacity: 0.5 }}>
           <path d="M3 8h10" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
@@ -172,20 +203,6 @@ export default function FlyerPreview({ flyer, initialSearch = "", onClose }: {
         transition: "opacity 0.35s ease 0.1s",
         zIndex: 10,
       }}>
-        <button
-          onClick={handleClose}
-          aria-label="Close"
-          style={{
-            flexShrink: 0, width: 44, height: 44, borderRadius: "50%",
-            background: "#dc2626", border: "none",
-            color: "#fff", fontSize: 22, lineHeight: 1,
-            cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-            transition: "background 0.15s", fontFamily: "var(--font-sans)",
-          }}
-          onMouseEnter={e => (e.currentTarget.style.background = "#991b1b")}
-          onMouseLeave={e => (e.currentTarget.style.background = "#dc2626")}
-        >×</button>
-
         <div style={{ flex: 1, minWidth: 0, position: "relative" }}>
           {/* Contacts panel */}
           <div style={{
