@@ -2,6 +2,8 @@
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "maplibre-gl/dist/maplibre-gl.css";
+import "@maplibre/maplibre-gl-leaflet";
 
 const CHICAGO: L.LatLngTuple = [41.8781, -87.6298];
 
@@ -203,7 +205,7 @@ function buildStationPopup(s: PoliceStation): string {
 export default function MapView({ userLat, userLng, shelters, flyerPins, stationPins, onFlyerPinClick, selectedShelterSiteId, isDark }: Props) {
   const containerRef        = useRef<HTMLDivElement>(null);
   const mapRef              = useRef<L.Map | null>(null);
-  const tileLayerRef        = useRef<L.TileLayer | null>(null);
+  const tileLayerRef        = useRef<L.Layer | null>(null);
   const shelterMarkers      = useRef<Map<number, L.Marker>>(new Map());
   const flyerMarkers        = useRef<Map<string, L.Marker>>(new Map());
   const stationMarkers      = useRef<Map<string, L.Marker>>(new Map());
@@ -243,23 +245,15 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, station
     return () => { map.remove(); mapRef.current = null; tileLayerRef.current = null; setMapReady(false); };
   }, []);
 
-  // Swap tile layer when dark mode changes
+  // Add vector tile base layer via MapLibre GL Leaflet
   useEffect(() => {
     if (!mapReady) return;
     const map = mapRef.current!;
     if (tileLayerRef.current) tileLayerRef.current.remove();
-    tileLayerRef.current = L.tileLayer(
-      isDark
-        ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        : "https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png",
-      {
-        attribution: isDark
-          ? '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>'
-          : '© <a href="https://github.com/cyclosm/cyclosm-cartocss-style/releases">CyclOSM</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19,
-      }
-    ).addTo(map);
-  }, [mapReady, isDark]);
+    tileLayerRef.current = L.maplibreGL({
+      style: "https://tiles.openfreemap.org/styles/liberty",
+    }).addTo(map);
+  }, [mapReady]);
 
   // Fly to user location
   useEffect(() => {
