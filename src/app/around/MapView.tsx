@@ -87,13 +87,20 @@ function makeShelterIcon(s: Shelter, isDark = false) {
   });
 }
 
-function makeFlyerIcon(f: FlyerPin) {
+function makeFlyerIcon(f: FlyerPin, isDark = false) {
   const initial = (f.title ?? f.entity ?? "?").charAt(0).toUpperCase();
   const inner = f.image_url
     ? `<img src="${esc(f.image_url)}" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:50%" />`
-    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;background:#4b5563;border-radius:50%">${initial}</div>`;
+    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;background:#f97316;border-radius:50%">${initial}</div>`;
+  const flyerHalo = isDark ? "0 1px 3px rgba(0,0,0,0.8)" : "-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff";
+  const label = f.addressLabel
+    ? `<span class="flyer-label" style="font-family:var(--font-sans),sans-serif;font-size:10px;font-weight:600;color:${isDark ? "#fdba74" : "#c2410c"};white-space:nowrap;text-shadow:${flyerHalo};pointer-events:none;margin-top:3px;display:block;text-align:center">${esc(f.addressLabel)}</span>`
+    : "";
   return L.divIcon({
-    html: `<div style="width:28px;height:28px;border-radius:50%;overflow:hidden;border:2px solid #4b5563;box-shadow:0 2px 8px rgba(0,0,0,0.30);background:#f3f4f6">${inner}</div>`,
+    html: `<div style="display:flex;flex-direction:column;align-items:center">
+      <div style="width:28px;height:28px;border-radius:50%;overflow:hidden;border:2px solid #f97316;box-shadow:0 2px 8px rgba(0,0,0,0.30);background:#ffedd5">${inner}</div>
+      ${label}
+    </div>`,
     className: "",
     iconSize: [28, 28],
     iconAnchor: [14, 14],
@@ -241,6 +248,7 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, station
       const z = map.getZoom();
       containerRef.current?.classList.toggle("labels-visible", z >= 12);
       containerRef.current?.classList.toggle("station-labels-visible", z >= 13);
+      containerRef.current?.classList.toggle("flyer-labels-visible", z >= 14);
       if (z >= 11) stationLayer.addTo(map); else map.removeLayer(stationLayer);
       if (z >= 12) flyerLayer.addTo(map);   else map.removeLayer(flyerLayer);
     };
@@ -350,12 +358,12 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, station
     });
     flyerPins.forEach(f => {
       if (flyerMarkers.current.has(f.pinId)) return;
-      const marker = L.marker([f.lat, f.lng], { icon: makeFlyerIcon(f) })
+      const marker = L.marker([f.lat, f.lng], { icon: makeFlyerIcon(f, isDark) })
         .addTo(flyerLayerRef.current!)
         .bindPopup(buildFlyerPopup(f), { maxWidth: 256, offset: [0, -4], closeButton: false, className: "flyer-popup" });
       flyerMarkers.current.set(f.pinId, marker);
     });
-  }, [flyerPins]);
+  }, [flyerPins, isDark]);
 
   return (
     <>
@@ -364,6 +372,8 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, station
         .labels-visible .shelter-label { opacity: 1; }
         .station-label { opacity: 0; transition: opacity 0.2s ease; }
         .station-labels-visible .station-label { opacity: 1; }
+        .flyer-label { opacity: 0; transition: opacity 0.2s ease; }
+        .flyer-labels-visible .flyer-label { opacity: 1; }
       `}</style>
       <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
     </>
