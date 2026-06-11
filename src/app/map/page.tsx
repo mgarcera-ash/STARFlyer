@@ -227,7 +227,7 @@ export default function MapPage() {
 
   // ── Desktop detection ─────────────────────────────────────────────────────────
   useEffect(() => {
-    const mq = window.matchMedia("(min-width: 900px)");
+    const mq = window.matchMedia("(min-width: 500px)");
     setIsDesktop(mq.matches);
     const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
     mq.addEventListener("change", handler);
@@ -633,7 +633,7 @@ export default function MapPage() {
       <div
         ref={sheetRef}
         style={{
-          position: "fixed", left: isDesktop ? "calc(50% - 200px)" : 0, right: isDesktop ? "calc(50% - 200px)" : 0, bottom: 0,
+          position: "fixed", left: isDesktop ? "calc(50% - 250px)" : 0, right: isDesktop ? "calc(50% - 250px)" : 0, bottom: 0,
           height: "100dvh",
           background: "var(--bar-bg)",
           backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
