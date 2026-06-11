@@ -633,7 +633,7 @@ export default function MapPage() {
       <div
         ref={sheetRef}
         style={{
-          position: "fixed", left: isDesktop ? "33%" : 0, right: isDesktop ? "33%" : 0, bottom: 0,
+          position: "fixed", left: isDesktop ? "calc(50% - 200px)" : 0, right: isDesktop ? "calc(50% - 200px)" : 0, bottom: 0,
           height: "100dvh",
           background: "var(--bar-bg)",
           backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
