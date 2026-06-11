@@ -251,11 +251,11 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, station
     tileLayerRef.current = L.tileLayer(
       isDark
         ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        : "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
       {
         attribution: isDark
           ? '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>'
-          : '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          : 'Tiles © <a href="https://www.esri.com/">Esri</a>',
         maxZoom: 19,
       }
     ).addTo(map);
