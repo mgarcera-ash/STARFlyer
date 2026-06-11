@@ -213,7 +213,7 @@ export default function MapPage() {
   }, []);
 
   const cycleTheme = () => {
-    const next: ThemeMode = themeMode === "light" ? "dark" : themeMode === "dark" ? "positron" : "light";
+    const next: ThemeMode = themeMode === "light" ? "positron" : themeMode === "positron" ? "dark" : "light";
     setThemeMode(next);
     localStorage.setItem("theme", next);
     document.documentElement.setAttribute("data-theme", next === "dark" ? "dark" : "light");
@@ -492,16 +492,16 @@ export default function MapPage() {
         >
           {themeMode === "light" ? (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
-          ) : themeMode === "dark" ? (
+          ) : themeMode === "positron" ? (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
               <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           ) : (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5"/>
-              <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           )}
         </button>
