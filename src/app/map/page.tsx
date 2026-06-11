@@ -720,7 +720,7 @@ export default function MapPage() {
                       <button
                         key={m}
                         onClick={() => setMode(m)}
-                        aria-label={m === "flyers" ? "Flyers mode" : "Shelters mode"}
+                        aria-label={m === "flyers" ? "Search mode" : "Shelters mode"}
                         style={{
                           width: 32, height: 32, borderRadius: "50%", border: "none",
                           display: "flex", alignItems: "center", justifyContent: "center",
@@ -732,7 +732,7 @@ export default function MapPage() {
                       >
                         {m === "shelters"
                           ? <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M10 3L3 9h2v8h4v-5h2v5h4V9h2L10 3z" fill="currentColor"/></svg>
-                          : <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6.5" r="1.8" fill="currentColor"/><rect x="8.6" y="9.5" width="2.8" height="6.5" rx="1.2" fill="currentColor"/></svg>}
+                          : <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="2.2"/><path d="M16 16L20 20" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/></svg>}
                       </button>
                     ))}
                   </div>
