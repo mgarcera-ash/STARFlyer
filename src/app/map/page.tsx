@@ -753,11 +753,13 @@ export default function MapPage() {
                   </div>
                 ) : isSearchActive ? (
                   /* ── Unified search results ── */
-                  <div>
+                  <div style={{ paddingBottom: 40 }}>
                     {/* Locations */}
                     {suggestions.length > 0 && (
-                      <div style={{ marginBottom: 20 }}>
-                        <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 700, color: "var(--muted)", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Locations</p>
+                      <div style={{ marginBottom: 24 }}>
+                        <p style={{ margin: "0 0 12px", fontSize: 22, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>
+                          {suggestions.length === 1 ? "1 location nearby." : `${suggestions.length} locations nearby.`}
+                        </p>
                         <div style={{ borderRadius: 16, overflow: "hidden", border: "1.5px solid var(--card-border)" }}>
                           {suggestions.slice(0, 3).map((f, i) => {
                             const { title, subtitle } = formatSuggestion(f);
@@ -791,8 +793,10 @@ export default function MapPage() {
 
                     {/* Shelters */}
                     {shelterResults.length > 0 && (
-                      <div style={{ marginBottom: 20 }}>
-                        <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 700, color: "var(--muted)", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Shelters ({shelterResults.length})</p>
+                      <div style={{ marginBottom: 24 }}>
+                        <p style={{ margin: "0 0 12px", fontSize: 22, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>
+                          {shelterResults.length === 1 ? "1 shelter found." : `${shelterResults.length} shelters found.`}
+                        </p>
                         <div>
                           {shelterResults.slice(0, 5).map((s, i) => {
                             const initials = (s.agency ?? s.site_name ?? "?").charAt(0).toUpperCase();
@@ -826,8 +830,10 @@ export default function MapPage() {
 
                     {/* Police Stations */}
                     {stationResults.length > 0 && (
-                      <div style={{ marginBottom: 20 }}>
-                        <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 700, color: "var(--muted)", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Police Stations ({stationResults.length})</p>
+                      <div style={{ marginBottom: 24 }}>
+                        <p style={{ margin: "0 0 12px", fontSize: 22, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.02em", fontFamily: "var(--font-sans)" }}>
+                          {stationResults.length === 1 ? "1 police station found." : `${stationResults.length} police stations found.`}
+                        </p>
                         <div>
                           {stationResults.map((s, i) => (
                             <div
@@ -852,8 +858,7 @@ export default function MapPage() {
 
                     {/* Flyers */}
                     {flyerGroups.length > 0 && (
-                      <div style={{ marginBottom: 20 }}>
-                        <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: "var(--muted)", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Flyers ({flyerGroups.length})</p>
+                      <div style={{ marginBottom: 24 }}>
                         <GroupedResults
                           flyerGroups={flyerGroups}
                           search={debouncedUnified}
