@@ -251,11 +251,11 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, station
     tileLayerRef.current = L.tileLayer(
       isDark
         ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        : "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+        : "https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png",
       {
         attribution: isDark
           ? '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>'
-          : 'Tiles © <a href="https://www.esri.com/">Esri</a>',
+          : '© <a href="https://github.com/cyclosm/cyclosm-cartocss-style/releases">CyclOSM</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19,
       }
     ).addTo(map);
