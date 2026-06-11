@@ -704,7 +704,6 @@ export default function MapPage() {
                       placeholder="Enter an address in Chicago…"
                       style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 16, fontFamily: "var(--font-sans)", color: "var(--text)" }}
                     />
-                    {geocoding && <span style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-sans)", flexShrink: 0 }}>Searching…</span>}
                     {addressInput && !geocoding && (
                       <button
                         onMouseDown={e => e.preventDefault()}
@@ -764,6 +763,12 @@ export default function MapPage() {
                       )}
                     </>
                   )
+                ) : geocoding ? (
+                  <div style={{ display: "flex", justifyContent: "center", gap: 7, paddingTop: 32 }}>
+                    {[0, 1, 2].map(i => (
+                      <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--muted)", animation: "searchDot 1s ease-in-out infinite", animationDelay: `${i * 0.18}s` }} />
+                    ))}
+                  </div>
                 ) : (
                   <>
                     {/* Autocomplete suggestions */}
