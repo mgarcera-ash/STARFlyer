@@ -91,9 +91,9 @@ function makeFlyerIcon(f: FlyerPin) {
   const initial = (f.title ?? f.entity ?? "?").charAt(0).toUpperCase();
   const inner = f.image_url
     ? `<img src="${esc(f.image_url)}" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:50%" />`
-    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;background:#22c55e;border-radius:50%">${initial}</div>`;
+    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;background:#4b5563;border-radius:50%">${initial}</div>`;
   return L.divIcon({
-    html: `<div style="width:28px;height:28px;border-radius:50%;overflow:hidden;border:2px solid #22c55e;box-shadow:0 2px 8px rgba(0,0,0,0.30);background:#dcfce7">${inner}</div>`,
+    html: `<div style="width:28px;height:28px;border-radius:50%;overflow:hidden;border:2px solid #4b5563;box-shadow:0 2px 8px rgba(0,0,0,0.30);background:#f3f4f6">${inner}</div>`,
     className: "",
     iconSize: [28, 28],
     iconAnchor: [14, 14],
@@ -177,7 +177,7 @@ function makeStationIcon(s: PoliceStation, isDark = false) {
   const inner = s.image_url
     ? `<img src="${esc(s.image_url)}" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:50%" />`
     : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;background:#60a5fa;border-radius:50%">${initial}</div>`;
-  const label = `<span class="shelter-label" style="font-family:var(--font-sans),sans-serif;font-size:10px;font-weight:600;color:#60a5fa;white-space:nowrap;text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff;pointer-events:none;margin-top:3px;display:block;text-align:center">${esc(name)}</span>`;
+  const label = `<span class="shelter-label" style="font-family:var(--font-sans),sans-serif;font-size:10px;font-weight:600;color:#60a5fa;white-space:nowrap;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;pointer-events:none;margin-top:3px;display:block;text-align:center">${esc(name)}</span>`;
   return L.divIcon({
     html: `<div style="display:flex;flex-direction:column;align-items:center">
       <div style="width:28px;height:28px;border-radius:50%;overflow:hidden;border:2px solid #60a5fa;box-shadow:0 2px 8px rgba(0,0,0,0.30);background:#60a5fa">

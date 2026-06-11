@@ -541,7 +541,7 @@ export default function MapPage() {
               }}>
                 {([
                   { key: "shelters", label: "Shelters",        dot: isDark ? "#fff" : "#111827", active: showShelters, toggle: () => setShowShelters(v => !v) },
-                  { key: "flyers",   label: "Flyers",          dot: "#22c55e", active: showFlyers,   toggle: () => setShowFlyers(v => !v)   },
+                  { key: "flyers",   label: "Flyers",          dot: "#4b5563", active: showFlyers,   toggle: () => setShowFlyers(v => !v)   },
                   { key: "stations", label: "Police Stations", dot: "#60a5fa", active: showStations, toggle: () => setShowStations(v => !v) },
                 ] as const).map(({ key, label, dot, active, toggle }, i, arr) => (
                   <div
@@ -727,7 +727,7 @@ export default function MapPage() {
                         style={{
                           width: 32, height: 32, borderRadius: "50%", border: "none",
                           display: "flex", alignItems: "center", justifyContent: "center",
-                          background: mode === m ? (m === "flyers" ? "#22c55e" : isDark ? "#fff" : "#111827") : "transparent",
+                          background: mode === m ? (m === "flyers" ? "#4b5563" : isDark ? "#fff" : "#111827") : "transparent",
                           color: mode === m ? (m === "shelters" ? (isDark ? "#111" : "#fff") : "#fff") : "var(--muted)",
                           cursor: "pointer", transition: "all 0.15s",
                           boxShadow: mode === m ? "0 1px 4px rgba(0,0,0,0.2)" : "none",
