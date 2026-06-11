@@ -154,13 +154,13 @@ export default function FlyerPreview({ flyer, initialSearch = "", onClose }: {
           aria-label="Close"
           style={{
             flexShrink: 0, width: 36, height: 36, borderRadius: "50%",
-            background: "rgba(255,255,255,0.15)", border: "none",
+            background: "#dc2626", border: "none",
             color: "#fff", fontSize: 20, lineHeight: 1,
             cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
             transition: "background 0.15s",
           }}
-          onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.25)")}
-          onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}
+          onMouseEnter={e => (e.currentTarget.style.background = "#991b1b")}
+          onMouseLeave={e => (e.currentTarget.style.background = "#dc2626")}
         >×</button>
         <div style={{ width: 1, height: 24, background: "rgba(255,255,255,0.15)", flexShrink: 0 }} />
         <svg width="18" height="18" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, opacity: 0.5 }}>
