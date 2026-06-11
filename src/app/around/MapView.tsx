@@ -86,13 +86,17 @@ function makeShelterIcon(s: Shelter, isDark = false) {
   });
 }
 
-function makeFlyerIcon() {
+function makeFlyerIcon(f: FlyerPin) {
+  const initial = (f.title ?? f.entity ?? "?").charAt(0).toUpperCase();
+  const inner = f.image_url
+    ? `<img src="${esc(f.image_url)}" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:50%" />`
+    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;background:#eab308;border-radius:50%">${initial}</div>`;
   return L.divIcon({
-    html: `<div style="width:12px;height:12px;border-radius:50%;background:#eab308;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.30)"></div>`,
+    html: `<div style="width:36px;height:36px;border-radius:50%;overflow:hidden;border:2px solid #eab308;box-shadow:0 2px 8px rgba(0,0,0,0.30);background:#fef9c3">${inner}</div>`,
     className: "",
-    iconSize: [12, 12],
-    iconAnchor: [6, 6],
-    popupAnchor: [0, -8],
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+    popupAnchor: [0, -20],
   });
 }
 
@@ -325,7 +329,7 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, station
     });
     flyerPins.forEach(f => {
       if (flyerMarkers.current.has(f.pinId)) return;
-      const marker = L.marker([f.lat, f.lng], { icon: makeFlyerIcon() })
+      const marker = L.marker([f.lat, f.lng], { icon: makeFlyerIcon(f) })
         .addTo(map)
         .bindPopup(buildFlyerPopup(f), { maxWidth: 256, offset: [0, -4], closeButton: false, className: "flyer-popup" });
       flyerMarkers.current.set(f.pinId, marker);
