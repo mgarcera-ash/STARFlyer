@@ -227,7 +227,7 @@ export default function MapPage() {
 
   // ── Desktop detection ─────────────────────────────────────────────────────────
   useEffect(() => {
-    const mq = window.matchMedia("(min-width: 768px)");
+    const mq = window.matchMedia("(min-width: 900px)");
     setIsDesktop(mq.matches);
     const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
     mq.addEventListener("change", handler);
