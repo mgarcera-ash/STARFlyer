@@ -237,7 +237,7 @@ export default function MapPage() {
   // ── Sheet position (imperative — never set via JSX style to avoid re-render conflicts) ──
   useLayoutEffect(() => {
     if (!sheetRef.current) return;
-    sheetRef.current.style.transform  = `translateY(${SNAP_CSS["half"]})`;
+    sheetRef.current.style.transform  = `translateY(${SNAP_CSS["collapsed"]})`;
     sheetRef.current.style.transition = "transform 0.38s cubic-bezier(0.32,0.72,0,1)";
   }, []);
 
