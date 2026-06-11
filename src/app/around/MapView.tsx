@@ -245,15 +245,17 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, station
     return () => { map.remove(); mapRef.current = null; tileLayerRef.current = null; setMapReady(false); };
   }, []);
 
-  // Add vector tile base layer via MapLibre GL Leaflet
+  // Swap vector tile style when dark mode changes
   useEffect(() => {
     if (!mapReady) return;
     const map = mapRef.current!;
     if (tileLayerRef.current) tileLayerRef.current.remove();
     tileLayerRef.current = L.maplibreGL({
-      style: "https://tiles.openfreemap.org/styles/liberty",
+      style: isDark
+        ? "https://tiles.openfreemap.org/styles/dark"
+        : "https://tiles.openfreemap.org/styles/bright",
     }).addTo(map);
-  }, [mapReady]);
+  }, [mapReady, isDark]);
 
   // Fly to user location
   useEffect(() => {
