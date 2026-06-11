@@ -978,7 +978,7 @@ export default function MapPage() {
                   return (
                     <>
                       {/* ── Hero header ── */}
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingBottom: 20, borderBottom: "1px solid var(--card-border)", marginBottom: 16 }}>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingBottom: 20, marginBottom: 16 }}>
                         {/* Avatar */}
                         <div style={{ width: 72, height: 72, borderRadius: "50%", overflow: "hidden", background: "var(--card-border)", marginBottom: 12, flexShrink: 0 }}>
                           {detailShelter.image_url
@@ -1083,9 +1083,9 @@ export default function MapPage() {
                               </div>
                             )}
                             {detailShelter.notes && (
-                              <div style={{ padding: "9px 0" }}>
-                                <p style={{ margin: "0 0 4px", fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>Notes</p>
-                                <p style={{ margin: 0, fontSize: 14, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.5 }}>{detailShelter.notes}</p>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "9px 0" }}>
+                                <span style={{ fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)", flexShrink: 0, marginRight: 12 }}>Notes</span>
+                                <span style={{ fontSize: 14, color: "var(--text)", fontFamily: "var(--font-sans)", textAlign: "right", lineHeight: 1.5 }}>{detailShelter.notes}</span>
                               </div>
                             )}
                           </div>
