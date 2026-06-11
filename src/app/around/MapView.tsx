@@ -70,19 +70,19 @@ function makeShelterIcon(s: Shelter, isDark = false) {
   const initial = (s.agency ?? s.site_name ?? "?").charAt(0).toUpperCase();
   const inner = s.image_url
     ? `<img src="${esc(s.image_url)}" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:50%" />`
-    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:${isDark ? "#111" : "#fff"};background:${isDark ? "#fff" : "#111827"};border-radius:50%">${initial}</div>`;
+    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${isDark ? "#111" : "#fff"};background:${isDark ? "#fff" : "#111827"};border-radius:50%">${initial}</div>`;
   const label = name ? `<span class="shelter-label" style="font-family:var(--font-sans),sans-serif;font-size:10px;font-weight:600;color:${isDark ? "#fff" : "#111"};white-space:nowrap;text-shadow:${isDark ? "0 1px 3px rgba(0,0,0,0.8)" : "0 0 3px #fff,0 0 3px #fff,0 1px 4px rgba(0,0,0,0.25)"};pointer-events:none;margin-top:3px;display:block;text-align:center">${esc(name)}</span>` : "";
   return L.divIcon({
     html: `<div style="display:flex;flex-direction:column;align-items:center">
-      <div style="width:44px;height:44px;border-radius:50%;overflow:hidden;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.30);background:#e5e7eb">
+      <div style="width:28px;height:28px;border-radius:50%;overflow:hidden;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.30);background:#e5e7eb">
         ${inner}
       </div>
       ${label}
     </div>`,
     className: "",
-    iconSize: [44, 44],
-    iconAnchor: [22, 22],
-    popupAnchor: [0, -26],
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -16],
   });
 }
 
@@ -175,19 +175,19 @@ function makeStationIcon(s: PoliceStation, isDark = false) {
   const initial = name.charAt(0).toUpperCase();
   const inner = s.image_url
     ? `<img src="${esc(s.image_url)}" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:50%" />`
-    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;background:#60a5fa;border-radius:50%">${initial}</div>`;
+    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;background:#60a5fa;border-radius:50%">${initial}</div>`;
   const label = `<span class="shelter-label" style="font-family:var(--font-sans),sans-serif;font-size:10px;font-weight:600;color:${isDark ? "#fff" : "#111"};white-space:nowrap;text-shadow:${isDark ? "0 1px 3px rgba(0,0,0,0.8)" : "0 0 3px #fff,0 0 3px #fff,0 1px 4px rgba(0,0,0,0.25)"};pointer-events:none;margin-top:3px;display:block;text-align:center">${esc(name)}</span>`;
   return L.divIcon({
     html: `<div style="display:flex;flex-direction:column;align-items:center">
-      <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;border:2px solid #60a5fa;box-shadow:0 2px 8px rgba(0,0,0,0.30);background:#60a5fa">
+      <div style="width:28px;height:28px;border-radius:50%;overflow:hidden;border:2px solid #60a5fa;box-shadow:0 2px 8px rgba(0,0,0,0.30);background:#60a5fa">
         ${inner}
       </div>
       ${label}
     </div>`,
     className: "",
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
-    popupAnchor: [0, -20],
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -16],
   });
 }
 
