@@ -120,7 +120,7 @@ export default function MapPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [quickLook, setQuickLook] = useState<Flyer | null>(null);
   const [preview,   setPreview]   = useState<Flyer | null>(null);
-  const [search,    setSearch]    = useState("");
+  const [unifiedSearch, setUnifiedSearch] = useState("");
 
   const [featuredFlyers,  setFeaturedFlyers]  = useState<Flyer[]>([]);
   const [topPickFlyers,   setTopPickFlyers]   = useState<Flyer[]>([]);
@@ -139,9 +139,7 @@ export default function MapPage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedShelterSiteId, setSelectedShelterSiteId] = useState<number | null>(null);
   const [detailShelter,   setDetailShelter]   = useState<Shelter | null>(null);
-  const [addressInput,    setAddressInput]    = useState("");
   const [suggestions,     setSuggestions]     = useState<PhotonFeature[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [geocoding,       setGeocoding]       = useState(false);
   const [addressError,    setAddressError]    = useState("");
 
@@ -303,7 +301,6 @@ export default function MapPage() {
       if (e.key.length !== 1) return;
       const tag = (e.target as HTMLElement).tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
-      if (modeRef.current !== "flyers") return;
       animateTo("full");
       searchInputRef.current?.focus();
     };
@@ -311,29 +308,6 @@ export default function MapPage() {
     return () => document.removeEventListener("keydown", handler);
   }, [animateTo]);
 
-  // ── Photon autocomplete for shelter location ──────────────────────────────────
-  useEffect(() => {
-    const q = addressInput.trim();
-    if (q.length < 3) { setSuggestions([]); setShowSuggestions(false); return; }
-    const timer = setTimeout(async () => {
-      try {
-        const res = await fetch(
-          `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=5&bbox=${CHICAGO_BBOX}&lang=en`
-        );
-        const data: { features: PhotonFeature[] } = await res.json();
-        const seen = new Set<string>();
-        const unique = (data.features ?? []).filter(f => {
-          const key = `${f.properties.osm_type}${f.properties.osm_id}`;
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        });
-        setSuggestions(unique);
-        setShowSuggestions(unique.length > 0);
-      } catch { /* silent */ }
-    }, 350);
-    return () => clearTimeout(timer);
-  }, [addressInput]);
 
   const applyLocation = (lat: number, lng: number) => {
     setUserLat(lat);
@@ -344,18 +318,17 @@ export default function MapPage() {
   const selectSuggestion = (f: PhotonFeature) => {
     const [lng, lat] = f.geometry.coordinates;
     applyLocation(lat, lng);
-    setAddressInput("");
+    setUnifiedSearch("");
+    setDebouncedUnified("");
     setSuggestions([]);
-    setShowSuggestions(false);
     setAddressError("");
   };
 
   const geocodeAddress = async () => {
-    const q = addressInput.trim();
+    const q = unifiedSearch.trim();
     if (!q) return;
     setGeocoding(true);
     setAddressError("");
-    setShowSuggestions(false);
     try {
       const res = await fetch(
         `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=1&bbox=${CHICAGO_BBOX}&lang=en`
@@ -364,7 +337,9 @@ export default function MapPage() {
       if (!data.features?.length) { setAddressError("Address not found in Chicago."); return; }
       const [lng, lat] = data.features[0].geometry.coordinates;
       applyLocation(lat, lng);
-      setAddressInput("");
+      setUnifiedSearch("");
+      setDebouncedUnified("");
+      setSuggestions([]);
     } catch {
       setAddressError("Search failed. Please try again.");
     } finally {
@@ -372,14 +347,37 @@ export default function MapPage() {
     }
   };
 
-  // ── Debounced search → animated ellipsis ─────────────────────────────────────
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  // ── Debounced unified search ──────────────────────────────────────────────────
+  const [debouncedUnified, setDebouncedUnified] = useState("");
   useEffect(() => {
-    if (!search) { setDebouncedSearch(""); return; }
-    const t = setTimeout(() => setDebouncedSearch(search), 400);
+    if (!unifiedSearch) { setDebouncedUnified(""); setSuggestions([]); return; }
+    const t = setTimeout(() => setDebouncedUnified(unifiedSearch), 400);
     return () => clearTimeout(t);
-  }, [search]);
-  const isSearchTyping = search !== "" && search !== debouncedSearch;
+  }, [unifiedSearch]);
+  const isTyping = unifiedSearch !== "" && unifiedSearch !== debouncedUnified;
+  const isSearchActive = debouncedUnified.trim() !== "";
+
+  // ── Photon autocomplete for location search ───────────────────────────────────
+  useEffect(() => {
+    const q = debouncedUnified.trim();
+    if (q.length < 3) { setSuggestions([]); return; }
+    (async () => {
+      try {
+        const res = await fetch(
+          `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=4&bbox=${CHICAGO_BBOX}&lang=en`
+        );
+        const data: { features: PhotonFeature[] } = await res.json();
+        const seen = new Set<string>();
+        const unique = (data.features ?? []).filter(f => {
+          const key = `${f.properties.osm_type}${f.properties.osm_id}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        setSuggestions(unique);
+      } catch { /* silent */ }
+    })();
+  }, [debouncedUnified]);
 
   // ── Pin click → open QuickLook ────────────────────────────────────────────────
   const handlePinClick = useCallback((pin: FlyerPin) => {
@@ -391,7 +389,7 @@ export default function MapPage() {
   const pinnedIds = useMemo(() => new Set(flyerPins.map(p => p.flyerId)), [flyerPins]);
 
   const filtered = useMemo(() => {
-    const q = debouncedSearch.trim().toLowerCase();
+    const q = debouncedUnified.trim().toLowerCase();
     return flyers.filter(f => {
       const matchSearch = !q ||
         f.title.toLowerCase().includes(q) ||
@@ -403,13 +401,13 @@ export default function MapPage() {
       const matchEntities = activeEntities.length === 0 || (f.entity != null && activeEntities.includes(f.entity));
       return matchSearch && matchTags && matchEntities;
     });
-  }, [flyers, debouncedSearch, activeTags, activeEntities]);
+  }, [flyers, debouncedUnified, activeTags, activeEntities]);
 
-  const showGrouped = debouncedSearch !== "" || activeTags.length > 0;
+  const showGrouped = debouncedUnified !== "" || activeTags.length > 0;
 
   const flyerGroups: FlyerGroup[] = useMemo(() => showGrouped ? filtered.map(f => {
-    const q = debouncedSearch.toLowerCase();
-    const matchingHotspots = debouncedSearch !== ""
+    const q = debouncedUnified.toLowerCase();
+    const matchingHotspots = debouncedUnified !== ""
       ? (f.hotspots?.filter(h => h.label?.toLowerCase().includes(q) || h.value.toLowerCase().includes(q)) ?? [])
       : (f.hotspots?.filter(h => activeTags.some(tag =>
           h.label?.toLowerCase().includes(tag.toLowerCase()) || h.value.toLowerCase().includes(tag.toLowerCase())
@@ -420,13 +418,34 @@ export default function MapPage() {
       hotspotsByType[h.type]!.push(h);
     }
     return { flyer: f, hotspotsByType, isFallback: matchingHotspots.length === 0 };
-  }) : [], [showGrouped, filtered, debouncedSearch, activeTags]);
+  }) : [], [showGrouped, filtered, debouncedUnified, activeTags]);
 
   const sortedShelters = useMemo(() =>
     userLat !== null
       ? [...shelters].sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity))
       : [...shelters].sort((a, b) => (a.agency ?? "").localeCompare(b.agency ?? "")),
   [shelters, userLat]);
+
+  const shelterResults = useMemo(() => {
+    if (!isSearchActive) return [];
+    const q = debouncedUnified.trim().toLowerCase();
+    return sortedShelters.filter(s =>
+      s.agency?.toLowerCase().includes(q) ||
+      s.site_name?.toLowerCase().includes(q) ||
+      s.population?.toLowerCase().includes(q) ||
+      s.address?.toLowerCase().includes(q)
+    );
+  }, [sortedShelters, debouncedUnified, isSearchActive]);
+
+  const stationResults = useMemo(() => {
+    if (!isSearchActive) return [];
+    const q = debouncedUnified.trim().toLowerCase();
+    return stations.filter(s =>
+      s.district_name?.toLowerCase().includes(q) ||
+      s.address?.toLowerCase().includes(q) ||
+      s.district.toLowerCase().includes(q)
+    );
+  }, [stations, debouncedUnified, isSearchActive]);
 
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
@@ -629,15 +648,54 @@ export default function MapPage() {
 
             {/* ── Panel 1: list ── */}
             <div style={{ width: "50%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-              {/* Header + mode toggle */}
+              {/* Universal search bar */}
               {snap !== "collapsed" && (
-                <div style={{ padding: "4px 16px 12px", flexShrink: 0, display: "flex", alignItems: "flex-start", gap: 12 }}>
+                <div style={{ padding: "4px 16px 10px", flexShrink: 0 }}>
+                  <div style={{ background: "var(--bg)", borderRadius: 99, border: "1.5px solid var(--card-border)", display: "flex", alignItems: "center", gap: 8, padding: "10px 14px" }}>
+                    {geocoding ? (
+                      <div style={{ display: "flex", gap: 4, alignItems: "center", flexShrink: 0 }}>
+                        {[0,1,2].map(i => <div key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--muted)", animation: "searchDot 1s ease-in-out infinite", animationDelay: `${i * 0.18}s` }} />)}
+                      </div>
+                    ) : (
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--muted)" }}>
+                        <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2"/>
+                        <path d="M16.5 16.5L21 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                    )}
+                    <input
+                      ref={searchInputRef}
+                      value={unifiedSearch}
+                      onChange={e => { setUnifiedSearch(e.target.value); setAddressError(""); }}
+                      onFocus={() => animateTo("full")}
+                      onKeyDown={e => {
+                        if (e.key === "Enter") geocodeAddress();
+                        if (e.key === "Escape") { animateTo("collapsed"); e.currentTarget.blur(); }
+                      }}
+                      placeholder="Shelters, flyers, or an address…"
+                      style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 16, fontFamily: "var(--font-sans)", color: "var(--text)" }}
+                    />
+                    {unifiedSearch && (
+                      <button
+                        onClick={() => { setUnifiedSearch(""); setDebouncedUnified(""); setSuggestions([]); setAddressError(""); }}
+                        style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontSize: 18, padding: 0, lineHeight: 1, display: "flex" }}
+                      >×</button>
+                    )}
+                  </div>
+                  {addressError && (
+                    <p style={{ margin: "6px 14px 0", fontSize: 13, color: "#ef4444", fontFamily: "var(--font-sans)" }}>{addressError}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Header + mode toggle — hidden while searching */}
+              {snap !== "collapsed" && !isSearchActive && !isTyping && (
+                <div style={{ padding: "0 16px 12px", flexShrink: 0, display: "flex", alignItems: "flex-start", gap: 12 }}>
                   <div style={{ flex: 1 }}>
                     <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 600, color: "var(--text)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>Find the right resource.</p>
                     <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 400, color: "var(--muted)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
                       {mode === "shelters"
                         ? shelters.length === 0 ? "Loading…" : userLat !== null ? `${shelters.length} shelters, sorted by distance.` : `${shelters.length} shelters in Chicago.`
-                        : flyers.length === 0 ? "Loading…" : showGrouped ? `${flyerGroups.length} result${flyerGroups.length !== 1 ? "s" : ""} of ${flyers.length}` : `Browse ${flyers.length} flyer${flyers.length !== 1 ? "s" : ""} below.`}
+                        : flyers.length === 0 ? "Loading…" : `Browse ${flyers.length} flyer${flyers.length !== 1 ? "s" : ""} below.`}
                     </p>
                   </div>
                   {/* Mode toggle pill */}
@@ -665,74 +723,138 @@ export default function MapPage() {
                 </div>
               )}
 
-              {/* Search bar */}
-              <div style={{ padding: "0 16px 12px", flexShrink: 0 }}>
-                {mode === "flyers" ? (
-                  <div style={{ background: "var(--bg)", borderRadius: 99, border: "1.5px solid var(--card-border)", display: "flex", alignItems: "center", gap: 8, padding: "10px 14px" }}>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--muted)" }}>
-                      <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2"/>
-                      <path d="M16.5 16.5L21 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                    </svg>
-                    <input
-                      ref={searchInputRef}
-                      value={search}
-                      onChange={e => setSearch(e.target.value)}
-                      onFocus={() => animateTo("full")}
-                      onKeyDown={e => { if (e.key === "Escape") { animateTo("collapsed"); e.currentTarget.blur(); } }}
-                      placeholder="Search flyers…"
-                      style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 16, fontFamily: "var(--font-sans)", color: "var(--text)" }}
-                    />
-                    {search && (
-                      <button onClick={() => setSearch("")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontSize: 18, padding: 0, lineHeight: 1, display: "flex" }}>×</button>
-                    )}
-                  </div>
-                ) : (
-                  <div style={{ background: "var(--bg)", borderRadius: 99, border: "1.5px solid var(--card-border)", display: "flex", alignItems: "center", gap: 8, padding: "10px 14px" }}>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--muted)" }}>
-                      <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.8"/>
-                      <path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-                    </svg>
-                    <input
-                      value={addressInput}
-                      onChange={e => { setAddressInput(e.target.value); setAddressError(""); }}
-                      onFocus={() => { animateTo("full"); if (suggestions.length > 0) setShowSuggestions(true); }}
-                      onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                      onKeyDown={e => {
-                        if (e.key === "Enter") geocodeAddress();
-                        if (e.key === "Escape") { setShowSuggestions(false); setAddressInput(""); }
-                      }}
-                      placeholder="Enter an address in Chicago…"
-                      style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 16, fontFamily: "var(--font-sans)", color: "var(--text)" }}
-                    />
-                    {addressInput && !geocoding && (
-                      <button
-                        onMouseDown={e => e.preventDefault()}
-                        onClick={() => { setAddressInput(""); setSuggestions([]); setShowSuggestions(false); setAddressError(""); }}
-                        style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontSize: 18, padding: 0, lineHeight: 1, display: "flex" }}
-                      >×</button>
-                    )}
-                  </div>
-                )}
-              </div>
-
               {/* Card list */}
               <div ref={listRef} className="sheet-list" style={{ flex: 1, overflowY: "auto", padding: "0 16px 40px", overscrollBehavior: "contain", touchAction: "pan-y" } as React.CSSProperties}>
-                {mode === "flyers" ? (
-                  isSearchTyping ? (
-                    <div style={{ display: "flex", justifyContent: "center", gap: 7, paddingTop: 32 }}>
-                      {[0, 1, 2].map(i => (
-                        <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--muted)", animation: "searchDot 1s ease-in-out infinite", animationDelay: `${i * 0.18}s` }} />
-                      ))}
-                    </div>
-                  ) : showGrouped ? (
-                    <GroupedResults
-                      flyerGroups={flyerGroups}
-                      search={debouncedSearch}
-                      activeEntities={activeEntities}
-                      onQuickLook={(flyer, initialSearch = "") => { setPreviewInitialSearch(initialSearch); setQuickLook(flyer); }}
-                      onPreview={(flyer, initialSearch = "") => { setPreviewInitialSearch(initialSearch); setPreview(flyer); }}
-                    />
-                  ) : snap === "half" ? (
+                {isTyping ? (
+                  /* Typing — waiting for debounce */
+                  <div style={{ display: "flex", justifyContent: "center", gap: 7, paddingTop: 32 }}>
+                    {[0, 1, 2].map(i => (
+                      <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--muted)", animation: "searchDot 1s ease-in-out infinite", animationDelay: `${i * 0.18}s` }} />
+                    ))}
+                  </div>
+                ) : isSearchActive ? (
+                  /* ── Unified search results ── */
+                  <div>
+                    {/* Locations */}
+                    {suggestions.length > 0 && (
+                      <div style={{ marginBottom: 20 }}>
+                        <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 700, color: "var(--muted)", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Locations</p>
+                        <div style={{ borderRadius: 16, overflow: "hidden", border: "1.5px solid var(--card-border)" }}>
+                          {suggestions.slice(0, 3).map((f, i) => {
+                            const { title, subtitle } = formatSuggestion(f);
+                            return (
+                              <button
+                                key={`${f.properties.osm_type}${f.properties.osm_id}`}
+                                onClick={() => selectSuggestion(f)}
+                                style={{
+                                  display: "flex", alignItems: "center", gap: 10,
+                                  width: "100%", padding: "10px 14px",
+                                  background: "var(--bg)", border: "none",
+                                  borderBottom: i < Math.min(suggestions.length, 3) - 1 ? "1px solid var(--card-border)" : "none",
+                                  cursor: "pointer", textAlign: "left",
+                                }}
+                                onMouseEnter={e => (e.currentTarget.style.background = "var(--card-bg)")}
+                                onMouseLeave={e => (e.currentTarget.style.background = "var(--bg)")}
+                              >
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--muted)" }}>
+                                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
+                                </svg>
+                                <div style={{ minWidth: 0 }}>
+                                  <span style={{ fontSize: 14, fontWeight: 500, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.3, display: "block" }}>{title}</span>
+                                  <span style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>{subtitle}</span>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Shelters */}
+                    {shelterResults.length > 0 && (
+                      <div style={{ marginBottom: 20 }}>
+                        <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 700, color: "var(--muted)", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Shelters ({shelterResults.length})</p>
+                        <div>
+                          {shelterResults.slice(0, 5).map((s, i) => {
+                            const initials = (s.agency ?? s.site_name ?? "?").charAt(0).toUpperCase();
+                            return (
+                              <div
+                                key={s.site_id}
+                                onClick={() => { setDetailShelter(s); animateTo("full"); }}
+                                style={{ padding: "10px 0", borderBottom: i < Math.min(shelterResults.length, 5) - 1 ? "1px solid var(--card-border)" : "none", cursor: "pointer" }}
+                              >
+                                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                  <div style={{ flexShrink: 0, width: 44, height: 44, borderRadius: "50%", overflow: "hidden", background: "var(--card-border)" }}>
+                                    {s.image_url
+                                      ? <img src={s.image_url} alt={s.agency ?? ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                      : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, color: "var(--muted)" }}>{initials}</div>
+                                    }
+                                  </div>
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    {s.agency && <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{s.agency}</p>}
+                                    {s.site_name && s.site_name !== s.agency && <p style={{ margin: "2px 0 0", fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>{s.site_name}</p>}
+                                  </div>
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--muted)" }}>
+                                    <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Police Stations */}
+                    {stationResults.length > 0 && (
+                      <div style={{ marginBottom: 20 }}>
+                        <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 700, color: "var(--muted)", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Police Stations ({stationResults.length})</p>
+                        <div>
+                          {stationResults.map((s, i) => (
+                            <div
+                              key={s.district}
+                              style={{ padding: "10px 0", borderBottom: i < stationResults.length - 1 ? "1px solid var(--card-border)" : "none", display: "flex", alignItems: "center", gap: 12 }}
+                            >
+                              <div style={{ flexShrink: 0, width: 44, height: 44, borderRadius: "50%", overflow: "hidden", background: "#dbeafe", border: "2px solid #60a5fa" }}>
+                                {s.image_url
+                                  ? <img src={s.image_url} alt={s.district_name ?? `District ${s.district}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                  : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: "#60a5fa" }}>{s.district}</div>
+                                }
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{s.district_name ?? `District ${s.district}`}</p>
+                                {s.address && <p style={{ margin: "2px 0 0", fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>{s.address}</p>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Flyers */}
+                    {flyerGroups.length > 0 && (
+                      <div style={{ marginBottom: 20 }}>
+                        <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: "var(--muted)", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Flyers ({flyerGroups.length})</p>
+                        <GroupedResults
+                          flyerGroups={flyerGroups}
+                          search={debouncedUnified}
+                          activeEntities={activeEntities}
+                          onQuickLook={(flyer, initialSearch = "") => { setPreviewInitialSearch(initialSearch); setQuickLook(flyer); }}
+                          onPreview={(flyer, initialSearch = "") => { setPreviewInitialSearch(initialSearch); setPreview(flyer); }}
+                        />
+                      </div>
+                    )}
+
+                    {/* No results */}
+                    {!geocoding && suggestions.length === 0 && shelterResults.length === 0 && stationResults.length === 0 && flyerGroups.length === 0 && (
+                      <p style={{ margin: 0, paddingTop: 32, textAlign: "center", fontSize: 14, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>
+                        No results for &ldquo;{debouncedUnified}&rdquo;
+                      </p>
+                    )}
+                  </div>
+                ) : mode === "flyers" ? (
+                  /* ── Flyers tab ── */
+                  snap === "half" ? (
                     <SectionRow
                       title="Our Top Picks"
                       flyers={topPickFlyers.length > 0 ? topPickFlyers : flyers.slice(0, 8)}
@@ -763,93 +885,51 @@ export default function MapPage() {
                       )}
                     </>
                   )
-                ) : geocoding ? (
-                  <div style={{ display: "flex", justifyContent: "center", gap: 7, paddingTop: 32 }}>
-                    {[0, 1, 2].map(i => (
-                      <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--muted)", animation: "searchDot 1s ease-in-out infinite", animationDelay: `${i * 0.18}s` }} />
-                    ))}
-                  </div>
                 ) : (
-                  <>
-                    {/* Autocomplete suggestions */}
-                    {showSuggestions && suggestions.length > 0 && (
-                      <div style={{ marginBottom: 12, borderRadius: 16, overflow: "hidden", border: "1.5px solid var(--card-border)" }}>
-                        {suggestions.map((f, i) => {
-                          const { title, subtitle } = formatSuggestion(f);
-                          return (
-                            <button
-                              key={`${f.properties.osm_type}${f.properties.osm_id}`}
-                              onMouseDown={e => e.preventDefault()}
-                              onClick={() => selectSuggestion(f)}
-                              style={{
-                                display: "flex", flexDirection: "column", alignItems: "flex-start",
-                                width: "100%", padding: "10px 14px",
-                                background: "var(--bg)", border: "none",
-                                borderBottom: i < suggestions.length - 1 ? "1px solid var(--card-border)" : "none",
-                                cursor: "pointer", textAlign: "left",
-                              }}
-                              onMouseEnter={e => (e.currentTarget.style.background = "var(--card-bg)")}
-                              onMouseLeave={e => (e.currentTarget.style.background = "var(--bg)")}
-                            >
-                              <span style={{ fontSize: 14, fontWeight: 500, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{title}</span>
-                              <span style={{ fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-sans)", marginTop: 2 }}>{subtitle}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                    {/* Address error */}
-                    {addressError && (
-                      <p style={{ margin: "0 0 12px", fontSize: 13, color: "#ef4444", fontFamily: "var(--font-sans)" }}>{addressError}</p>
-                    )}
-                    {/* Shelter list */}
-                    {shelters.length === 0 ? (
-                      <p style={{ color: "var(--muted)", fontSize: 14, fontFamily: "var(--font-sans)" }}>Loading shelters…</p>
-                    ) : (
-                      <div>
-                        {sortedShelters.map((s, i) => {
-                          const initials = (s.agency ?? s.site_name ?? "?").charAt(0).toUpperCase();
-                          return (
-                            <div
-                              key={s.site_id}
-                              onClick={() => { setDetailShelter(s); animateTo("full"); }}
-                              style={{ padding: "12px 0", borderBottom: i < sortedShelters.length - 1 ? "1px solid var(--card-border)" : "none", cursor: "pointer" }}
-                            >
-                              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                                {/* Circular image */}
-                                <div style={{ flexShrink: 0, width: 56, height: 56, borderRadius: "50%", overflow: "hidden", background: "var(--card-border)" }}>
-                                  {s.image_url
-                                    ? <img src={s.image_url} alt={s.agency ?? ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                                    : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 700, color: "var(--muted)" }}>{initials}</div>
-                                  }
-                                </div>
-                                {/* Text */}
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  {s.agency && <p style={{ margin: 0, fontSize: 16, fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{s.agency}</p>}
-                                  {s.site_name && s.site_name !== s.agency && <p style={{ margin: "3px 0 0", fontSize: 14, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{s.site_name}</p>}
-                                  {s.distance !== undefined && (
-                                    <p style={{ margin: "3px 0 0", fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>
-                                      {s.distance < 0.1 ? "<0.1" : s.distance.toFixed(1)} mi away
-                                    </p>
-                                  )}
-                                </div>
-                                {/* Arrow button — opens detail */}
-                                <button
-                                  onClick={e => { e.stopPropagation(); setDetailShelter(s); animateTo("full"); }}
-                                  aria-label="View details"
-                                  style={{ flexShrink: 0, width: 36, height: 36, borderRadius: "50%", border: "none", background: "var(--card-border)", color: "var(--muted)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-                                >
-                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                    <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                  </svg>
-                                </button>
+                  /* ── Shelters tab ── */
+                  shelters.length === 0 ? (
+                    <p style={{ color: "var(--muted)", fontSize: 14, fontFamily: "var(--font-sans)" }}>Loading shelters…</p>
+                  ) : (
+                    <div>
+                      {sortedShelters.map((s, i) => {
+                        const initials = (s.agency ?? s.site_name ?? "?").charAt(0).toUpperCase();
+                        return (
+                          <div
+                            key={s.site_id}
+                            onClick={() => { setDetailShelter(s); animateTo("full"); }}
+                            style={{ padding: "12px 0", borderBottom: i < sortedShelters.length - 1 ? "1px solid var(--card-border)" : "none", cursor: "pointer" }}
+                          >
+                            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                              <div style={{ flexShrink: 0, width: 56, height: 56, borderRadius: "50%", overflow: "hidden", background: "var(--card-border)" }}>
+                                {s.image_url
+                                  ? <img src={s.image_url} alt={s.agency ?? ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                  : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 700, color: "var(--muted)" }}>{initials}</div>
+                                }
                               </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                {s.agency && <p style={{ margin: 0, fontSize: 16, fontWeight: 600, color: "var(--text)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{s.agency}</p>}
+                                {s.site_name && s.site_name !== s.agency && <p style={{ margin: "3px 0 0", fontSize: 14, color: "var(--muted)", fontFamily: "var(--font-sans)", lineHeight: 1.3 }}>{s.site_name}</p>}
+                                {s.distance !== undefined && (
+                                  <p style={{ margin: "3px 0 0", fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-sans)" }}>
+                                    {s.distance < 0.1 ? "<0.1" : s.distance.toFixed(1)} mi away
+                                  </p>
+                                )}
+                              </div>
+                              <button
+                                onClick={e => { e.stopPropagation(); setDetailShelter(s); animateTo("full"); }}
+                                aria-label="View details"
+                                style={{ flexShrink: 0, width: 36, height: 36, borderRadius: "50%", border: "none", background: "var(--card-border)", color: "var(--muted)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                  <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                              </button>
                             </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )
                 )}
               </div>
             </div>
