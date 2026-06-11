@@ -90,9 +90,9 @@ function makeFlyerIcon(f: FlyerPin) {
   const initial = (f.title ?? f.entity ?? "?").charAt(0).toUpperCase();
   const inner = f.image_url
     ? `<img src="${esc(f.image_url)}" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:50%" />`
-    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;background:#8b5cf6;border-radius:50%">${initial}</div>`;
+    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;background:#3b82f6;border-radius:50%">${initial}</div>`;
   return L.divIcon({
-    html: `<div style="width:36px;height:36px;border-radius:50%;overflow:hidden;border:2px solid #8b5cf6;box-shadow:0 2px 8px rgba(0,0,0,0.30);background:#ede9fe">${inner}</div>`,
+    html: `<div style="width:36px;height:36px;border-radius:50%;overflow:hidden;border:2px solid #3b82f6;box-shadow:0 2px 8px rgba(0,0,0,0.30);background:#dbeafe">${inner}</div>`,
     className: "",
     iconSize: [36, 36],
     iconAnchor: [18, 18],
