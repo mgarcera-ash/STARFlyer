@@ -178,7 +178,7 @@ function makeStationIcon(s: PoliceStation, isDark = false) {
     ? `<img src="${esc(s.image_url)}" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:50%" />`
     : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;background:#60a5fa;border-radius:50%">${initial}</div>`;
   const stationHalo = isDark ? "0 1px 3px rgba(0,0,0,0.8)" : "-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff";
-  const label = `<span class="shelter-label" style="font-family:var(--font-sans),sans-serif;font-size:10px;font-weight:600;color:${isDark ? "#93c5fd" : "#1d4ed8"};white-space:nowrap;text-shadow:${stationHalo};pointer-events:none;margin-top:3px;display:block;text-align:center">${esc(name)}</span>`;
+  const label = `<span class="station-label" style="font-family:var(--font-sans),sans-serif;font-size:10px;font-weight:600;color:${isDark ? "#93c5fd" : "#1d4ed8"};white-space:nowrap;text-shadow:${stationHalo};pointer-events:none;margin-top:3px;display:block;text-align:center">${esc(name)}</span>`;
   return L.divIcon({
     html: `<div style="display:flex;flex-direction:column;align-items:center">
       <div style="width:28px;height:28px;border-radius:50%;overflow:hidden;border:2px solid #60a5fa;box-shadow:0 2px 8px rgba(0,0,0,0.30);background:#60a5fa">
@@ -240,6 +240,7 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, station
     const updateZoom = () => {
       const z = map.getZoom();
       containerRef.current?.classList.toggle("labels-visible", z >= 12);
+      containerRef.current?.classList.toggle("station-labels-visible", z >= 13);
       if (z >= 11) stationLayer.addTo(map); else map.removeLayer(stationLayer);
       if (z >= 12) flyerLayer.addTo(map);   else map.removeLayer(flyerLayer);
     };
@@ -361,6 +362,8 @@ export default function MapView({ userLat, userLng, shelters, flyerPins, station
       <style>{`
         .shelter-label { opacity: 0; transition: opacity 0.2s ease; }
         .labels-visible .shelter-label { opacity: 1; }
+        .station-label { opacity: 0; transition: opacity 0.2s ease; }
+        .station-labels-visible .station-label { opacity: 1; }
       `}</style>
       <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
     </>
