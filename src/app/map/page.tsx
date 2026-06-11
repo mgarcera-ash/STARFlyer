@@ -643,15 +643,15 @@ export default function MapPage() {
           zIndex: 20,
         }}
       >
-        {/* Drag handle — pill only */}
+        {/* Drag handle — full-width strip with larger hit area */}
         <div
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
           onMouseDown={onMouseDown}
-          style={{ flexShrink: 0, padding: "10px 0 8px", display: "flex", justifyContent: "center", touchAction: "none", cursor: "grab", userSelect: "none" }}
+          style={{ flexShrink: 0, padding: "20px 0 18px", display: "flex", justifyContent: "center", touchAction: "none", cursor: "grab", userSelect: "none" }}
         >
-          <div style={{ width: 36, height: 4, borderRadius: 99, background: "var(--card-border)" }} />
+          <div style={{ width: 48, height: 5, borderRadius: 99, background: "var(--card-border)" }} />
         </div>
 
         {/* Sliding panels */}
@@ -705,7 +705,10 @@ export default function MapPage() {
 
               {/* Header + mode toggle — hidden while searching */}
               {snap !== "collapsed" && !isSearchActive && !isTyping && (
-                <div style={{ padding: "0 16px 12px", flexShrink: 0, display: "flex", alignItems: "flex-start", gap: 12 }}>
+                <div
+                  onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onMouseDown={onMouseDown}
+                  style={{ padding: "0 16px 12px", flexShrink: 0, display: "flex", alignItems: "flex-start", gap: 12, touchAction: "none", cursor: "grab", userSelect: "none" }}
+                >
                   <div style={{ flex: 1 }}>
                     <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 600, color: "var(--text)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>Find the right resource.</p>
                     <p style={{ fontFamily: "var(--font-sans)", fontSize: 22, fontWeight: 400, color: "var(--muted)", lineHeight: 1.3, margin: 0, letterSpacing: "-0.02em" }}>
